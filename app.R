@@ -544,8 +544,8 @@ server <- function(input, output, session) {
       plink_path <- Sys.which("plink")
       if (plink_path == "") plink_path <- "/usr/local/bin/plink"
       
-      csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
-      convertedCSV(csv_result)
+      #csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
+      #convertedCSV(csv_result)
       
       outputDir <- tempdir()
       outputName <- "converted_to_csv.csv"
@@ -562,6 +562,9 @@ server <- function(input, output, session) {
          if (ext %in% c("vcf", "gz")) {
             vcfPath <- input$vcfFile$datapath
             vcftocsv(vcf = vcfPath, ref = refValue)
+            
+            csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
+            convertedCSV(csv_result)
          } else {
             showNotification("Unsupported VCF format. Please upload a .vcf or .vcf.gz file.", type = "error")
             return()
@@ -576,7 +579,9 @@ server <- function(input, output, session) {
          )
          system(command)
          vcfPath <- paste0(temp_output, ".vcf")
-         vcftocsv(vcf = vcfPath, ref = refValue)
+         #vcftocsv(vcf = vcfPath, ref = refValue)
+         csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
+         convertedCSV(csv_result)
          
       } else if (input$inputType == "plink") {
          bed <- input$bedFile$datapath
@@ -592,7 +597,9 @@ server <- function(input, output, session) {
          )
          system(command)
          vcfPath <- paste0(outputVCF, ".vcf")
-         vcftocsv(vcf = vcfPath, ref = refValue)
+         #vcftocsv(vcf = vcfPath, ref = refValue)
+         csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
+         convertedCSV(csv_result)
       }
       
       output$downloadConvertedCSV <- downloadHandler(
