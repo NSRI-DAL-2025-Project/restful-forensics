@@ -1,3 +1,7 @@
+# problem 1: docker logo not showing
+# proble 2: copyright not showing properly, add at the bottom of the application
+# problem 3: previously uploaded file showing upon reload, should be wiped clean
+# proble 4: wont run in docker container
 library(shiny)
 library(shinyjs)
 library(ggplot2)
@@ -561,7 +565,7 @@ server <- function(input, output, session) {
          ext <- tools::file_ext(input$vcfFile$name)
          if (ext %in% c("vcf", "gz")) {
             vcfPath <- input$vcfFile$datapath
-            vcftocsv(vcf = vcfPath, ref = refValue)
+            #vcftocsv(vcf = vcfPath, ref = refValue)
             
             csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
             convertedCSV(csv_result)
