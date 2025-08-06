@@ -176,6 +176,7 @@ tosnipper <- function(input, references, target.pop = TRUE, population.name = NU
 }
 
 ### =======================FILE CONVERSION (to CSV)================###
+# Issue (06 August 2025): Pop added at the end of the file
 vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    library(dplyr)
    
@@ -190,6 +191,7 @@ vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
       final_df <- data.frame(t(raw_df)) %>%
          janitor::row_to_names(row_number = 1) %>%
          tibble::rownames_to_column(var = "Sample")
+
       
    } else if (tools::file_ext(vcf) == ".gz") {
       directory <- paste0(dir, "./vcf_files")
@@ -210,6 +212,8 @@ vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
       })
       
       final_df <- dplyr::bind_rows(dflist, .id = "source", .fill = TRUE)
+
+      
    } else {
       stop("Unsupported file type for VCF input.")
    }
@@ -228,6 +232,17 @@ vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    } else {
       stop("Invalid reference input: must be a file path or string.")
    }
+   
+   # solution to the pop and sample organization (06 August 2025)
+   sample <- final_df[,1]
+   nosample <- final_df[,-1]
+   data_cols <- ncol(nosample) - 1 #number of data cols
+   total_cols <- as.integer(ncol(final_df)) #number of total cols
+   data_gt <- final_df[, 2:data_cols] #subset data
+   pop <- final_df[,total_cols] # subset pop
+   final_df <- bind_cols(sample, pop, data_gt)
+   final_df <- final_df %>%
+      rename(Sample = 1, Population = 2)
    
    return(final_df)
 }

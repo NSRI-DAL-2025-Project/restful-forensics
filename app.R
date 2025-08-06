@@ -2,21 +2,18 @@
 # proble 2: copyright not showing properly, add at the bottom of the application
 # problem 3: previously uploaded file showing upon reload, should be wiped clean
 # proble 4: wont run in docker container
-library(shiny)
-library(shinyjs)
-library(ggplot2)
-source("functions.R")
+
 useShinyjs()
 
 ui <- navbarPage(
    title = div(
       tags$img(src = "/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
       tags$span("RESTful Forensics",
-                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;"),
-      tags$div(
-         style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
-         HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
-      )
+                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
+      #tags$div(
+      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
+      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
+      #)
    ),
    
    tags$head(
@@ -173,7 +170,7 @@ ui <- navbarPage(
                        p("Expected output file: Zipped files and PNG plots")))
             ) # end of fluidpage
             
-   ),
+   ), # end of tab panel 
    
    ## FILE CONVERSION
    tabPanel(
@@ -285,7 +282,7 @@ ui <- navbarPage(
          )
          
       )
-   ),
+   ), # end of tabpanel
    
    ## MARKER EXTRACTION
    tabPanel(title = HTML("<span style = 'color:#ffffff;'>SNP Extraction</span>"),
@@ -384,7 +381,7 @@ ui <- navbarPage(
                         )
                )
             )
-   ),
+   ), # end of tabpanel
    
    ## POP STAT
    tabPanel(HTML("<span style = 'color:#ffffff;'>Population Statistics</span>"),
@@ -440,7 +437,7 @@ ui <- navbarPage(
                         
                )
             )
-   ),
+   ), # end of tabpanel
    
    ## PCA
    tabPanel(HTML("<span style = 'color:#ffffff;'>Exploratory Analysis</span>"),
@@ -467,7 +464,7 @@ ui <- navbarPage(
                   tableOutput("examplePCA")
                )
             )
-   ),
+   ), # end of tabpanel
    
    ## STRUCTURE Analysis
    tabPanel(
@@ -498,10 +495,40 @@ ui <- navbarPage(
             uiOutput("structurePlots")
          )
       )
+   ), #end of tabpanel
+   p("© 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved."),
+   div(
+      style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
-)
+   )
 
 server <- function(input, output, session) {
+      
+      lastAction <- reactiveVal(Sys.time())
+      
+      # timer
+      observe({
+         invalidateLater(300000, session)  # 5 minutes
+         
+         # set cleanup time by 5 mins
+         if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
+            # resets
+            concordanceResult(NULL)
+            concordancePlotPath(NULL)
+            fsnps_gen(NULL)
+            population_stats(NULL)
+            hardy_weinberg_stats(NULL)
+            fst_stats(NULL)
+            
+            # this would reset the ui
+            shinyjs::reset("formPanel")
+            
+            # to clean the files
+            unlink(tempdir(), recursive = TRUE)
+            
+            showNotification("Session cleaned due to inactivity.", type = "message")
+         }
+      })
    
    
    ## Store plots for viewing and downloading
@@ -544,9 +571,7 @@ server <- function(input, output, session) {
    
    observeEvent(input$convertCSV, {
       
-      # load plink
-      plink_path <- Sys.which("plink")
-      if (plink_path == "") plink_path <- "/usr/local/bin/plink"
+      lastAction(Sys.time())
       
       #csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
       #convertedCSV(csv_result)
@@ -658,6 +683,8 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$convertBtn, {
+      lastAction(Sys.time())
+      
       inputPath <- input$convertFile$datapath
       refPath <- input$refFile$datapath
       targetSet <- input$targetPop
@@ -700,6 +727,8 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$run_uas2csv, {
+      lastAction(Sys.time())
+      
       req(input$uas_zip)
       
       temp_dir <- tempdir()
@@ -747,6 +776,8 @@ server <- function(input, output, session) {
    concordancePlotPath <- reactiveVal(NULL)
    
    observeEvent(input$compareBtn, {
+      lastAction(Sys.time())
+      
       tryCatch({
          
          req(input$concordanceFile1$datapath, input$concordanceFile2$datapath)
@@ -835,6 +866,8 @@ server <- function(input, output, session) {
    
    withProgress(message = "Extracting markers...", value = 0, {
       observeEvent(input$extractBtn, {
+         lastAction(Sys.time())
+         
          req(input$markerFile)
          
          snps_list <- if (input$markerType == "rsid") {
@@ -863,10 +896,7 @@ server <- function(input, output, session) {
                strsplit(input$plink_args, "\\s+")[[1]]
             } else NULL
             
-            plink_path <- Sys.which("plink")
-            if (plink_path == "") plink_path <- "/usr/local/bin/plink"
-            
-            
+
             temp_dir <- tempdir()
             extract_markers(
                input.file  = input$markerFile$datapath,
@@ -911,6 +941,8 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$runPopStats, {
+      lastAction(Sys.time())
+      
       req(input$popStatsFile)
       
       fsnps_gen <- reactive({
@@ -1111,6 +1143,8 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$runPCA, {
+      lastAction(Sys.time())
+      
       req(input$pcaFile)
       
       withProgress(message = "Running PCA...", {
@@ -1196,9 +1230,9 @@ server <- function(input, output, session) {
    
    
    observeEvent(input$runStructure, {
-      req(input$structureFile)
+      lastAction(Sys.time())
       
-      structure_path <- Sys.which("structure")
+      req(input$structureFile)
       
       temp_dir <- tempdir()
       
