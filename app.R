@@ -2,7 +2,8 @@
 # proble 2: copyright not showing properly, add at the bottom of the application
 # problem 3: previously uploaded file showing upon reload, should be wiped clean
 # proble 4: wont run in docker container
-
+library(bslib)
+library(shinyjs)
 useShinyjs()
 
 ui <- navbarPage(
@@ -75,20 +76,19 @@ ui <- navbarPage(
    
    
    tabPanel(title = HTML("<span style = 'color:#   ;'>Homepage</span>"),
-            fluidPage(
-               h3(""),
-               print("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types.")
-            ) # end of fluid page
-            
+               p("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types.")
+                  
+               
    ), # end of tab panel for homepage
    
    ## 1. Instructions Tab ----
-   tabPanel(title = HTML("<span style = 'color:#000000;'>Instructions</span>"),
+   tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
             fluidPage(
                
                div(class = "clickable-card",
                    div(class = "card-header", "🔄 File Conversion"),
                    div(class = "card-body",
+                       p("Convert various files to commonly used input files."),
                        
                        div(class = "inner-card",
                            h5("A. Convert files to CSV and add population info"),
@@ -112,6 +112,7 @@ ui <- navbarPage(
                div(class = "clickable-card",
                    div(class = "card-header", "🧬 SNP Extraction"),
                    div(class = "card-body",
+                       p("Extract markers from sequenced data and perform concordance analysis."),
                        
                        div(class = "inner-card",
                            h5("A. Extract SNPs based on rsID or GRCh37/GRCh38 position"),
@@ -174,7 +175,7 @@ ui <- navbarPage(
    
    ## FILE CONVERSION
    tabPanel(
-      title = HTML("<span style = 'color:#000000;'>File Conversion</span>"),
+      title = HTML("<span style = 'color:#ffffff;'>File Conversion</span>"),
       tabsetPanel(
          
          # Subtab 1: Convert to CSV
