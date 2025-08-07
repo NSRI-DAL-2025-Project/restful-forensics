@@ -4,6 +4,7 @@
 # proble 4: wont run in docker container
 library(bslib)
 library(shinyjs)
+source("functions.R", local = TRUE)
 useShinyjs()
 
 ui <- navbarPage(
