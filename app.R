@@ -468,7 +468,7 @@ ui <- navbarPage(
                   
                   hr(),
                   plotOutput("barPlot"),
-                  imageOutput("downloadbarPlot", "Download Bar Plot")
+                  imageOutput("downloadbarPlot", "Download Bar Plot"),
                   hr(),
                   plotOutput("pcaPlot"),
                   downloadButton("downloadPCAPlot", "Download PCA Plot"),
