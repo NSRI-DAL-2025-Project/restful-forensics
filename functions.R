@@ -998,7 +998,8 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, wid
       labs(x = xlab, y = ylab)
    
    # Save plot
-   ggsave(filename = filename, plot = plot, width = width, height = height, dpi = 600)
+   #ggsave(filename = filename, plot = plot, width = width, height = height, dpi = 600)
+   return(plot)
 }
 
 
