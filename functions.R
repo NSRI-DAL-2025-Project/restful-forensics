@@ -968,6 +968,7 @@ get_colors_labels <- function(fsnps_gen, use_default, input_labels = NULL, input
 
 plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, width = 8, height = 8, pc_x = 1, pc_y = 2) {
    library(ggplot2)
+   library(ggrepel)
    library(stats)
    # Convert matrices to data frames if needed
    if (!is.data.frame(ind_coords)) ind_coords <- as.data.frame(ind_coords)
@@ -986,11 +987,11 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, wid
    ylab <- paste("PC", pc_y, " (", format(round(percent[pc_y], 1), nsmall = 1), "%)", sep = "")
    
    # Create plot
-   plot <- ggplot(data = ind_coords, aes_string(x = paste0("PC", pc_x), y = paste0("PC", pc_y))) +
+   plot <- ggplot(data = ind_coords, aes(x = paste0("PC", pc_x), y = paste0("PC", pc_y))) +
       geom_hline(yintercept = 0) +
       geom_vline(xintercept = 0) +
       geom_point(aes(fill = Site), shape = 21, size = 4, show.legend = FALSE) +
-      geom_label_repel(data = centroid, aes_string(x = paste0("PC", pc_x), y = paste0("PC", pc_y), label = "Site"), 
+      geom_label_repel(data = centroid, aes(x = paste0("PC", pc_x), y = paste0("PC", pc_y), label = "Site"), 
                        size = 4, show.legend = FALSE, max.overlaps = Inf) +
       scale_fill_manual(values = colors_named) +
       scale_colour_manual(values = colors_named) +
@@ -1589,7 +1590,8 @@ running_structure <- function(input_file,
 
 # Plot STRUCTURE
 plotQ <- function(qmat, populations_df, outfile = outfile) {
-   
+   library(ggplot2)
+   library(ggrepel)
    # Revised to be compatible with large list of matrices
    facet = FALSE
    K <- qmat$K
