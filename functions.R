@@ -988,13 +988,24 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, width = 8, he
    xlab <- paste("PC", pc_x, " (", format(round(percent[pc_x], 1), nsmall = 1), "%)", sep = "")
    ylab <- paste("PC", pc_y, " (", format(round(percent[pc_y], 1), nsmall = 1), "%)", sep = "")
    
+   ggtheme = theme(axis.text.y = element_text(colour="black", size=12),
+                   axis.text.x = element_text(colour="black", size=12),
+                   axis.title = element_text(colour="black", size=12),
+                   panel.border = element_rect(colour="black", fill=NA, size=1),
+                   panel.background = element_blank(),
+                   plot.title = element_text(hjust=0.5, size=15) 
+   )
+   
    # Create plot
    plot <- ggplot(data = ind_coords, aes(x = paste0("PC", pc_x, sep = ""), y = paste0("PC", pc_y, sep = ""))) +
       geom_hline(yintercept = 0) +
       geom_vline(xintercept = 0) +
       geom_point(aes(fill = Site), shape = 21, size = 4, show.legend = FALSE) +
-      geom_label_repel(data = centroid, aes(x = paste0("PC", pc_x, sep = ""), y = paste0("PC", pc_y, sep = ""), label = Site, fill = Site), 
-                       size = 4, show.legend = FALSE, max.overlaps = Inf) +
+      geom_label_repel(data = centroid, 
+                       aes(x = paste0("PC", pc_x, sep = ""), 
+                           y = paste0("PC", pc_y, sep = ""), 
+                           label = Site, fill = Site), 
+                       size = 4, show.legend = FALSE) +
       scale_fill_manual(values = colors_named) +
       scale_colour_manual(values = colors_named) +
       labs(x = xlab, y = ylab)
