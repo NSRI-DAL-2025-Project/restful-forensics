@@ -1,11 +1,14 @@
-# problem 1: docker logo not showing
-# proble 2: copyright not showing properly, add at the bottom of the application
+# problem 1: docker logo not showing - Addressed 08/08/25
+# problem 2: copyright not showing properly, add at the bottom of the application - Addressed 06/08/2025
 # problem 3: previously uploaded file showing upon reload, should be wiped clean
-# proble 4: wont run in docker container
+# problem 4: wont run in docker container - needed package installed, addressed 07/08/25
+
+# to-do: add a notice that server will disconnect after a certain time
+# to-do: reset file uploads
 library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
-shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www')
+shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
 ui <- navbarPage(
@@ -464,7 +467,7 @@ ui <- navbarPage(
                   imageOutput("concordancePlot"),
                   downloadButton("downloadPCAPlot", "Download PCA Plot"),
                   
-                  hr(),
+                  #hr(),
                   h4("Example: PCA Input Format"),
                   tableOutput("examplePCA")
                )

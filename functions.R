@@ -1,6 +1,5 @@
 # TO DO #1: (DONE) ADDITIONAL ARGUMENTS FOR PLINK - OPTIONAL FILTERING PROCEDURES
 # TO DO #2: ADD DOWNLOADABLE SAMPLE FILES - can do, create sample files
-# TO DO #3 (ongoing): REMOVE AUTOSAVE FEATURE OF FILES
 
 ###========================FILE CONVERSION (SNIPPER)===============###
 
@@ -738,6 +737,8 @@ load_input_file <- function(input) {
 
 
 clean_input_data <- function(file) {
+   library(dplyr)
+   
    file <- lapply(file, function(x) gsub("|", "/", x, fixed = TRUE))
    file <- as.data.frame(file)
    file[is.na(file)] <- "N"
