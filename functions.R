@@ -1006,8 +1006,8 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, width = 8, he
                            y = paste0("PC", pc_y, sep = ""), 
                            label = Site, fill = Site), 
                        size = 4, show.legend = FALSE) +
-      scale_fill_manual(values = colors_named) +
-      scale_colour_manual(values = colors_named) +
+      scale_fill_manual(breaks = labels_colors$labels, values = labels_colors$colors) +
+      scale_colour_manual(breaks = labels_colors$labels, values = labels_colors$colors) +
       labs(x = xlab, y = ylab)
    
    # Save plot
