@@ -5,7 +5,7 @@
 library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
-#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www')
+shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www')
 useShinyjs()
 
 ui <- navbarPage(
