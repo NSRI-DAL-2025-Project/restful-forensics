@@ -989,11 +989,11 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, width = 8, he
    ylab <- paste("PC", pc_y, " (", format(round(percent[pc_y], 1), nsmall = 1), "%)", sep = "")
    
    # Create plot
-   plot <- ggplot(data = ind_coords, aes(x = paste0("PC", pc_x), y = paste0("PC", pc_y))) +
+   plot <- ggplot(data = ind_coords, aes(x = paste0("PC", pc_x, sep = ""), y = paste0("PC", pc_y, sep = ""))) +
       geom_hline(yintercept = 0) +
       geom_vline(xintercept = 0) +
       geom_point(aes(fill = Site), shape = 21, size = 4, show.legend = FALSE) +
-      geom_label_repel(data = centroid, aes(x = paste0("PC", pc_x), y = paste0("PC", pc_y), label = Site, fill = Site), 
+      geom_label_repel(data = centroid, aes(x = paste0("PC", pc_x, sep = ""), y = paste0("PC", pc_y, sep = ""), label = Site, fill = Site), 
                        size = 4, show.legend = FALSE, max.overlaps = Inf) +
       scale_fill_manual(values = colors_named) +
       scale_colour_manual(values = colors_named) +
