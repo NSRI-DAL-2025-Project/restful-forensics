@@ -766,6 +766,7 @@ convert_to_genind <- function(file) {
                                     ploidy = 2, 
                                     type = "codom")
    
+   source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
    fsnps_gen@pop <- as.factor(file$Pop)
    
    return(fsnps_gen)
@@ -855,6 +856,7 @@ compute_fst <- function(fsnps_gen) {
 
 
 plot_heterozygosity <- function(Het_fsnps_df, out_dir) {
+   library(ggplot2)
    out_path <- file.path(out_dir, "heterozygosity_plot.png")
    
    Het_fsnps_df$Variable <- as.factor(Het_fsnps_df$Variable)
@@ -874,6 +876,7 @@ plot_heterozygosity <- function(Het_fsnps_df, out_dir) {
 }
 
 plot_fst_heatmap_interactive <- function(fst_df) {
+   library(ggplot2)
    p <- ggplot(fst_df, aes(x = Site1, y = Site2, fill = Fst, label = round(Fst, 3))) +
       geom_tile(color = "black") +
       geom_text(aes(label = round(Fst, 3)), size = 3, color = "black") +
@@ -917,6 +920,9 @@ export_results <- function(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
 ### ====================PCA======================###
 
 compute_pca <- function(fsnps_gen) {
+   library(ade4)
+   library(adegenet)
+   library(stats)
    x <- tab(fsnps_gen, NA.method = "mean")
    set.seed(9999)
    pca1 <- dudi.pca(x, scannf = FALSE, scale = FALSE, nf = min(7, ncol(x)))
@@ -939,6 +945,8 @@ compute_pca <- function(fsnps_gen) {
 
 
 get_colors_labels <- function(fsnps_gen, use_default, input_labels = NULL, input_colors = NULL) {
+   library(ade4)
+   library(adegenet)
    if (use_default) {
       labels <- levels(as.factor(fsnps_gen@pop))
       colors <- RColorBrewer::brewer.pal(n = length(labels), name = "Set1")
@@ -959,6 +967,8 @@ get_colors_labels <- function(fsnps_gen, use_default, input_labels = NULL, input
 }
 
 plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, width = 8, height = 8, pc_x = 1, pc_y = 2) {
+   library(ggplot2)
+   library(stats)
    # Convert matrices to data frames if needed
    if (!is.data.frame(ind_coords)) ind_coords <- as.data.frame(ind_coords)
    if (!is.data.frame(centroid)) centroid <- as.data.frame(centroid)
