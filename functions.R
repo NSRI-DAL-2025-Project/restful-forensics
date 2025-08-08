@@ -991,20 +991,15 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, wid
 
 
 explore.pca <- function(input, default.colors.labels = TRUE, pca.labels = NULL, color.palette = NULL, set.size = FALSE, width = NULL, height = NULL, add.pc = FALSE, add.pc.x = NULL, add.pc.y = NULL) {
-   # Step 1: Load and clean data
    file <- load_input_file(input)
    file <- clean_input_data(file)
    
-   # Step 2: Convert to genind format
    fsnps_gen <- convert_to_genind(file)
    
-   # Step 3: Perform PCA analysis
    pca_results <- compute_pca(fsnps_gen)
    
-   # Step 4: Determine colors and labels (either default or user-specified)
    labels_colors <- get_colors_labels(fsnps_gen, default.colors.labels, pca.labels, color.palette)
    
-   # Step 5: Validate width and height if set.size = TRUE
    if (set.size) {
       if (is.null(width) || is.null(height)) {
          stop("If set.size is TRUE, both width and height must be provided.")
@@ -1014,15 +1009,11 @@ explore.pca <- function(input, default.colors.labels = TRUE, pca.labels = NULL, 
       height <- 8
    }
    
-   # Step 6: Generate PCA plot with default PCs
    plot_pca(pca_results$ind_coords, pca_results$centroid, pca_results$percent, labels_colors, filename = "pca.png", width = width, height = height, pc_x = 1, pc_y = 2)
    
-   # Step 7: Additional PCA plot if user specifies PCs
    if (add.pc) {
       plot_pca(pca_results$ind_coords, pca_results$centroid, pca_results$percent, labels_colors, filename = "pca2.png", width = width, height = height, pc_x = add.pc.x, pc_y = add.pc.y)
    }
-   
-   print("PCA analysis and plotting completed!")
 }
 
 ### ===================== STRUCTURE ANALYSIS ===============###

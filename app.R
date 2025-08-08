@@ -5,11 +5,12 @@
 library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
+#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www')
 useShinyjs()
 
 ui <- navbarPage(
    title = div(
-      tags$img(src = "/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
+      tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
       tags$span("RESTful Forensics",
                 style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
       #tags$div(
@@ -242,6 +243,7 @@ ui <- navbarPage(
                         downloadButton("downloadUAScsv", "Download Converted CSV")
                      ),
                      mainPanel(
+                        tableOutput("previewTableUAS"),
                         h4("Example Input XLSX Format"),
                         fluidRow(
                            column(6,
@@ -278,6 +280,7 @@ ui <- navbarPage(
                                   h5("Sample reference file"),
                                   tableOutput("exampleRefSnipper"))
                         ), # end of fluid row
+                        tableOutput("previewTableSNIPPER"),
                         downloadButton("downloadConverted", "Download Converted File")
                      )
                   )
@@ -665,6 +668,8 @@ server <- function(input, output, session) {
       )
    })
    
+   convertedSNIPPER <- reactiveVal(NULL)
+   
    observe({
       hasFile <- !is.null(input$convertFile)
       hasRef <- !is.null(input$refFile)
@@ -704,6 +709,7 @@ server <- function(input, output, session) {
                                 markers = numMarkers)
       
       #xlsx_file <- file.path(paste(outputDir, outputName))
+      convertedSNIPPER(snipper.file)
       
       output$downloadConverted <- downloadHandler(
          filename = function() { outputName },
@@ -712,9 +718,17 @@ server <- function(input, output, session) {
          }
       )
       
+      # try to preview the table
+      output$previewTableSNIPPER <- renderTable({
+         req(convertedSNIPPER())
+         head(convertedSNIPPER(), 10)  # Preview top 10 rows
+      })
+      
    })
    
    ### UAS to CSV
+   convertedUAS <- reactiveVal(NULL)
+   
    output$exampleXLSX <- renderTable({
       data.frame(
          Sample.Name = c("sample1","sample1", "sample1", "sample1", "sample1", "sample1", "sample2", "sample3", "sample3", "sample3"),
@@ -751,6 +765,7 @@ server <- function(input, output, session) {
                                  population = ref_value,
                                  reference = use_reference,
                                  dir = temp_dir)
+         convertedUAS(widened.file)
          showNotification("Conversion complete!", type = "message")
       }, error = function(e) {
          showNotification(paste("Error:", e$message), type = "error")
@@ -767,6 +782,12 @@ server <- function(input, output, session) {
             file.copy(widened.file, file)
          }
       )
+      
+      output$previewTableUAS <- renderTable({
+         req(convertedUAS())
+         head(convertedUAS(), 10)  # Preview top 10 rows
+      })
+      
    })
    
    ## Concordance Analysis

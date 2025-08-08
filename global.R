@@ -2,7 +2,7 @@ library(shiny)
 library(shinyjs)
 library(ggplot2)
 library(bslib)
-source("functions.R")
+source("functions.R", local = TRUE)
 useShinyjs()
 
 # load plink
