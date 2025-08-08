@@ -981,7 +981,7 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, width = 8, he
    }
    
    # Ensure Site column exists and matches colors
-   ind_coords$Site <- factor(ind_coords$Site, levels = labels_colors$labels)
+   #ind_coords$Site <- factor(ind_coords$Site, levels = labels_colors$labels)
    colors_named <- setNames(labels_colors$colors, labels_colors$labels)
    
    # Labels for axes
