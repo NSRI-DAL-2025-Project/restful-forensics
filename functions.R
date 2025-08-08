@@ -950,7 +950,8 @@ get_colors_labels <- function(fsnps_gen, use_default, input_labels = NULL, input
    library(adegenet)
    if (use_default) {
       labels <- levels(as.factor(fsnps_gen@pop))
-      colors <- RColorBrewer::brewer.pal(n = length(labels), name = "Set1")
+      n <- as.integer(length(labels))
+      colors <- RColorBrewer::brewer.pal(n, name = "Set1")
    } else {
       labels <- input_labels
       colors <- input_colors

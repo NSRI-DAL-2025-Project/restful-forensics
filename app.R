@@ -1220,7 +1220,7 @@ server <- function(input, output, session) {
             # add an option to download
             output$barPlot <- renderPlot({
                # identify percent of variance explained per component
-               ggplot2::barplot(pca_results$percent, 
+               graphics::barplot(pca_results$percent, 
                               ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
                               names.arg = round(pca_results$percent, 1))
             })
