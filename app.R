@@ -463,13 +463,18 @@ ui <- navbarPage(
                   actionButton("runPCA", "Run PCA Analysis", icon = icon("play"))
                ),
                mainPanel(
+                  h4("Example: PCA Input Format"),
+                  tableOutput("examplePCA"),
+                  
+                  hr(),
+                  plotOutput("barPlot"),
+                  imageOutput("downloadbarPlot", "Download Bar Plot")
+                  hr(),
                   plotOutput("pcaPlot"),
-                  imageOutput("concordancePlot"),
                   downloadButton("downloadPCAPlot", "Download PCA Plot"),
                   
                   #hr(),
-                  h4("Example: PCA Input Format"),
-                  tableOutput("examplePCA")
+
                )
             )
    ), # end of tabpanel
@@ -1211,6 +1216,27 @@ server <- function(input, output, session) {
             incProgress(0.6, detail = "Computing PCA...")
             pca_results <- compute_pca(fsnps_gen)
             
+            # to add under ui
+            # add an option to download
+            output$barPlot <- renderPlot({
+               # identify percent of variance explained per component
+               ggplot2::barplot(pca_results$percent, 
+                              ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
+                              names.arg = round(pca_results$percent, 1))
+            })
+            
+            output$downloadbarPlot <- downloadHandler(
+               filename = function() {
+                  paste0("bar_plot_", Sys.Date(), ".png")
+               },
+               content = function(file) {
+                  ggplot2::barplot(pca_results$percent, 
+                                   ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
+                                   names.arg = round(pca_results$percent, 1))
+               }
+            )
+            
+            
             incProgress(0.8, detail = "Rendering PCA plot...")
             
             output$pcaPlot <- renderPlot({
@@ -1219,7 +1245,6 @@ server <- function(input, output, session) {
                   centroid = pca_results$centroid,
                   percent = pca_results$percent,
                   labels_colors = labels_colors,
-                  filename = NULL,  # rendering only
                   pc_x = input$pcX,
                   pc_y = input$pcY
                )
@@ -1235,7 +1260,6 @@ server <- function(input, output, session) {
                      centroid = pca_results$centroid,
                      percent = pca_results$percent,
                      labels_colors = labels_colors,
-                     filename = file,
                      pc_x = input$pcX,
                      pc_y = input$pcY
                   )

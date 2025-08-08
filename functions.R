@@ -923,18 +923,19 @@ compute_pca <- function(fsnps_gen) {
    library(ade4)
    library(adegenet)
    library(stats)
+   
    x <- tab(fsnps_gen, NA.method = "mean")
    set.seed(9999)
-   pca1 <- dudi.pca(x, scannf = FALSE, scale = FALSE, nf = min(7, ncol(x)))
+   pca1 <- dudi.pca(x, scannf = FALSE, scale = FALSE, nf = 7)
    
-   percent <- pca1$eig / sum(pca1$eig) * 100
+   percent <- pca1$eig/sum(pca1$eig)*100
+   
    ind_coords <- as.data.frame(pca1$li)  # Convert matrix to data frame
    colnames(ind_coords) <- paste0("PC", seq_len(ncol(ind_coords)))
-   
-   ind_coords$Ind <- indNames(fsnps_gen)
+   ind_coords$Ind <- adegenet::indNames(fsnps_gen)
    ind_coords$Site <- fsnps_gen@pop
    
-   centroid <- aggregate(ind_coords[, -c(ncol(ind_coords), ncol(ind_coords)-1)], 
+   centroid <- stats::aggregate(ind_coords[, -c(ncol(ind_coords), ncol(ind_coords)-1)], 
                          by = list(ind_coords$Site), 
                          FUN = mean)
    colnames(centroid)[1] <- "Site"
@@ -966,7 +967,7 @@ get_colors_labels <- function(fsnps_gen, use_default, input_labels = NULL, input
    return(list(labels = labels, colors = colors))
 }
 
-plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, width = 8, height = 8, pc_x = 1, pc_y = 2) {
+plot_pca <- function(ind_coords, centroid, percent, labels_colors, width = 8, height = 8, pc_x = 1, pc_y = 2) {
    library(ggplot2)
    library(ggrepel)
    library(stats)
@@ -991,7 +992,7 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, filename, wid
       geom_hline(yintercept = 0) +
       geom_vline(xintercept = 0) +
       geom_point(aes(fill = Site), shape = 21, size = 4, show.legend = FALSE) +
-      geom_label_repel(data = centroid, aes(x = paste0("PC", pc_x), y = paste0("PC", pc_y), label = "Site"), 
+      geom_label_repel(data = centroid, aes(x = paste0("PC", pc_x), y = paste0("PC", pc_y), label = Site, fill = Site), 
                        size = 4, show.legend = FALSE, max.overlaps = Inf) +
       scale_fill_manual(values = colors_named) +
       scale_colour_manual(values = colors_named) +
