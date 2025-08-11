@@ -228,6 +228,10 @@ ui <- navbarPage(
                      ),
                      mainPanel(
                         tableOutput("previewTable"),
+                        tags$h4("Sample File"),
+                        tags$ul(
+                          tags$li(a("Sample VCF file", href = "sample_hgdp.csv", download = NA)) 
+                        ),
                         downloadButton("downloadConvertedCSV", "Download Converted CSV")
                      )
                   )
@@ -254,6 +258,10 @@ ui <- navbarPage(
                                   h5("All alleles of available SNPs per sample are listed in a long format."),
                                   tableOutput("exampleXLSX")
                            )
+                        ),
+                        tags$h4("Sample File"),
+                        tags$ul(
+                           tags$li(a("Sample zipped file", href = "sample_forenseq.zip", download = NA)) 
                         )
                         #possibly add an option to view the first few lines of the result,
                      )
@@ -285,6 +293,10 @@ ui <- navbarPage(
                                   tableOutput("exampleRefSnipper"))
                         ), # end of fluid row
                         tableOutput("previewTableSNIPPER"),
+                        tags$h4("Sample File"),
+                        tags$ul(
+                           tags$li(a("Sample file", href = "sample.csv", download = NA)) 
+                        ),
                         downloadButton("downloadConverted", "Download Converted File")
                      )
                   )
@@ -403,7 +415,11 @@ ui <- navbarPage(
                         
                         hr(),
                         h4("Example: Population File Format"),
-                        tableOutput("examplePop")
+                        tableOutput("examplePop"),
+                        tags$h4("Sample File"),
+                        tags$ul(
+                           tags$li(a("Sample file", href = "sample.csv", download = NA)) 
+                        )
                ), 
                tabPanel("1 Private Alleles",
                         h4("Private Alleles Summary"),
@@ -438,8 +454,7 @@ ui <- navbarPage(
                         DT::dataTableOutput("fstDfTable"),
                         hr(),
                         h4("Fst Heatmap"),
-                        plotly::plotlyOutput("fst_heatmap_interactive", height = "600px")
-                        #imageOutput("fst_heatmap"),
+                        imageOutput("fst_heatmap_plot", width = "100%")                        #imageOutput("fst_heatmap"),
                         #downloadButton("downloadFstHeatmap", "Download Heatmap")
                         
                )
@@ -464,6 +479,10 @@ ui <- navbarPage(
                mainPanel(
                   h4("Example: PCA Input Format"),
                   tableOutput("examplePCA"),
+                  tags$h4("Sample File"),
+                  tags$ul(
+                     tags$li(a("Sample zipped file", href = "sample.csv", download = NA)) 
+                  ),
                   
                   hr(),
                   plotOutput("barPlot"),
@@ -494,6 +513,10 @@ ui <- navbarPage(
             actionButton("runStructure", "Run STRUCTURE", icon = icon("play"))
          ),
          mainPanel(
+            tags$h4("Sample File"),
+            tags$ul(
+               tags$li(a("Sample file", href = "sample.csv", download = NA)) 
+            ),
             h4("STRUCTURE Visualization"),
             imageOutput("structurePlot"),
             downloadButton("downloadAllResults", "Download All STRUCTURE Results (ZIP)"),
@@ -834,7 +857,7 @@ server <- function(input, output, session) {
          output$downloadConcordance <- downloadHandler(
             filename = function() {"concordance.csv"},
             content = function(file) {
-               #file.copy("concordance.csv", file)
+               #file.copy("concordance.csv", file)            # DO I NEED TO FILE.COPY?
                readr::write_csv(concordanceResult(), file)
             }
          )
@@ -849,14 +872,15 @@ server <- function(input, output, session) {
             )
          }, deleteFile = FALSE)
          
-         outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
+         #outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
          output$downloadConcordancePlot <- downloadHandler(
             filename = function() {
-               outputNameConcordance
-               },
+               paste0("concordance_plot_", Sys.Date(), ".png")
+            },
             content = function(file) {
-               plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
-               ggsave(file, plot, width = 8, height = 8, dpi = 600)
+               #plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
+               #file.copy(plot, file)
+               ggsave(filename, concordancePlotPath(), width = 8, height = 8, dpi = 600)
                
             }, contentType = "image/png"
          )
@@ -958,7 +982,7 @@ server <- function(input, output, session) {
                filename = function() { "final_merged.vcf" },
                content = function(file) {
                   source_path <- file.path(temp_dir, "final_merged.vcf")
-                  file.copy(source_path, file)
+                  file.copy(source_path, file)     # would this download??
                }
             )
          }, error = function(e) {
@@ -1063,7 +1087,6 @@ server <- function(input, output, session) {
                   "heterozygosity_plot.png"
                },
                content = function(file) {
-                  # Recompute the plot to save as requested file
                   plot_path <- plot_heterozygosity(
                      Het_fsnps_df = population_stats()$heterozygosity,
                      out_dir = tempdir()
@@ -1124,15 +1147,44 @@ server <- function(input, output, session) {
             })
             
             # plotting
-            output$fst_heatmap_interactive <- plotly::renderPlotly({
-               req(fst_stats()$fst_dataframe)
-               plot_fst_heatmap_interactive(fst_stats()$fst_dataframe)
-            })
+            #output$fst_heatmap_interactive <- plotly::renderPlotly({
+            #   req(fst_stats()$fst_dataframe)
+            #   plot_fst_heatmap_interactive(fst_stats()$fst_dataframe)
+            #})
+            output$fst_heatmap_plot <- renderImage({
+               req(fst_data())
+               
+               plot_path <- plot_fst_heatmap_static(
+                  fst_df = fst_data(),
+                  out_dir = tempdir()
+               )
+               
+               list(
+                  src = plot_path,
+                  contentType = "image/png",
+                  alt = "FST Heatmap",
+                  width = "100%"
+               )
+            }, deleteFile = TRUE)
+            
+            #output$downloadFstHeatmap <- downloadHandler(
+            #  filename = function() { "fst_heatmap.png" },
+            #   content = function(file) {
+            #      plot_path <- plot_fst_heatmap(fst_stats()$fst_dataframe, out_dir = tempdir())
+            #      file.copy(plot_path, file)
+            #      ggsave(filename = filename, plot = plot_path, width = 8, height = 8, dpi = 600)
+            #   }
+            #)
             
             output$downloadFstHeatmap <- downloadHandler(
-               filename = function() { "fst_heatmap.png" },
+               filename = function() {
+                  "fst_heatmap.png"
+               },
                content = function(file) {
-                  plot_path <- plot_fst_heatmap(fst_stats()$fst_dataframe, out_dir = tempdir())
+                  plot_path <- plot_fst_heatmap_static(
+                     fst_df = fst_data(),
+                     out_dir = tempdir()
+                  )
                   file.copy(plot_path, file)
                }
             )
@@ -1142,18 +1194,18 @@ server <- function(input, output, session) {
             hw_matrix <- compute_hardy_weinberg(fsnps_gen())
             fst_matrix <- compute_fst(fsnps_gen())
             
-            timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-            outputNameStat <- paste0("population-statistics-results_", timestamp, ".xlsx")
             
             output$downloadStatsXLSX <- downloadHandler(
                filename = function() {
-                  outputNameStat
+                  timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+                  paste0("population-statistics-results_", timestamp, ".xlsx")
                },
                content = function(file) {
                   req(stats_matrix, hw_matrix, fst_matrix)
                   path <- export_results(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
-                  openxlsx::write.xlsx(path, file = outputNameStat)
-                  #file.copy(path, file)
+                  
+                  file.copy(path, file)
+                  openxlsx::write.xlsx(path, file = filename)
                }
             )
             
@@ -1240,19 +1292,21 @@ server <- function(input, output, session) {
                                  names.arg = round(pca_results$percent, 1))
             })
             
-            outputNameBar <- paste0("bar_plot_", Sys.Date(), ".png")
             output$downloadbarPlot <- downloadHandler(
                filename = function() {
-                  #paste0("bar_plot_", Sys.Date(), ".png")
-                  outputNameBar
+                  paste0("bar_plot_", Sys.Date(), ".png")
                },
                content = function(file) {
-                  plot <- graphics::barplot(pca_results$percent, 
-                                           ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
-                                           names.arg = round(pca_results$percent, 1))
-                  
-                  ggsave(filename = outputNameBar, plot = plot, width = 8, height = 8, dpi = 600)
-               }, contentType = "image/png"
+                  png(file, width = 800, height = 800, res = 120)
+                  graphics::barplot(
+                     pca_results$percent,
+                     ylab = "Genetic variance explained by eigenvectors (%)",
+                     ylim = c(0, 25),
+                     names.arg = round(pca_results$percent, 1)
+                  )
+                  dev.off()
+               },
+               contentType = "image/png"
             )
             
             
@@ -1269,11 +1323,11 @@ server <- function(input, output, session) {
                )
             })
             
-            outputNamePCA <- paste0("pca_plot_", Sys.Date(), ".png")
+            
+            
             output$downloadPCAPlot <- downloadHandler(
                filename = function() {
-                  #paste0("pca_plot_", Sys.Date(), ".png")
-                  outputNamePCA
+                  paste0("pca_plot_", Sys.Date(), ".png")
                },
                content = function(file) {
                   plot <- plot_pca(
@@ -1285,8 +1339,10 @@ server <- function(input, output, session) {
                      pc_y = input$pcY
                   )
                   
-                  ggsave(filename = outputNamePCA, plot = plot, width = 8, height = 8, dpi = 600)
-               }, contentType = "image/png"
+                  # Save directly to the requested file path
+                  ggsave(filename = file, plot = plot, width = 8, height = 8, dpi = 600)
+               },
+               contentType = "image/png"
             )
             
          }, error = function(e) {
@@ -1358,7 +1414,6 @@ server <- function(input, output, session) {
             file.copy(matrices, file)
          }
       )
-      
       
       
       output$structurePlots <- renderUI({

@@ -774,7 +774,7 @@ convert_to_genind <- function(file) {
 
 # Need to correct, genind2hierfstat is outputting an error 
 compute_population_stats <- function(fsnps_gen) {
-   mar_matrix <- allelic.richness(genind2hierfstat(fsnps_gen))$Ar %>%
+   mar_matrix <- hierfstat::allelic.richness(genind2hierfstat(fsnps_gen))$Ar %>%
       apply(MARGIN = 2, FUN = mean) %>%
       round(digits = 3)
    mar_list <- as.list(mar_matrix)
@@ -871,12 +871,14 @@ plot_heterozygosity <- function(Het_fsnps_df, out_dir) {
       labs(y = "Heterozygosity") +
       theme(axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, face = "bold"))
    
-   #ggsave(out_path, plot = p, width = 9, dpi = 300)
-   return(p)
+   ggsave(out_path, plot = p, width = 9, dpi = 300)
+   return(out_path)
 }
 
-plot_fst_heatmap_interactive <- function(fst_df) {
+plot_fst_heatmap_interactive <- function(fst_df, out_dir) {
    library(ggplot2)
+   out_path <- file.path(out_dir, "fst_heatmap.png")
+   
    p <- ggplot(fst_df, aes(x = Site1, y = Site2, fill = Fst, label = round(Fst, 3))) +
       geom_tile(color = "black") +
       geom_text(aes(label = round(Fst, 3)), size = 3, color = "black") +
@@ -891,8 +893,9 @@ plot_fst_heatmap_interactive <- function(fst_df) {
          axis.text.x = element_text(angle = 45, hjust = 1)
       )
    
-   #plotly::ggplotly(p, tooltip = c("x", "y", "label", "fill"))
-   return(p)
+   ggsave(out_path, plot = p, width = 8, height = 6, dpi = 300)
+   return(out_path)
+   
 }
 
 
