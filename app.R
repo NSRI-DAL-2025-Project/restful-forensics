@@ -230,7 +230,7 @@ ui <- navbarPage(
                         tableOutput("previewTable"),
                         tags$h4("Sample File"),
                         tags$ul(
-                          tags$li(a("Sample VCF file", href = "sample_hgdp.csv", download = NA)) 
+                          tags$li(a("Sample VCF file", href = "www/sample_hgdp.csv", download = NA)) 
                         ),
                         downloadButton("downloadConvertedCSV", "Download Converted CSV")
                      )
@@ -261,7 +261,7 @@ ui <- navbarPage(
                         ),
                         tags$h4("Sample File"),
                         tags$ul(
-                           tags$li(a("Sample zipped file", href = "sample_forenseq.zip", download = NA)) 
+                           tags$li(a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)) 
                         )
                         #possibly add an option to view the first few lines of the result,
                      )
@@ -295,7 +295,7 @@ ui <- navbarPage(
                         tableOutput("previewTableSNIPPER"),
                         tags$h4("Sample File"),
                         tags$ul(
-                           tags$li(a("Sample file", href = "sample.csv", download = NA)) 
+                           tags$li(a("Sample file", href = "www/sample.csv", download = NA)) 
                         ),
                         downloadButton("downloadConverted", "Download Converted File")
                      )
@@ -418,7 +418,7 @@ ui <- navbarPage(
                         tableOutput("examplePop"),
                         tags$h4("Sample File"),
                         tags$ul(
-                           tags$li(a("Sample file", href = "sample.csv", download = NA)) 
+                           tags$li(a("Sample file", href = "www/sample.csv", download = NA)) 
                         )
                ), 
                tabPanel("1 Private Alleles",
@@ -481,7 +481,7 @@ ui <- navbarPage(
                   tableOutput("examplePCA"),
                   tags$h4("Sample File"),
                   tags$ul(
-                     tags$li(a("Sample zipped file", href = "sample.csv", download = NA)) 
+                     tags$li(a("Sample file", href = "www/sample.csv", download = NA)) 
                   ),
                   
                   hr(),
@@ -515,7 +515,7 @@ ui <- navbarPage(
          mainPanel(
             tags$h4("Sample File"),
             tags$ul(
-               tags$li(a("Sample file", href = "sample.csv", download = NA)) 
+               tags$li(a("Sample file", href = "www/sample.csv", download = NA)) 
             ),
             h4("STRUCTURE Visualization"),
             imageOutput("structurePlot"),
