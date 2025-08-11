@@ -849,8 +849,11 @@ server <- function(input, output, session) {
             )
          }, deleteFile = FALSE)
          
+         outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
          output$downloadConcordancePlot <- downloadHandler(
-            filename = function() {paste0("concordance_plot_", Sys.Date(), ".png")},
+            filename = function() {
+               outputNameConcordance
+               },
             content = function(file) {
                plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
                ggsave(file, plot, width = 8, height = 8, dpi = 600)
@@ -1139,15 +1142,17 @@ server <- function(input, output, session) {
             hw_matrix <- compute_hardy_weinberg(fsnps_gen())
             fst_matrix <- compute_fst(fsnps_gen())
             
+            timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+            outputNameStat <- paste0("population-statistics-results_", timestamp, ".xlsx")
+            
             output$downloadStatsXLSX <- downloadHandler(
                filename = function() {
-                  timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-                  paste0("population-statistics-results_", timestamp, ".xlsx")
+                  outputNameStat
                },
                content = function(file) {
                   req(stats_matrix, hw_matrix, fst_matrix)
                   path <- export_results(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
-                  openxlsx::write.xlsx(path, file = filename)
+                  openxlsx::write.xlsx(path, file = outputNameStat)
                   #file.copy(path, file)
                }
             )
@@ -1235,16 +1240,18 @@ server <- function(input, output, session) {
                                  names.arg = round(pca_results$percent, 1))
             })
             
+            outputNamar <- paste0("bar_plot_", Sys.Date(), ".png")eB
             output$downloadbarPlot <- downloadHandler(
                filename = function() {
-                  paste0("bar_plot_", Sys.Date(), ".png")
+                  #paste0("bar_plot_", Sys.Date(), ".png")
+                  outputNameBar
                },
                content = function(file) {
-                  plot <- ggplot2::barplot(pca_results$percent, 
+                  plot <- graphics::barplot(pca_results$percent, 
                                            ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
                                            names.arg = round(pca_results$percent, 1))
                   
-                  ggsave(filename = filename, plot = plot, width = 8, height = 8, dpi = 600)
+                  ggsave(filename = outputNameBar, plot = plot, width = 8, height = 8, dpi = 600)
                }, contentType = "image/png"
             )
             
@@ -1262,9 +1269,11 @@ server <- function(input, output, session) {
                )
             })
             
+            outputNamePCA <- paste0("pca_plot_", Sys.Date(), ".png")
             output$downloadPCAPlot <- downloadHandler(
                filename = function() {
-                  paste0("pca_plot_", Sys.Date(), ".png")
+                  #paste0("pca_plot_", Sys.Date(), ".png")
+                  outputNamePCA
                },
                content = function(file) {
                   plot <- plot_pca(
@@ -1276,7 +1285,7 @@ server <- function(input, output, session) {
                      pc_y = input$pcY
                   )
                   
-                  ggsave(filename = filename, plot = plot, width = 8, height = 8, dpi = 600)
+                  ggsave(filename = outputNamePCA, plot = plot, width = 8, height = 8, dpi = 600)
                }, contentType = "image/png"
             )
             
