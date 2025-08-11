@@ -398,7 +398,6 @@ ui <- navbarPage(
                tabPanel("Perform Analysis",
                         useShinyjs(),
                         fileInput("popStatsFile", "Upload CSV or XLSX Dataset"),
-                        
                         actionButton("runPopStats", "Analyze", icon = icon("magnifying-glass-chart")),
                         downloadButton("downloadStats", "Download Results (Excel)"),
                         
@@ -408,7 +407,7 @@ ui <- navbarPage(
                ), 
                tabPanel("1 Private Alleles",
                         h4("Private Alleles Summary"),
-                        uiOutput("privateAllelePlot"),
+                        uiOutput("privateAllelePlot")
                ),
                tabPanel("2 Heterozygosity",
                         h4("Observed vs Expected Heterozygosity"),
@@ -437,7 +436,6 @@ ui <- navbarPage(
                         uiOutput("fstMatrixUI"),  
                         h4("Tidy Pairwise Fst Data"),
                         DT::dataTableOutput("fstDfTable"),
-                        
                         hr(),
                         h4("Fst Heatmap"),
                         plotly::plotlyOutput("fst_heatmap_interactive", height = "600px")
@@ -472,10 +470,8 @@ ui <- navbarPage(
                   downloadButton("downloadbarPlot", "Download Bar Plot"),
                   hr(),
                   plotOutput("pcaPlot"),
-                  downloadButton("downloadPCAPlot", "Download PCA Plot"),
-                  
+                  downloadButton("downloadPCAPlot", "Download PCA Plot")
                   #hr(),
-
                )
             )
    ), # end of tabpanel
@@ -1278,9 +1274,9 @@ server <- function(input, output, session) {
                      labels_colors = labels_colors,
                      pc_x = input$pcX,
                      pc_y = input$pcY
-                     
-                     ggsave(filename = filename, plot = plot, width = 8, height = 8, dpi = 600)
                   )
+                  
+                  ggsave(filename = filename, plot = plot, width = 8, height = 8, dpi = 600)
                }, contentType = "image/png"
             )
             
