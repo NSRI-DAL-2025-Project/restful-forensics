@@ -2,6 +2,7 @@
 # problem 2: copyright not showing properly, add at the bottom of the application - Addressed 06/08/2025
 # problem 3: previously uploaded file showing upon reload, should be wiped clean
 # problem 4: wont run in docker container - needed package installed, addressed 07/08/25
+# problem 5: can't download plots
 
 # to-do: add a notice that server will disconnect after a certain time
 # to-do: reset file uploads
@@ -515,33 +516,34 @@ ui <- navbarPage(
    )
    )
 
+# TO ADD
 server <- function(input, output, session) {
+   
+   lastAction <- reactiveVal(Sys.time())
+   
+   # timer
+   observe({
+      invalidateLater(300000, session)  # 5 minutes
       
-      lastAction <- reactiveVal(Sys.time())
-      
-      # timer
-      observe({
-         invalidateLater(300000, session)  # 5 minutes
+      # set cleanup time by 5 mins
+      if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
+         # resets
+         concordanceResult(NULL)
+         concordancePlotPath(NULL)
+         fsnps_gen(NULL)
+         population_stats(NULL)
+         hardy_weinberg_stats(NULL)
+         fst_stats(NULL)
          
-         # set cleanup time by 5 mins
-         if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
-            # resets
-            concordanceResult(NULL)
-            concordancePlotPath(NULL)
-            fsnps_gen(NULL)
-            population_stats(NULL)
-            hardy_weinberg_stats(NULL)
-            fst_stats(NULL)
-            
-            # this would reset the ui
-            shinyjs::reset("formPanel")
-            
-            # to clean the files
-            unlink(tempdir(), recursive = TRUE)
-            
-            showNotification("Session cleaned due to inactivity.", type = "message")
-         }
-      })
+         # this would reset the ui
+         shinyjs::reset("formPanel")
+         
+         # to clean the files
+         unlink(tempdir(), recursive = TRUE)
+         
+         showNotification("Session cleaned due to inactivity.", type = "message")
+      }
+   })
    
    
    ## Store plots for viewing and downloading
@@ -722,7 +724,8 @@ server <- function(input, output, session) {
       output$downloadConverted <- downloadHandler(
          filename = function() { outputName },
          content = function(file) {
-            file.copy(snipper.file, file)
+            #file.copy(snipper.file, file)
+            openxlsx::write.xlsx(convertedSNIPPER(), file)
          }
       )
       
@@ -787,7 +790,7 @@ server <- function(input, output, session) {
             outputName
          },
          content = function(file) {
-            file.copy(widened.file, file)
+            readr::write_csv(convertedUAS(), file)
          }
       )
       
@@ -822,38 +825,48 @@ server <- function(input, output, session) {
          concordanceResult(result$results)
          concordancePlotPath(result$plot)
          
+         output$concordanceResults <- renderTable({
+            req(concordanceResult())
+            concordanceResult()
+         })
+         
+         output$concordancePlot <- renderPlot({
+            req(concordancePlotPath())
+            concordancePlotPath()
+         })
+         
+         output$downloadConcordance <- downloadHandler(
+            filename = function() {"concordance.csv"},
+            content = function(file) {
+               #file.copy("concordance.csv", file)
+               readr::write_csv(concordanceResult(), file)
+            }
+         )
+         
+         output$concordancePlot <- renderImage({ # will renderImage work???
+            req(concordancePlotPath())
+            
+            list(
+               src = concordancePlotPath(),
+               contentType = "image/png",
+               alt = "Concordance Plot"
+            )
+         }, deleteFile = FALSE)
+         
+         output$downloadConcordancePlot <- downloadHandler(
+            filename = function() {paste0("concordance_plot_", Sys.Date(), ".png")},
+            content = function(file) {
+               plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
+               ggsave(file, plot, width = 8, height = 8, dpi = 600)
+               
+            }, contentType = "image/png"
+         )
+         
          
       }, error = function(e) {
          showNotification(paste("Error during analysis:", e$message), type = "error", duration = 10)
       })
    })
-   
-   output$concordanceResults <- renderTable({
-      req(concordanceResult())
-      concordanceResult()
-   })
-   
-   output$concordancePlot <- renderPlot({
-      req(concordancePlotPath())
-      concordancePlotPath()
-   })
-   
-   output$downloadConcordance <- downloadHandler(
-      filename = function() {"concordance.csv"},
-      content = function(file) {
-         file.copy("concordance.csv", file)
-      }
-   )
-   
-   output$concordancePlot <- renderImage({
-      req(concordancePlotPath())
-      
-      list(
-         src = concordancePlotPath(),
-         contentType = "image/png",
-         alt = "Concordance Plot"
-      )
-   }, deleteFile = FALSE)
    
    
    ## MARKER EXTRACTION
@@ -927,7 +940,7 @@ server <- function(input, output, session) {
                strsplit(input$plink_args, "\\s+")[[1]]
             } else NULL
             
-
+            
             temp_dir <- tempdir()
             extract_markers(
                input.file  = input$markerFile$datapath,
@@ -1138,7 +1151,8 @@ server <- function(input, output, session) {
                content = function(file) {
                   req(stats_matrix, hw_matrix, fst_matrix)
                   path <- export_results(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
-                  file.copy(path, file)
+                  openxlsx::write.xlsx(path, file = filename)
+                  #file.copy(path, file)
                }
             )
             
@@ -1221,8 +1235,8 @@ server <- function(input, output, session) {
             output$barPlot <- renderPlot({
                # identify percent of variance explained per component
                graphics::barplot(pca_results$percent, 
-                              ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
-                              names.arg = round(pca_results$percent, 1))
+                                 ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
+                                 names.arg = round(pca_results$percent, 1))
             })
             
             output$downloadbarPlot <- downloadHandler(
@@ -1230,10 +1244,12 @@ server <- function(input, output, session) {
                   paste0("bar_plot_", Sys.Date(), ".png")
                },
                content = function(file) {
-                  ggplot2::barplot(pca_results$percent, 
-                                   ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
-                                   names.arg = round(pca_results$percent, 1))
-               }
+                  plot <- ggplot2::barplot(pca_results$percent, 
+                                           ylab = "Genetic variance explained by eigenvectors (%)", ylim = c(0,25),
+                                           names.arg = round(pca_results$percent, 1))
+                  
+                  ggsave(filename = filename, plot = plot, width = 8, height = 8, dpi = 600)
+               }, contentType = "image/png"
             )
             
             
@@ -1255,15 +1271,17 @@ server <- function(input, output, session) {
                   paste0("pca_plot_", Sys.Date(), ".png")
                },
                content = function(file) {
-                  plot_pca(
+                  plot <- plot_pca(
                      ind_coords = pca_results$ind_coords,
                      centroid = pca_results$centroid,
                      percent = pca_results$percent,
                      labels_colors = labels_colors,
                      pc_x = input$pcX,
                      pc_y = input$pcY
+                     
+                     ggsave(filename = filename, plot = plot, width = 8, height = 8, dpi = 600)
                   )
-               }
+               }, contentType = "image/png"
             )
             
          }, error = function(e) {
@@ -1326,6 +1344,7 @@ server <- function(input, output, session) {
       
       matrices <- file.path(result, "matrices.zip")
       zip(matices, files = list.files(results$directory, pattern = "\\matrices", full.names = TRUE))
+      
       output$downloadQmatrices <- downloadHandler(
          filename = function(){
             paste("QMatrices", Sys.Date(), ".zip", sep = "")
@@ -1334,6 +1353,8 @@ server <- function(input, output, session) {
             file.copy(matrices, file)
          }
       )
+      
+      
       
       output$structurePlots <- renderUI({
          plot_files <- list.files(result$directory, pattern = "\\.png$", full.names = TRUE)
