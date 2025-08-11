@@ -1240,7 +1240,7 @@ server <- function(input, output, session) {
                                  names.arg = round(pca_results$percent, 1))
             })
             
-            outputNamar <- paste0("bar_plot_", Sys.Date(), ".png")eB
+            outputNameBar <- paste0("bar_plot_", Sys.Date(), ".png")
             output$downloadbarPlot <- downloadHandler(
                filename = function() {
                   #paste0("bar_plot_", Sys.Date(), ".png")
