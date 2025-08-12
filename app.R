@@ -75,8 +75,8 @@ ui <- fluidPage(
             $(document).on('click', '.clickable-card', function() {
               $(this).find('.card-body').slideToggle('fast');
             });
-          "))
-), # end of fluid page
+          ")),
+#), # end of fluid page
    
    
    
@@ -1453,6 +1453,6 @@ server <- function(input, output, session) {
       })
    })
    
-}
+})
 
 shinyApp(ui, server)
