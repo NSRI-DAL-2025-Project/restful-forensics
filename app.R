@@ -242,7 +242,7 @@ ui <- navbarPage(
                         tableOutput("previewTable"),
                         fluidRow(
                         column(6,
-                               h5("Sample reference file, only the first two columns are used."),
+                               h5("This is a sample reference file. Only the first two columns (sample and population information) are used."),
                                tableOutput("exampleRefCSV")),
                         column(6,
                                tags$h4("Sample File"),
@@ -1391,6 +1391,8 @@ server <- function(input, output, session) {
       shinyjs::toggleState("runStructure", condition = file_ready)
    })
    
+   structure_path <- Sys.which("structure")
+   if (structure_path == "") plink_path <- "/usr/local/bin/structure"
    
    observeEvent(input$runStructure, {
       lastAction(Sys.time())
