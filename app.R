@@ -83,19 +83,19 @@ ui <- navbarPage(
    
    tabPanel(
       title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
-            fluidPage(
-               div(
+            div(
                class = "card",
                style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
                div(
                   class = "card-body",
+                  style = "display: block;",
                   h4(class = "card-title", "From the Authors:"),
                   p(class = "card-text",
                     "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
                     )
                )
             )
-            )
+      
    ), # end of tab panel for homepage
 
    
