@@ -239,15 +239,18 @@ ui <- navbarPage(
                         
                      ),
                      mainPanel(
+                        tableOutput("previewTable"),
                         fluidRow(
                         column(6,
                                h5("Sample reference file, only the first two columns are used."),
-                               tableOutput("exampleRefSnipper"))
-                     ), 
-                        tags$h4("Sample File"),
-                        tags$ul(
-                          tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
-                        ),
+                               tableOutput("exampleRefCSV")),
+                        column(6,
+                               tags$h4("Sample File"),
+                               tags$ul(
+                                  tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
+                               )  
+                        )
+                     ), # end of fluidRow
                         downloadButton("downloadConvertedCSV", "Download Converted CSV")
                      )
                   )
@@ -592,6 +595,14 @@ server <- function(input, output, session) {
    # ===================== FILE CONV
    convertedCSV <- reactiveVal(NULL)
    
+   output$exampleRefCSV <- renderTable({
+      data.frame(
+         Sample.Name = c("sample1", "sample2", "sample3", "sample4", "..."),
+         Population = c("Malaysia", "Mexico", "Greece", "South Korea", "..."),
+         Superpopulation = c("Southeast Asia", "North and South America", "Europe", "East Asia", "...")
+      )
+   })
+   
    observe({
       file_ready <- FALSE
       pop_ready <- FALSE
@@ -701,18 +712,19 @@ server <- function(input, output, session) {
    ### For SNIPPER
    output$exampleTableSnipper <- renderTable({
       data.frame(
-         Ind = c("sample1", "sample2", "sample3", "sample4"),
-         rs101 = c("A/A", "A/T", "T/T", "A/T"),
-         rs102 = c("G/C", "G/C", "G/G", "G/C"),
-         rs103 = c("C/C", "C/G", "G/G", "G/G")
+         Ind = c("sample1", "sample2", "sample3", "sample4", "..."),
+         rs101 = c("A/A", "A/T", "T/T", "A/T", "..."),
+         rs102 = c("G/C", "G/C", "G/G", "G/C", "..."),
+         rs103 = c("C/C", "C/G", "G/G", "G/G", "..."),
+         rs_n = c("...", "...", "...", "...", "...")
       )
    })
    
    output$exampleRefSnipper <- renderTable({
       data.frame(
-         Sample.Name = c("sample1", "sample2", "sample3", "sample4"),
-         Population = c("Malaysia", "Mexico", "Greece", "South Korea"),
-         Superpopulation = c("Southeast Asia", "North and South America", "Europe", "East Asia")
+         Sample.Name = c("sample1", "sample2", "sample3", "sample4", "..."),
+         Population = c("Malaysia", "Mexico", "Greece", "South Korea", "..."),
+         Superpopulation = c("Southeast Asia", "North and South America", "Europe", "East Asia", "...")
       )
    })
    
@@ -780,9 +792,9 @@ server <- function(input, output, session) {
    
    output$exampleXLSX <- renderTable({
       data.frame(
-         Sample.Name = c("sample1","sample1", "sample1", "sample1", "sample1", "sample1", "sample2", "sample3", "sample3", "sample3"),
-         Locus = c("rs01", "rs01", "rs02", "rs02", "rs02", "rs03", "rs01", "rs01", "rs02", "rs03"),
-         Allele = c("A", "T", "C", "A", "G", "T", "A", "T", "G", "A")
+         Sample.Name = c("sample1","sample1", "sample1", "sample1", "sample1", "sample1", "sample2", "sample3", "sample3", "sample3", "..."),
+         Locus = c("rs01", "rs01", "rs02", "rs02", "rs02", "rs03", "rs01", "rs01", "rs02", "rs03", "..."),
+         Allele = c("A", "T", "C", "A", "G", "T", "A", "T", "G", "A", "...")
       )
    })
    
@@ -914,24 +926,25 @@ server <- function(input, output, session) {
    ## MARKER EXTRACTION
    output$exampleRSID <- renderTable({
       data.frame(
-         rsID = c("rs101", "rs102", "rs103", "rs104")
+         rsID = c("rs101", "rs102", "rs103", "rs104", "...")
       )
    })
    
    output$examplePOS <- renderTable({
       data.frame(
-         Chromosome = c("1", "2"),
-         Start_BP = c("104500", "205300"),
-         End_BP = c("104700", "205700")
+         Chromosome = c("1", "2", "..."),
+         Start_BP = c("104500", "205300", "..."),
+         End_BP = c("104700", "205700", "...")
       )
    })
    
    output$exampleTable <- renderTable({
       data.frame(
-         Ind = c("sample1", "sample2", "sample3"),
-         rs101 = c("A/A", "A/T", "T/T"),
-         rs102 = c("G/C", "G/C", "G/G"),
-         rs103 = c("C/C", "C/G", "G/G")
+         Ind = c("sample1", "sample2", "sample3", "..."),
+         rs101 = c("A/A", "A/T", "T/T", "..."),
+         rs102 = c("G/C", "G/C", "G/G", "..."),
+         rs103 = c("C/C", "C/G", "G/G", "..."),
+         rs_n = c("...", "...", "...", "...")
       )
    })
    
@@ -1014,10 +1027,11 @@ server <- function(input, output, session) {
    # POP STAT
    output$examplePop <- renderTable({
       data.frame(
-         Sample = c("Sample1", "Sample2", "Sample3", "Sample4"),
-         Population = c("POP1", "POP2", "POP3", "POP4"),
-         rs101 = c("A/A", "A/T", "A/A", "T/T"),
-         rs102 = c("G/G", "C/C", "G/C", "G/G")
+         Sample = c("Sample1", "Sample2", "Sample3", "Sample4", "..."),
+         Population = c("POP1", "POP2", "POP3", "POP4", "..."),
+         rs101 = c("A/A", "A/T", "A/A", "T/T", "..."),
+         rs102 = c("G/G", "C/C", "G/C", "G/G", "..."),
+         rs_n = c("...", "...", "...", "...", "...")
       )
    })
    
@@ -1239,10 +1253,11 @@ server <- function(input, output, session) {
    # PCA
    output$examplePCA <- renderTable({
       data.frame(
-         Sample = c("Sample1", "Sample2", "Sample3", "Sample4"),
-         Population = c("POP1", "POP2", "POP3", "POP4"),
-         rs101 = c("A/A", "A/T", "A/A", "T/T"),
-         rs102 = c("G/G", "C/C", "G/C", "G/G")
+         Sample = c("Sample1", "Sample2", "Sample3", "Sample4", "..."),
+         Population = c("POP1", "POP2", "POP3", "POP4", "..."),
+         rs101 = c("A/A", "A/T", "A/A", "T/T", "..."),
+         rs102 = c("G/G", "C/C", "G/C", "G/G", "..."),
+         rs_n = c("...", "...", "...", "...", "...")
       )
    })
    
