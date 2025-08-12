@@ -1392,7 +1392,7 @@ server <- function(input, output, session) {
    })
    
    structure_path <- Sys.which("structure")
-   if (structure_path == "") plink_path <- "/usr/local/bin/structure"
+   if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
    
    observeEvent(input$runStructure, {
       lastAction(Sys.time())

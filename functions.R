@@ -778,7 +778,7 @@ convert_to_genind <- function(file) {
 
 # Need to correct, genind2hierfstat is outputting an error 
 compute_population_stats <- function(fsnps_gen) {
-   mar_matrix <- hierfstat::allelic.richness(genind2hierfstat(fsnps_gen))$Ar %>%
+   mar_matrix <- hierfstat::allelic.richness(hierfstat::genind2hierfstat(fsnps_gen))$Ar %>%
       apply(MARGIN = 2, FUN = mean) %>%
       round(digits = 3)
    mar_list <- as.list(mar_matrix)
@@ -1067,7 +1067,7 @@ run_structure <- function(
       #plot.out = TRUE,
       #delete.files = TRUE
 ){
-   dir.create(dir)
+   #dir.create(dir)
    #dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
    #dir.create(clumpp_plots, recursive = TRUE, showWarnings = FALSE)
    
