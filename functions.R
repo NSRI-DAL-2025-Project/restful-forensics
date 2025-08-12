@@ -16,7 +16,7 @@ tosnipper <- function(input, references, target.pop = TRUE, population.name = NU
    if (tools::file_ext(input) == "csv"){
       input.file <- readr::read_csv(input)
       input.file <- input.file %>%
-         rename(Ind = 1)
+         rename(Sample = 1)
       
    } else if (tools::file_ext(input) == "xlsx"){
       input.file <- readxl::read_excel(input)
@@ -223,7 +223,11 @@ vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    # Merge or assign population
    if (file.exists(ref)) {
       # If ref is a valid filepath, treat it as a reference file
-      ref_data <- read.csv(ref)
+      ref_data <- readr::read_csv(ref)
+      ref_data <- ref_data %>%
+         rename(Sample = 1, Population = 2)
+      ref_data <- ref_data[,1:2]
+      
       final_df <- left_join(final_df, ref_data, by = "Sample")
    } else if (is.character(ref)) {
       # If ref is a string, assign it directly to the Population column

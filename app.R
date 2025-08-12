@@ -81,12 +81,14 @@ ui <- navbarPage(
           ")),
    
    
-   tabPanel(title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
+   tabPanel(
+      title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
             div(
                class = "card",
                style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
                div(
                   class = "card-body",
+                  h4(class = "card-title", "From the Authors:"),
                   p(class = "card-text",
                     "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
                     )
@@ -236,7 +238,11 @@ ui <- navbarPage(
                         
                      ),
                      mainPanel(
-                        tableOutput("previewTable"),
+                        fluidRow(
+                        column(6,
+                               h5("Sample reference file, only the first two columns are used."),
+                               tableOutput("exampleRefSnipper"))
+                     ), 
                         tags$h4("Sample File"),
                         tags$ul(
                           tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
@@ -554,7 +560,7 @@ server <- function(input, output, session) {
       invalidateLater(300000, session)  # 5 minutes
       
       # set cleanup time by 5 mins
-      if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
+      if (difftime(Sys.time(), lastAction(), units = "secs") > 120) {
          # resets
          concordanceResult(NULL)
          concordancePlotPath(NULL)
