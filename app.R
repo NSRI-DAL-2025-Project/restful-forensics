@@ -81,11 +81,20 @@ ui <- navbarPage(
           ")),
    
    
-   tabPanel(title = HTML("<span style = 'color:#   ;'>Homepage</span>"),
-               p("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types.")
-                  
-               
+   tabPanel(title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
+            div(
+               class = "card",
+               style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
+               div(
+                  class = "card-body",
+                  p(class = "card-text",
+                    "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
+                    )
+               )
+            )
+      
    ), # end of tab panel for homepage
+
    
    ## 1. Instructions Tab ----
    tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
@@ -230,7 +239,7 @@ ui <- navbarPage(
                         tableOutput("previewTable"),
                         tags$h4("Sample File"),
                         tags$ul(
-                          tags$a("Sample VCF file", href = "www/sample_hgdp.csv", download = NA)
+                          tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
                         ),
                         downloadButton("downloadConvertedCSV", "Download Converted CSV")
                      )
