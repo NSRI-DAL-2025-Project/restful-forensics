@@ -83,7 +83,8 @@ ui <- navbarPage(
    
    tabPanel(
       title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
-            div(
+            fluidPage(
+               div(
                class = "card",
                style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
                div(
@@ -94,7 +95,7 @@ ui <- navbarPage(
                     )
                )
             )
-      
+            )
    ), # end of tab panel for homepage
 
    
