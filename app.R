@@ -15,7 +15,7 @@ useShinyjs()
 ui <- fluidPage(
    div(
       style = "padding: 10px 20px; background-color: #f8f9fa; display: flex; align-items: center;",
-      tags$img(src = "logo.png", height = "30px", style = "margin-right: 10px;"),
+      tags$img(src = "www/logo.png", height = "30px", style = "margin-right: 10px;"),
       tags$span("RESTful Forensics",
                 style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4;")
    ),
@@ -78,19 +78,8 @@ ui <- fluidPage(
    
    
    navbarPage(
-   title = div(
-      tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
-      tags$span("RESTful Forensics",
-                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
-      #tags$div(
-      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
-      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
-      #)
-   ), # end of title
-   
-   
-   
-   
+   title = NULL, # end of title
+
    tabPanel(
       title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
             div(
@@ -1461,7 +1450,7 @@ server <- function(input, output, session) {
                paste0("structure_logs_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               files <- list.files(str_files()$output_dir, pattern = "\\.log\\.txt$", full.names = TRUE)
+               files <- list.files(str_files()$plot_paths, pattern = "\\.log\\.txt$", full.names = TRUE)
                zip::zipr(zipfile = file, files = files)
             },
             contentType = "application/zip"
@@ -1472,7 +1461,7 @@ server <- function(input, output, session) {
                paste0("structure_outputs_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               files <- list.files(str_files()$output_dir, pattern = "_f$", full.names = TRUE)
+               files <- list.files(str_files()$plot_paths, pattern = "_f$", full.names = TRUE)
                zip::zipr(zipfile = file, files = files)
             },
             contentType = "application/zip"
@@ -1481,7 +1470,7 @@ server <- function(input, output, session) {
          incProgress(0.8, detail = "Extracting q matrices...")
          qmatrices_data <- reactive({
             req(str_files())
-            q_matrices(str_files()$output_dir)
+            q_matrices(str_files()$plot_paths)
          })
          
          output$downloadQMatrixTxtZip <- downloadHandler(
