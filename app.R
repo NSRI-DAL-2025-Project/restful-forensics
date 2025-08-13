@@ -1410,7 +1410,7 @@ server <- function(input, output, session) {
       structure_path <- Sys.which("structure")
       if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
       
-      temp_dir <- tempdir()
+      output_dir <- tempdir()
       
       withProgress(message = "Running STRUCTURE analysis...", {
          
@@ -1425,14 +1425,14 @@ server <- function(input, output, session) {
          incProgress(0.4, detail = "Converting to STRUCTURE file...")
          structure_file <- reactive({
             req(fsnps_gen()$fsnps_gen)
+            out_path <- file.path(output_dir, "structure_input.str")
             
             structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
-            temp_str_file <- tempfile(pattern = "structure_input_", fileext = ".str")
-            write.table(structure_df, file = temp_str_file, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
-            return(temp_str_file)
+            #temp_str_file <- tempfile(pattern = "structure_input", fileext = ".str")
+            write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
+            return(out_path)
          })
          
-         output_dir <- tempdir()
          
          incProgress(0.6, detail = "Running STRUCTURE analysis...")
          str_files <- reactive({
@@ -1489,22 +1489,32 @@ server <- function(input, output, session) {
                paste0("q_matrices_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               req(qmatrices_data())
+               req(qmatrices_data())  # Ensure reactive is ready
                
+               # Create a temporary directory to hold the .txt files
                temp_dir <- tempfile()
                dir.create(temp_dir)
                
+               # Write each matrix to a .txt file
                lapply(names(qmatrices_data()), function(name) {
                   matrix_data <- qmatrices_data()[[name]]
+                  
+                  # Defensive check
+                  if (!is.data.frame(matrix_data)) {
+                     warning("Skipping non-data.frame entry: ", name)
+                     return(NULL)
+                  }
+                  
+                  file_path <- file.path(temp_dir, paste0(name, ".txt"))
                   write.table(matrix_data,
-                              file = file.path(temp_dir, paste0(name, ".txt")),
+                              file = file_path,
                               row.names = FALSE,
                               col.names = FALSE,
                               quote = FALSE,
                               sep = "\t")
                })
                
-               
+               # Zip all .txt files
                zip::zipr(zipfile = file, files = list.files(temp_dir, full.names = TRUE))
             },
             contentType = "application/zip"
