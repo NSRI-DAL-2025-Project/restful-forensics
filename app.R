@@ -12,17 +12,13 @@ source("functions.R", local = TRUE)
 shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
-ui <- navbarPage(
-   title = div(
-      tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
+ui <- fluidPage(
+   div(
+      style = "padding: 10px 20px; background-color: #f8f9fa; display: flex; align-items: center;",
+      tags$img(src = "logo.png", height = "30px", style = "margin-right: 10px;"),
       tags$span("RESTful Forensics",
-                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
-      #tags$div(
-      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
-      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
-      #)
-   ), # end of title
-   
+                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4;")
+   ),
    tags$head(
       tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Carme&display=swap"),
       tags$style(HTML("
@@ -79,6 +75,20 @@ ui <- navbarPage(
               $(this).find('.card-body').slideToggle('fast');
             });
           ")),
+   
+   
+   navbarPage(
+   title = div(
+      tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
+      tags$span("RESTful Forensics",
+                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
+      #tags$div(
+      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
+      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
+      #)
+   ), # end of title
+   
+   
    
    
    tabPanel(
@@ -553,7 +563,8 @@ ui <- navbarPage(
    div(
       style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
-   )
+   ) # end of navbar
+) # end of fluid page
 
 # TO ADD
 server <- function(input, output, session) {
@@ -1437,7 +1448,7 @@ server <- function(input, output, session) {
                                         ploidy = input$ploidy,
                                         linkage = input$linkage,
                                         structure_path = structure_path,
-                                        output_dir = dir)
+                                        output_dir = output_dir)
             
             return(list(
                output_dir = output_dir,
