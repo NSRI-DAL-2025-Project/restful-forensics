@@ -1425,7 +1425,7 @@ server <- function(input, output, session) {
          # dont make it reactive
          
          out_path <- file.path(output_dir, "structure_input.str")
-         structure_df <- to_structure(fsnps_gen(), include_pop = TRUE)
+         structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
          write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
          
          structure_file <- out_path
