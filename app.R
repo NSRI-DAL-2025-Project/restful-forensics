@@ -12,13 +12,17 @@ source("functions.R", local = TRUE)
 shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
-ui <- fluidPage(
-   div(
-      style = "padding: 10px 20px; background-color: #f8f9fa; display: flex; align-items: center;",
-      tags$img(src = "www/logo.png", height = "30px", style = "margin-right: 10px;"),
+ui <- navbarPage(
+   title = div(
+      tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
       tags$span("RESTful Forensics",
-                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4;")
-   ),
+                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
+      #tags$div(
+      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
+      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
+      #)
+   ), # end of title
+   
    tags$head(
       tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Carme&display=swap"),
       tags$style(HTML("
@@ -77,9 +81,6 @@ ui <- fluidPage(
           ")),
    
    
-   navbarPage(
-   title = NULL, # end of title
-
    tabPanel(
       title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
             div(
@@ -552,8 +553,7 @@ ui <- fluidPage(
    div(
       style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
-   ) # end of navbar
-) # end of fluid page
+   )
 
 # TO ADD
 server <- function(input, output, session) {
@@ -1412,22 +1412,29 @@ server <- function(input, output, session) {
          })
          
          incProgress(0.4, detail = "Converting to STRUCTURE file...")
-         structure_file <- reactive({
-            req(fsnps_gen()$fsnps_gen)
-            out_path <- file.path(output_dir, "structure_input.str")
-            
-            structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
-            #temp_str_file <- tempfile(pattern = "structure_input", fileext = ".str")
-            write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
-            return(out_path)
-         })
          
+         #structure_file <- reactive({
+         #   req(fsnps_gen()$fsnps_gen)
+         #   out_path <- file.path(output_dir, "structure_input.str")
+            
+         #   structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
+         #   #temp_str_file <- tempfile(pattern = "structure_input", fileext = ".str")
+         #   write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
+         #   return(out_path)
+         #})
+         # dont make it reactive
+         
+         out_path <- file.path(output_dir, "structure_input.str")
+         structure_df <- to_structure(fsnps_gen(), include_pop = TRUE)
+         write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
+         
+         structure_file <- out_path
          
          incProgress(0.6, detail = "Running STRUCTURE analysis...")
          str_files <- reactive({
-            req(structure_file())
+            req(structure_file)
             
-            result <- running_structure(structure_file(),
+            result <- running_structure(structure_file,
                                         k.range = input$kMin:input$kMax,
                                         num.k.rep = input$numKRep,
                                         burnin = input$burnin,
