@@ -537,14 +537,15 @@ ui <- navbarPage(
                tags$a("Sample file", href = "www/sample.csv", download = NA)
             ),
             h4("STRUCTURE Visualization"),
-            imageOutput("structurePlot"),
-            downloadButton("downloadAllResults", "Download All STRUCTURE Results (ZIP)"),
-            downloadButton("downloadQmatrices", "Download Q-matrices"),
-            downloadButton("downloadStructurePlot", "Download STRUCTURE Plot"),
-            h4("Run Summary"),
-            tableOutput("structureSummary"),
-            h4("All STRUCTURE Plots"),
-            uiOutput("structurePlots")
+            imageOutput("structurePlotPreview"),
+            downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
+            downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
+            downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
+            downloadButton("downloadStructurePlots", "Download STRUCTURE Plots"),
+            #h4("Run Summary"),
+            #tableOutput("structureSummary"),
+            #h4("All STRUCTURE Plots"),
+            #uiOutput("structurePlots")
          )
       )
    ), #end of tabpanel
@@ -1391,85 +1392,166 @@ server <- function(input, output, session) {
       shinyjs::toggleState("runStructure", condition = file_ready)
    })
    
-   structure_path <- Sys.which("structure")
-   if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
-   
    observeEvent(input$runStructure, {
       lastAction(Sys.time())
       
       req(input$structureFile)
+      structure_path <- Sys.which("structure")
+      if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
       
       temp_dir <- tempdir()
       
-      result <- run_structure(
-         file = input$structureFile$datapath,
-         k.range = input$kMin:input$kMax,
-         num.k.rep = input$numKRep,
-         burnin = input$burnin,
-         numreps = input$numreps,
-         noadmix = input$noadmix,
-         phased = input$phased,
-         ploidy = input$ploidy,
-         linkage = input$linkage,
-         dir = temp_dir,
-         structure_path = structure_path
-      )
-      
-      zip_path <- file.path(result, "structure_results.zip")
-      zip(zip_path, files = list.files(result$directory, full.names = TRUE))
-      
-      output$downloadAllResults <- downloadHandler(
-         filename = function() {
-            paste("STRUCTURE_results_", Sys.Date(), ".zip", sep = "")
-         },
-         content = function(file) {
-            file.copy(zip_path, file)
-         }
-      )
-      
-      plots <- file.path(result, "str_plots.zip")
-      zip(plots, files = list.files(result$directory, pattern = "\\.png$", full.names = TRUE))
-      
-      output$downloadStructurePlot <- downloadHandler(
-         filename = function() {
-            paste("STR_plots_", Sys.Date(), ".zip", sep = "")
-         },
-         content = function(file){
-            file.copy(plots, file)
-         }
-      )
-      
-      matrices <- file.path(result, "matrices.zip")
-      zip(matices, files = list.files(results$directory, pattern = "\\matrices", full.names = TRUE))
-      
-      output$downloadQmatrices <- downloadHandler(
-         filename = function(){
-            paste("QMatrices", Sys.Date(), ".zip", sep = "")
-         },
-         content = function(file){
-            file.copy(matrices, file)
-         }
-      )
-      
-      
-      output$structurePlots <- renderUI({
-         plot_files <- list.files(result$directory, pattern = "\\.png$", full.names = TRUE)
+      withProgress(message = "Running STRUCTURE analysis...", {
          
-         # Generate an imageOutput for each plot
-         lapply(seq_along(plot_files), function(i) {
-            local({
-               f <- plot_files[i]
-               id <- paste0("plot_", i)
-               
-               output[[id]] <- renderImage({
-                  list(src = f, contentType = "image/png", width = "100%")
-               }, deleteFile = FALSE)
-               
-               imageOutput(id, width = "100%", height = "auto")
-            })
+         incProgress(0.2, detail = "Loading input file...")
+         fsnps_gen <- reactive({
+            req(input$structureFile)
+            
+            df <- load_input_file(input$structureFile$datapath)
+            clean_input_data_str(df)
          })
-      })
-   })
+         
+         incProgress(0.4, detail = "Converting to STRUCTURE file...")
+         structure_file <- reactive({
+            req(fsnps_gen()$fsnps_gen)
+            
+            structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
+            temp_str_file <- tempfile(pattern = "structure_input_", fileext = ".str")
+            write.table(structure_df, file = temp_str_file, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
+            return(temp_str_file)
+         })
+         
+         output_dir <- tempdir()
+         
+         incProgress(0.6, detail = "Running STRUCTURE analysis...")
+         str_files <- reactive({
+            req(structure_file())
+            
+            result <- running_structure(structure_file(),
+                                        k.range = input$kMin:input$kMax,
+                                        num.k.rep = input$numKRep,
+                                        burnin = input$burnin,
+                                        numreps = input$numreps,
+                                        noadmix = input$noadmix,
+                                        phased = input$phased,
+                                        ploidy = input$ploidy,
+                                        linkage = input$linkage,
+                                        structure_path = structure_path,
+                                        output_dir = dir)
+            
+            return(list(
+               output_dir = output_dir,
+               plot_paths = result$plot.paths
+            ))
+         })
+         
+         output$downloadLogs <- downloadHandler(
+            filename = function() {
+               paste0("structure_logs_", Sys.Date(), ".zip")
+            },
+            content = function(file) {
+               files <- list.files(str_files()$output_dir, pattern = "\\.log\\.txt$", full.names = TRUE)
+               zip::zipr(zipfile = file, files = files)
+            },
+            contentType = "application/zip"
+         )
+         
+         output$downloadFOutputs <- downloadHandler(
+            filename = function() {
+               paste0("structure_outputs_", Sys.Date(), ".zip")
+            },
+            content = function(file) {
+               files <- list.files(str_files()$output_dir, pattern = "_f$", full.names = TRUE)
+               zip::zipr(zipfile = file, files = files)
+            },
+            contentType = "application/zip"
+         )
+         
+         incProgress(0.8, detail = "Extracting q matrices...")
+         qmatrices_data <- reactive({
+            req(str_files())
+            q_matrices(str_files()$output_dir)
+         })
+         
+         output$downloadQMatrixTxtZip <- downloadHandler(
+            filename = function() {
+               paste0("q_matrices_", Sys.Date(), ".zip")
+            },
+            content = function(file) {
+               req(qmatrices_data())
+               
+               temp_dir <- tempfile()
+               dir.create(temp_dir)
+               
+               lapply(names(qmatrices_data()), function(name) {
+                  matrix_data <- qmatrices_data()[[name]]
+                  write.table(matrix_data,
+                              file = file.path(temp_dir, paste0(name, ".txt")),
+                              row.names = FALSE,
+                              col.names = FALSE,
+                              quote = FALSE,
+                              sep = "\t")
+               })
+               
+               
+               zip::zipr(zipfile = file, files = list.files(temp_dir, full.names = TRUE))
+            },
+            contentType = "application/zip"
+         )
+         
+         
+         incProgress(1.0, detail = "Plotting...")
+         structure_plots <- reactive({
+            req(str_files(), fsnps_gen())  
+            
+            str.dir <- str_files()$output_dir
+            populations_df <- fsnps_gen()$pop_labels  
+            
+            str.files <- list.files(str.dir, pattern = "_f$", full.names = TRUE)
+            str.data <- lapply(str.files, starmie::loadStructure)
+            
+            plot_paths <- list()
+            
+            for (i in seq_along(str.data)) {
+               structure_obj <- str.data[[i]]
+               file_name <- paste0(str.dir, "/", structure_obj$K, "_plot.png")
+               
+               gg <- plotQ(structure_obj, populations_df, outfile = file_name)
+               ggplot2::ggsave(file_name, plot = gg, width = 12, height = 10, dpi = 600)
+               
+               plot_paths[[i]] <- file_name
+            }
+            
+            return(plot_paths)
+         })
+         
+         # view first plot
+         output$structurePlotPreview <- renderImage({
+            req(structure_plots())
+            
+            list(
+               src = structure_plots()[[1]],
+               contentType = "image/png",
+               alt = "STRUCTURE Plot Preview",
+               width = "100%"
+            )
+         }, deleteFile = FALSE)
+         
+         output$downloadStructurePlots <- downloadHandler(
+            filename = function() {
+               paste0("structure_plots_", Sys.Date(), ".zip")
+            },
+            content = function(file) {
+               req(structure_plots())
+               
+               zip::zipr(zipfile = file, files = structure_plots())
+            },
+            contentType = "application/zip"
+         )
+      }) # end of with progress
+      
+      
+   }) # end of observe event for structure
    
 }
 

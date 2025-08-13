@@ -1050,53 +1050,25 @@ explore.pca <- function(input, default.colors.labels = TRUE, pca.labels = NULL, 
 }
 
 ### ===================== STRUCTURE ANALYSIS ===============###
-run_structure <- function(
-      file,
-      k.range = 1:5,
-      num.k.rep = 3,
-      burnin = 1000,
-      numreps = 1000,
-      noadmix = FALSE,
-      phased = FALSE,
-      ploidy = 2,
-      linkage = FALSE,
-      structure_path = str_path,
-      dir = dir_input #, # changed to structure_files
-      #plot_dir = file.path(output_base_dir, "evanno_plots"),
-      #clumpp_plots = file.path(output_base_dir, "str_plots")
-      #plot.out = TRUE,
-      #delete.files = TRUE
-){
-   #dir.create(dir)
-   #dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
-   #dir.create(clumpp_plots, recursive = TRUE, showWarnings = FALSE)
+clean_input_data_str <- function(file) {
+   library(dplyr)
    
-   ext <- tools::file_ext(file)
+   file <- lapply(file, function(x) gsub("|", "/", x, fixed = TRUE))
+   file <- as.data.frame(file)
+   file[is.na(file)] <- "N"
    
-   raw <- if (ext == "csv") {
-      readr::read_csv(file)
-   } else if (ext == "xlsx") {
-      readxl::read_excel(file)
-   } else {
-      stop("Unsupported file type. Please provide a CSV or XLSX.")
-   }
+   file <- file %>%
+      mutate(across(everything(), ~ case_when(. == "N/A" ~ "N", . == "NA" ~ "N", TRUE ~ .x))) %>%
+      rename(Ind = 1, Pop = 2)
    
-   library(dplyr) # to make sure it works
-   
-   # Homogenize file format
-   # check allele format
-   raw <- as.data.frame(lapply(raw, function(x) gsub("|", "/", x, fixed = TRUE)))
-   raw[is.na(raw)] <- "N"
-   raw <- dplyr::mutate(raw, across(everything(), ~ dplyr::case_when(. == "N/A" ~ "N", . == "NA" ~ "N", TRUE ~ .x))) |> 
-      dplyr::rename(Ind = 1, Pop = 2)
-   
+   file <- as.data.frame(file)
    # For Plotting
-   populations_df <- raw[,1:2]
+   populations_df <- file[,1:2]
    colnames(populations_df) <- c("Label", "Population")
    populations_df$Label <- rownames(populations_df)
    
    ### Change pop to numeric - for STRUCTURE
-   pop_df <- as.data.frame(raw$Pop) %>%
+   pop_df <- as.data.frame(file$Pop) %>%
       dplyr::rename(pops = 1)
    
    # Get total no. of pops
@@ -1104,62 +1076,40 @@ run_structure <- function(
       dplyr::rename(pops = 1)
    # add row names as numbers
    pop_df_unique$num <- rownames(pop_df_unique)
-   write.csv(pop_df_unique, file = "population_order.csv")
+   # write.csv(pop_df_unique, file = "population_order.csv") # RETURN THIS FOR DOWNLOAD
    
    # replace the pops in the original df (pop_df) with the numbers
    pop_df_corr <- left_join(pop_df, pop_df_unique, by = "pops") 
    pops <- pop_df_corr$num
    
    ### Change Ind to numeric
-   ind_only <- as.data.frame(raw$Ind)
+   ind_only <- as.data.frame(file$Ind)
    ind_only$num <- rownames(ind_only)
    
    ind <- as.character(ind_only$num)
    pop <- as.character(pops)
-   geno <- raw[, 3:ncol(raw)]
+   geno <- file[, 3:ncol(file)]
    
+   devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
    genind_obj <- adegenet::df2genind(geno, ind.names = ind, pop = pop, sep = "/", NA.char = "N", ploidy = 2, type = "codom")
    genind_obj@pop <- as.factor(pop)
    
-   str.file <- to_structure(genind_obj, file = "structure_input.str", dir = dir)
+   # return as list both
+   #return(file)
    
-   result <- running_structure(
-      input_file = str.file,
-      k.range = k.range,
-      num.k.rep = num.k.rep,
-      burnin = burnin,
-      numreps = numreps,
-      noadmix = noadmix,
-      output_dir = dir,
-      structure_path = structure_path
-   )
-   
-   # download each item on the list of the q matrices
-   ############ NEED TO VERIFY NAME
-   
-   qmatrices_list <- q_matrices()
-   for(matrices in qmatrices_list){
-      con <- file.path(paste0(dir, names(matrices), "matrices"))
-      writeLines(as.character(item), con = dir)
-   }
-   
-   #devtools::install_github("sa-lee/starmie")
-   str.dir <- dir
-   str.files <- list.files(str.dir, pattern = "\\_f$", full.names = TRUE)
-   str.data <- lapply(str.files, starmie::loadStructure)
-   
-   for (i in str.data){
-      #path_plot <- paste(clumpp_plots, i$K)
-      file_name <- paste0(dir, "/", i$K, "plot.png")
-      plotQ(i, populations_df, outfile = file_name)
-   }
-   
+   return(list(
+      fsnps_gen = genind_obj,
+      populations = pop_df_unique,
+      pop_labels = populations_df
+   )) 
 }
 
 
 ## Adapted from the dartR package
-to_structure <- function(genind_obj, file = "structure_input.str", include_pop = TRUE, dir = output_base_dir) {
-   out_path <- file.path(dir, file)
+to_structure <- function(genind_obj, 
+                         include_pop = TRUE
+) {
+   #out_path <- file.path(dir, file)
    # Get basic info
    ind <- adegenet::indNames(genind_obj)
    pop <- if (include_pop) as.character(genind_obj@pop) else rep(1, length(ind))
@@ -1180,10 +1130,10 @@ to_structure <- function(genind_obj, file = "structure_input.str", include_pop =
    }
    
    final_data <- data.frame(ID = ind, POP = pop, allele_matrix, stringsAsFactors = FALSE)
+   return(final_data)
    
-   
-   write.table(final_data, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
-   return(out_path)
+   #write.table(final_data, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
+   #return(out_path)
 }
 
 ## Directly from the dartR package, revised sections with comments
@@ -1434,7 +1384,6 @@ running_structure <- function(input_file,
                               #plot_dir = file.path(output_dir, "evanno_plots")
 ){
    
-   
    # Validate K range
    if (length(k.range) < 2) stop("Provide at least two K values for Evanno analysis.")
    #if (!dir.exists(plot_dir)) dir.create(plot_dir, recursive = TRUE)
@@ -1449,15 +1398,12 @@ running_structure <- function(input_file,
    
    
    out_files <- lapply(1:nrow(rep.df), function(run_label) {
-      #k <- rep.df[i, "k"]
-      #####################
+
       out_path <- file.path(output_dir, rep.df[run_label, "run"])
       
       mainparams <- paste0(output_dir, "/mainparams")
       extraparams <- paste0(output_dir, "/extraparams")
-      
-      #mainparams <- paste0(dir, "mainparams")
-      #extraparams <- paste0(dir, "extraparams")
+
       
       if(is.null(ploidy)){
          ploidy = "2"
@@ -1470,7 +1416,6 @@ running_structure <- function(input_file,
          paste("BURNIN", burnin),
          paste("NUMREPS", numreps),
          paste("INFILE", input_file),
-         #paste("OUTFILE", out_path),
          paste("NUMINDS", numinds),
          paste("NUMLOCI", numloci),
          paste("PLOIDY", ploidy),
@@ -1490,7 +1435,6 @@ running_structure <- function(input_file,
          "NOTAMBIGUOUS -999"
       )), con = mainparams)
       
-      # change alpha value divide 1 with max K value #######################################################
       alpha = 1/max(k.range)
       
       writeLines(paste("#define", c(
@@ -1542,13 +1486,6 @@ running_structure <- function(input_file,
          "REPORTHITRATE 0"
       )), con = extraparams)
       
-      #cmd <- paste(structure_path,
-      #             "-i", input_file,
-      #             "-m", mainparams,
-      #             "-e", extraparams,
-      #             "-o", out_path)
-      
-      # for(i in 1:nrow(rep.df)){
       cmd <- paste(structure_path,
                    "-i", input_file,
                    "-K", rep.df[run_label, "k"],
@@ -1598,11 +1535,9 @@ running_structure <- function(input_file,
    
    #if (plot.out && "delta.k" %in% names(ev$plots)) {
    suppressMessages(print(ev$plots$delta.k))
-   #}
+
    
-   #if (delete.files) unlink(output_dir, recursive = TRUE)
-   
-   invisible(list(
+   return(list(
       results = run.result,
       evanno = ev,
       plot.paths = list.files(output_dir, full.names = TRUE)
@@ -1680,10 +1615,11 @@ plotQ <- function(qmat, populations_df, outfile = outfile) {
    gg <- gg + guides(fill=guide_legend(title="Cluster"))
    gg <- gg + theme(axis.text.x = element_text(angle = 90))
    
-   ggplot2::ggsave(outfile, plot = gg, width = 12, height = 10, dpi = 600)
+   #ggplot2::ggsave(outfile, plot = gg, width = 12, height = 10, dpi = 600)
+   return(gg)
 }
 
-q_matrices <- function(dir = dir){
+q_matrices <- function(dir){
    output <- list.files(path = dir, pattern = "\\_f$", full.names = TRUE)
    output_list <- lapply(output, function(filepath){
       lines <- readLines(filepath)
@@ -1705,8 +1641,7 @@ q_matrices <- function(dir = dir){
       }))
       return(qmatrices_data)
    })
-   names(output_list) <- sapply(output_list, function(n) as.character(output$k))
+   #names(output_list) <- sapply(output_list, function(n) as.character(output$k))
+   names(output_list) <- basename(output)
    return(output_list) ########### DOUBLE CHECK NAMES
 }
-
-
