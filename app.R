@@ -9,7 +9,8 @@
 library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
-shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
+source("global.R")
+#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
 ui <- navbarPage(
@@ -1398,8 +1399,8 @@ server <- function(input, output, session) {
       req(input$structureFile)
       structure_path <- Sys.which("structure")
       if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
+      #structure_path <- "./structure.exe"
       
-      output_dir <- tempdir()
       
       withProgress(message = "Running STRUCTURE analysis...", {
          
@@ -1423,6 +1424,8 @@ server <- function(input, output, session) {
          #   return(out_path)
          #})
          # dont make it reactive
+         output_dir <- tempdir()
+         dir.create(output_dir)
          
          out_path <- file.path(output_dir, "structure_input.str")
          structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
