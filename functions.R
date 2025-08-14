@@ -1498,8 +1498,8 @@ running_structure <- function(input_file,
       log <- tryCatch(system(cmd, intern = TRUE), error = function(e) e$message)
       writeLines(log, paste0(out_path, "_log.txt"))
       
-      final_out <- paste0(output_dir, "_f")
-      if (!file.exists(final_out) && file.exists(output_dir)) final_out <- output_dir
+      final_out <- paste0(out_path, "_f")
+      if (!file.exists(final_out) && file.exists(out_path)) final_out <- out_path
       if (!file.exists(final_out)) {
          warning("Missing output file for run: ", run_label)
          return(NULL)

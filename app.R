@@ -10,7 +10,7 @@ library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
 source("global.R")
-#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
+shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
 ui <- navbarPage(
