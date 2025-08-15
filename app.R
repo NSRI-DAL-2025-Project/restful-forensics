@@ -1529,15 +1529,26 @@ server <- function(input, output, session) {
          })
          
          # STRUCTURE _f outputs
+         #f_zip_path <- reactive({
+         #   req(str_files())
+         #   files <- list.files(str_files()$plot_paths, pattern = "_f$", full.names = TRUE)
+         #   if (length(files) == 0) return(NULL)
+         #   zip_file <- tempfile(fileext = ".zip")
+         #   zip::zipr(zipfile = zip_file, files = files)
+         #   zip_file
+         #})
          f_zip_path <- reactive({
             req(str_files())
-            files <- list.files(str_files()$plot_paths, pattern = "_f$", full.names = TRUE)
-            if (length(files) == 0) return(NULL)
+            output_dir <- str_files()$output_dir
+            files <- list.files(output_dir, pattern = "_f$", full.names = TRUE)
+            if (length(files) == 0) {
+               warning("No STRUCTURE _f files found in output_dir.")
+               return(NULL)
+            }
             zip_file <- tempfile(fileext = ".zip")
             zip::zipr(zipfile = zip_file, files = files)
             zip_file
          })
-         
          # Q matrices
          qmatrix_zip_path <- reactive({
             req(qmatrices_data())
