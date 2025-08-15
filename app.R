@@ -1439,6 +1439,7 @@ server <- function(input, output, session) {
          out_path <- file.path(output_dir, "structure_input.str")
          
          structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
+         structure_df[] <- lapply(structure_df, function(col) as.numeric(as.character(col)))
          
          # Validate formatting
          validate_structure_input <- function(df) {
