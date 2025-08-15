@@ -1397,6 +1397,7 @@ running_structure <- function(input_file,
    rep.df$run <- paste0(base_label, ".k", rep.df$k, ".r", rep.df$rep)
    
    input_file <- normalizePath(input_file)
+   structure_path <- normalizePath(structure_path)
    
    out_files <- lapply(1:nrow(rep.df), function(run_label) {
 

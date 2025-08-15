@@ -1431,6 +1431,8 @@ server <- function(input, output, session) {
          structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
          write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
          
+         readLines(out_path)[1:5]
+         
          structure_file <- out_path
          
          incProgress(0.6, detail = "Running STRUCTURE analysis...")
