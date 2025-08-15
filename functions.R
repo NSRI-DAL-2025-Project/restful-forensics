@@ -1351,25 +1351,25 @@ utils.structure.evanno <- function (sr, plot = TRUE)
    df$sd.max <- df$mean.ln.k + df$sd.ln.k
    plot.list <- list(mean.ln.k = 
                         ggplot2::ggplot(df, 
-                                        ggplot2::aes(x = "k", 
-                                                            y = "mean.ln.k")) + 
+                                        ggplot2::aes(x = k, 
+                                                            y = mean.ln.k)) + 
                         ggplot2::ylab("mean LnP(K)") + 
-                        ggplot2::geom_segment(ggplot2::aes(x = "k", 
-                                                                  xend = "k", 
-                                                                  y = "sd.min", 
-                                                                  yend = "sd.max")), 
+                        ggplot2::geom_segment(ggplot2::aes(x = k, 
+                                                                  xend = k, 
+                                                                  y = sd.min, 
+                                                                  yend = sd.max)), 
                      ln.pk = ggplot2::ggplot(df[!is.na(df$ln.pk), ], 
-                                             ggplot2::aes(x = "k", 
-                                                                 y = "ln.pk")) +
+                                             ggplot2::aes(x = k, 
+                                                                 y = ln.pk)) +
                         ggplot2::ylab("LnP'(K)"), 
                      ln.ppk = ggplot2::ggplot(df[!is.na(df$ln.ppk), ],
-                                              ggplot2::aes(x = "k", 
-                                                                  y = "ln.ppk")) +
+                                              ggplot2::aes(x = k, 
+                                                                  y = ln.ppk)) +
                         ggplot2::ylab("LnP''(K)"))
    
    if (!all(is.na(df$delta.k))) {
       plot.list$delta.k <- ggplot2::ggplot(df[!is.na(df$delta.k), 
-      ], ggplot2::aes(x = "k", y = "delta.k")) + 
+      ], ggplot2::aes(x = k, y = delta.k)) + 
          ggplot2::ylab(expression(Delta(K)))
    }
    for (i in 1:length(plot.list)) {
