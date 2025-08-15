@@ -539,10 +539,12 @@ ui <- navbarPage(
             ),
             h4("STRUCTURE Visualization"),
             imageOutput("structurePlotPreview"),
-            downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
-            downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
-            downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
-            downloadButton("downloadStructurePlots", "Download STRUCTURE Plots"),
+            h4("Download Results"),
+            uiOutput("downloadButtons")
+            #downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
+            #downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
+            #downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
+            #downloadButton("downloadStructurePlots", "Download STRUCTURE Plots")
             #h4("Run Summary"),
             #tableOutput("structureSummary"),
             #h4("All STRUCTURE Plots"),
@@ -1485,13 +1487,62 @@ server <- function(input, output, session) {
             ))
          })
          
+         
+         # Logs
+         log_zip_path <- reactive({
+            req(str_files())
+            files <- list.files(str_files()$plot_paths, pattern = "\\.log\\.txt$", full.names = TRUE)
+            if (length(files) == 0) return(NULL)
+            zip_file <- tempfile(fileext = ".zip")
+            zip::zipr(zipfile = zip_file, files = files)
+            zip_file
+         })
+         
+         # STRUCTURE _f outputs
+         f_zip_path <- reactive({
+            req(str_files())
+            files <- list.files(str_files()$plot_paths, pattern = "_f$", full.names = TRUE)
+            if (length(files) == 0) return(NULL)
+            zip_file <- tempfile(fileext = ".zip")
+            zip::zipr(zipfile = zip_file, files = files)
+            zip_file
+         })
+         
+         # Q matrices
+         qmatrix_zip_path <- reactive({
+            req(qmatrices_data())
+            temp_dir <- tempfile()
+            dir.create(temp_dir)
+            
+            lapply(names(qmatrices_data()), function(name) {
+               matrix_data <- qmatrices_data()[[name]]
+               if (!is.data.frame(matrix_data)) return(NULL)
+               file_path <- file.path(temp_dir, paste0(name, ".txt"))
+               write.table(matrix_data, file = file_path, row.names = FALSE,
+                           col.names = FALSE, quote = FALSE, sep = "\t")
+            })
+            
+            zip_file <- tempfile(fileext = ".zip")
+            zip::zipr(zipfile = zip_file, files = list.files(temp_dir, full.names = TRUE))
+            zip_file
+         })
+         
+         # STRUCTURE plots
+         plot_zip_path <- reactive({
+            req(structure_plots())
+            zip_file <- tempfile(fileext = ".zip")
+            zip::zipr(zipfile = zip_file, files = structure_plots())
+            zip_file
+         })
+         
+         
          output$downloadLogs <- downloadHandler(
             filename = function() {
                paste0("structure_logs_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               files <- list.files(str_files()$plot_paths, pattern = "\\.log\\.txt$", full.names = TRUE)
-               zip::zipr(zipfile = file, files = files)
+               req(log_zip_path())
+               file.copy(log_zip_path(), file)
             },
             contentType = "application/zip"
          )
@@ -1501,81 +1552,34 @@ server <- function(input, output, session) {
                paste0("structure_outputs_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               files <- list.files(str_files()$plot_paths, pattern = "_f$", full.names = TRUE)
-               zip::zipr(zipfile = file, files = files)
+               req(f_zip_path())
+               file.copy(f_zip_path(), file)
             },
             contentType = "application/zip"
          )
-         
-         incProgress(0.8, detail = "Extracting q matrices...")
-         qmatrices_data <- reactive({
-            req(str_files())
-            q_matrices(str_files()$plot_paths)
-         })
          
          output$downloadQMatrixTxtZip <- downloadHandler(
             filename = function() {
                paste0("q_matrices_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               req(qmatrices_data())  # Ensure reactive is ready
-               
-               # Create a temporary directory to hold the .txt files
-               temp_dir <- tempfile()
-               dir.create(temp_dir)
-               
-               # Write each matrix to a .txt file
-               lapply(names(qmatrices_data()), function(name) {
-                  matrix_data <- qmatrices_data()[[name]]
-                  
-                  # Defensive check
-                  if (!is.data.frame(matrix_data)) {
-                     warning("Skipping non-data.frame entry: ", name)
-                     return(NULL)
-                  }
-                  
-                  file_path <- file.path(temp_dir, paste0(name, ".txt"))
-                  write.table(matrix_data,
-                              file = file_path,
-                              row.names = FALSE,
-                              col.names = FALSE,
-                              quote = FALSE,
-                              sep = "\t")
-               })
-               
-               # Zip all .txt files
-               zip::zipr(zipfile = file, files = list.files(temp_dir, full.names = TRUE))
+               req(qmatrix_zip_path())
+               file.copy(qmatrix_zip_path(), file)
             },
             contentType = "application/zip"
          )
          
+         output$downloadStructurePlots <- downloadHandler(
+            filename = function() {
+               paste0("structure_plots_", Sys.Date(), ".zip")
+            },
+            content = function(file) {
+               req(plot_zip_path())
+               file.copy(plot_zip_path(), file)
+            },
+            contentType = "application/zip"
+         )
          
-         incProgress(1.0, detail = "Plotting...")
-         structure_plots <- reactive({
-            req(str_files(), fsnps_gen())  
-            
-            str.dir <- str_files()$output_dir
-            populations_df <- fsnps_gen()$pop_labels  
-            
-            str.files <- list.files(str.dir, pattern = "_f$", full.names = TRUE)
-            str.data <- lapply(str.files, starmie::loadStructure)
-            
-            plot_paths <- list()
-            
-            for (i in seq_along(str.data)) {
-               structure_obj <- str.data[[i]]
-               file_name <- paste0(str.dir, "/", structure_obj$K, "_plot.png")
-               
-               gg <- plotQ(structure_obj, populations_df, outfile = file_name)
-               ggplot2::ggsave(file_name, plot = gg, width = 12, height = 10, dpi = 600)
-               
-               plot_paths[[i]] <- file_name
-            }
-            
-            return(plot_paths)
-         })
-         
-         # view first plot
          output$structurePlotPreview <- renderImage({
             req(structure_plots())
             
@@ -1587,17 +1591,20 @@ server <- function(input, output, session) {
             )
          }, deleteFile = FALSE)
          
-         output$downloadStructurePlots <- downloadHandler(
-            filename = function() {
-               paste0("structure_plots_", Sys.Date(), ".zip")
-            },
-            content = function(file) {
-               req(structure_plots())
-               
-               zip::zipr(zipfile = file, files = structure_plots())
-            },
-            contentType = "application/zip"
-         )
+         output$downloadButtons <- renderUI({
+            req(structure_plots(), qmatrices_data(), str_files())
+            
+            tagList(
+               downloadButton("downloadLogs", "Download Log Files (.zip)"),
+               br(), br(),
+               downloadButton("downloadFOutputs", "Download STRUCTURE _f Files (.zip)"),
+               br(), br(),
+               downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.zip)"),
+               br(), br(),
+               downloadButton("downloadStructurePlots", "Download STRUCTURE Plots (.zip)")
+            )
+         })
+         
       }) # end of with progress
       
       

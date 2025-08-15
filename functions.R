@@ -1344,6 +1344,8 @@ utils.structure.evanno <- function (sr, plot = TRUE)
       delta.k = pad(delta.k, n.k)
    )
    
+   df$k <- as.numeric(as.character(df$k))
+   
    rownames(df) <- NULL
    df$sd.min <- df$mean.ln.k - df$sd.ln.k
    df$sd.max <- df$mean.ln.k + df$sd.ln.k
