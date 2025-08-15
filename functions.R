@@ -1497,7 +1497,7 @@ running_structure <- function(input_file,
       #             "-o", shQuote(out_path))
       
       # added 15 August 2025
-      cmd <- system2("/path/to/run_structure.sh", 
+      cmd <- system2(structure_path, 
                      args = c("-i", 
                               input_file, 
                               "-K", rep.df[run_label, "k"],
