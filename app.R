@@ -1424,14 +1424,41 @@ server <- function(input, output, session) {
          #   return(out_path)
          #})
          # dont make it reactive
+         #output_dir <- tempdir()
+         #dir.create(output_dir)
+         
+         #out_path <- file.path(output_dir, "structure_input.str")
+         #structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
+         #write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
+         
+         #structure_file <- out_path
+         # Create temp output directory
          output_dir <- tempdir()
-         dir.create(output_dir)
+         dir.create(output_dir, showWarnings = FALSE)
          
          out_path <- file.path(output_dir, "structure_input.str")
-         structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
-         write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
          
-         readLines(out_path)[1:5]
+         structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
+         
+         # Validate formatting
+         validate_structure_input <- function(df) {
+            if (!is.data.frame(df)) return("Input is not a data frame")
+            if (ncol(df) %% 2 != 0) return("Number of columns must be even (two alleles per locus)")
+            if (any(is.na(df))) return("Missing values detected")
+            if (!all(sapply(df, is.numeric))) return("All columns must be numeric")
+            return(NULL)
+         }
+         
+         validation_msg <- validate_structure_input(structure_df)
+         if (!is.null(validation_msg)) {
+            showNotification(paste("STRUCTURE input error:", validation_msg), type = "error")
+            return(NULL)
+         }
+         
+         write.table(structure_df, file = out_path, quote = FALSE, sep = " ",
+                     row.names = FALSE, col.names = FALSE)
+         
+         cat("STRUCTURE input preview:\n", paste(readLines(out_path, n = 5), collapse = "\n"))
          
          structure_file <- out_path
          
