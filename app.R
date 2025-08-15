@@ -565,10 +565,10 @@ server <- function(input, output, session) {
    
    # timer
    observe({
-      invalidateLater(300000, session)  # 5 minutes
+      invalidateLater(600000, session)  # 5 minutes
       
       # set cleanup time by 5 mins
-      if (difftime(Sys.time(), lastAction(), units = "secs") > 120) {
+      if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
          # resets
          convertedCSV
          convertedSNIPPER
