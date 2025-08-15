@@ -1111,7 +1111,9 @@ to_structure <- function(genind_obj,
 ) {
    #out_path <- file.path(dir, file)
    # Get basic info
-   ind <- adegenet::indNames(genind_obj)
+   library(ade4)
+   library(adegenet)
+   ind <- indNames(genind_obj)
    pop <- if (include_pop) as.character(genind_obj@pop) else rep(1, length(ind))
    ploidy <- max(genind_obj@ploidy)
    loci <- adegenet::locNames(genind_obj)
@@ -1508,7 +1510,9 @@ running_structure <- function(input_file,
                               ))
       
       message("Running STRUCTURE: ", cmd)
-      log <- tryCatch(system(cmd, intern = TRUE), error = function(e) e$message)
+      log <- tryCatch(system2(structure_path, args = cmd_args, stdout = TRUE, stderr = TRUE), 
+                      error = function(e) e$message)
+      
       writeLines(log, paste0(out_path, "_log.txt"))
       
       final_out <- paste0(out_path, "_f")
