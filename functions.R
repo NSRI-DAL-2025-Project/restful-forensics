@@ -1315,38 +1315,59 @@ utils.structure.evanno <- function (sr, plot = TRUE)
    delta.k <- sapply(2:(length(ln.k) - 1), function(i) {
       abs(ln.k[i + 1] - (2 * ln.k[i]) + ln.k[i - 1])/sd.ln.k[i]
    })
-   df <- data.frame(k = as.numeric(names(ln.k)), 
-                    reps = as.numeric(table(sr.smry[, "k"])),
-                    mean.ln.k = as.numeric(ln.k), 
-                    sd.ln.k = as.numeric(sd.ln.k), 
-                    ln.pk = c(NA, ln.pk), 
-                    ln.ppk = c(NA, ln.ppk, NA), 
-                    delta.k = c(NA, delta.k, NA))
+   
+   #df <- data.frame(k = as.numeric(names(ln.k)), 
+   #                 reps = as.numeric(table(sr.smry[, "k"])),
+   #                 mean.ln.k = as.numeric(ln.k), 
+   #                 sd.ln.k = as.numeric(sd.ln.k), 
+   #                 ln.pk = c(NA, ln.pk), 
+   #                 ln.ppk = c(NA, ln.ppk, NA), 
+   #                 delta.k = c(NA, delta.k, NA))
+   
+   # Expected number of K values
+   n.k <- length(ln.k)
+   
+   # Safe padding function
+   pad <- function(x, len) {
+      x <- as.numeric(x)
+      if (length(x) < len) return(c(x, rep(NA, len - length(x))))
+      return(x[1:len])
+   }
+   
+   df <- data.frame(
+      k = as.numeric(names(ln.k)),
+      reps = as.numeric(table(sr.smry[, "k"])),
+      mean.ln.k = pad(ln.k, n.k),
+      sd.ln.k = pad(sd.ln.k, n.k),
+      ln.pk = pad(ln.pk, n.k),
+      ln.ppk = pad(ln.ppk, n.k),
+      delta.k = pad(delta.k, n.k)
+   )
    
    rownames(df) <- NULL
    df$sd.min <- df$mean.ln.k - df$sd.ln.k
    df$sd.max <- df$mean.ln.k + df$sd.ln.k
    plot.list <- list(mean.ln.k = 
                         ggplot2::ggplot(df, 
-                                        ggplot2::aes_string(x = "k", 
+                                        ggplot2::aes(x = "k", 
                                                             y = "mean.ln.k")) + 
                         ggplot2::ylab("mean LnP(K)") + 
-                        ggplot2::geom_segment(ggplot2::aes_string(x = "k", 
+                        ggplot2::geom_segment(ggplot2::aes(x = "k", 
                                                                   xend = "k", 
                                                                   y = "sd.min", 
                                                                   yend = "sd.max")), 
                      ln.pk = ggplot2::ggplot(df[!is.na(df$ln.pk), ], 
-                                             ggplot2::aes_string(x = "k", 
+                                             ggplot2::aes(x = "k", 
                                                                  y = "ln.pk")) +
                         ggplot2::ylab("LnP'(K)"), 
                      ln.ppk = ggplot2::ggplot(df[!is.na(df$ln.ppk), ],
-                                              ggplot2::aes_string(x = "k", 
+                                              ggplot2::aes(x = "k", 
                                                                   y = "ln.ppk")) +
                         ggplot2::ylab("LnP''(K)"))
    
    if (!all(is.na(df$delta.k))) {
       plot.list$delta.k <- ggplot2::ggplot(df[!is.na(df$delta.k), 
-      ], ggplot2::aes_string(x = "k", y = "delta.k")) + 
+      ], ggplot2::aes(x = "k", y = "delta.k")) + 
          ggplot2::ylab(expression(Delta(K)))
    }
    for (i in 1:length(plot.list)) {
@@ -1388,7 +1409,7 @@ running_structure <- function(input_file,
    
    # Validate K range
    if (length(k.range) < 2) stop("Provide at least two K values for Evanno analysis.")
-   #if (!dir.exists(plot_dir)) dir.create(plot_dir, recursive = TRUE)
+   if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
    
    numinds <- length(readLines(input_file))
    numloci <- (ncol(read.table(input_file, header = FALSE, sep = " ")) - 2)/2
@@ -1401,22 +1422,24 @@ running_structure <- function(input_file,
    input_file <- normalizePath(input_file)
    structure_path <- normalizePath(structure_path)
    
+   
    out_files <- lapply(1:nrow(rep.df), function(run_label) {
 
       out_path <- file.path(output_dir, rep.df[run_label, "run"])
       
-      mainparams <- paste0(output_dir, "/mainparams")
-      extraparams <- paste0(output_dir, "/extraparams")
-
+      mainparams <- file.path(output_dir, "mainparams")
+      extraparams <- file.path(output_dir, "extraparams")
       
       if(is.null(ploidy)){
          ploidy = "2"
       } else {
          ploidy = ploidy
       }
+      adm_burnin <- if (burnin < 500) burnin else 500
       
-      writeLines(paste("#define", c(
+      for_mainparam <- paste("#define", c(
          paste("MAXPOPS", rep.df[run_label, "k"]),
+         #paste("ADMBURNIN", adm_burnin),
          paste("BURNIN", burnin),
          paste("NUMREPS", numreps),
          paste("INFILE", input_file),
@@ -1437,13 +1460,16 @@ running_structure <- function(input_file,
          paste("PHASED", ifelse(phased, 1, 0)),
          "MARKOVPHASE 0",
          "NOTAMBIGUOUS -999"
-      )), con = mainparams)
+      ))
+      writeLines(for_mainparam, con = mainparams)
       
       alpha = 1/max(k.range)
       
-      writeLines(paste("#define", c(
+      for_extraparam <- paste("#define", c(
          paste("NOADMIX", ifelse(noadmix, 1, 0)), 
          paste("LINKAGE", ifelse(linkage, 1, 0)),
+         #paste("ADMBURNIN", adm_burnin),
+         paste("ADMBURNIN", max(0, as.integer(burnin/2))),
          "USEPOPINFO 0",
          "FREQSCORR 1",
          "ONEFST 0",
@@ -1461,7 +1487,7 @@ running_structure <- function(input_file,
          "ALPHAPRIORB 2.0",
          "LOG10RMIN -4.0",
          "LOG10RMAX 1.0",
-         "LOG10RSTAT -2.0",
+         #"LOG10RSTAT -2.0",
          "GENSBACK 2",
          "MIGRPRIOR 0.01",
          "PFROMPOPFLAGONLY 0",
@@ -1481,35 +1507,38 @@ running_structure <- function(input_file,
          "NUMBOXES 1000",
          "ANCESTPINT 0.90",
          "COMPUTEPROB 1",
-         "ADMBURNIN 500",
          "ALPHAPROPSD 0.025",
          "STARTATPOPINFO 0",
          "RANDOMIZE 0",
          "SEED 2245",
          "METROFREQ 10",
          "REPORTHITRATE 0"
-      )), con = extraparams)
+      ))
+      writeLines(for_extraparam, con = extraparams)
       
-      Sys.sleep(0.1)
-      
+      message("mainparams written to: ", mainparams, " | Exists: ", file.exists(mainparams))
+      message("extraparams written to: ", extraparams, " | Exists: ", file.exists(extraparams))
       #cmd <- paste(shQuote(structure_path),
       #             "-i", shQuote(input_file),
       #             "-K", rep.df[run_label, "k"],
       #             "-m", shQuote(mainparams),
       #             "-e", shQuote(extraparams),
       #             "-o", shQuote(out_path))
+      message("Using mainparams: ", normalizePath(mainparams))
+      message("Using extraparams: ", normalizePath(extraparams))
       
+    
       # added 15 August 2025
-      cmd <- system2(structure_path, 
-                     args = c("-i", 
-                              input_file, 
-                              "-K", rep.df[run_label, "k"],
-                              "-m", mainparams,
-                              "-e", extraparams,
-                              "-o", out_path
-                              ))
-      
-      message("Running STRUCTURE: ", cmd)
+      cmd_args <-  c("-i", 
+                     input_file, 
+                     "-K", rep.df[run_label, "k"],
+                     "-m", normalizePath(mainparams),
+                     "-e", normalizePath(extraparams),
+                     "-o", out_path
+                              )
+
+      #message("Running STRUCTURE: ", cmd)
+      message("Running STRUCTURE with args: ", paste(cmd_args, collapse = " "))
       log <- tryCatch(system2(structure_path, args = cmd_args, stdout = TRUE, stderr = TRUE), 
                       error = function(e) e$message)
       
