@@ -1396,6 +1396,7 @@ running_structure <- function(input_file,
    rep.df <- expand.grid(rep = 1:num.k.rep, k = k.range)
    rep.df$run <- paste0(base_label, ".k", rep.df$k, ".r", rep.df$rep)
    
+   input_file <- normalizePath(input_file)
    
    out_files <- lapply(1:nrow(rep.df), function(run_label) {
 
@@ -1486,12 +1487,14 @@ running_structure <- function(input_file,
          "REPORTHITRATE 0"
       )), con = extraparams)
       
-      cmd <- paste(structure_path,
-                   "-i", input_file,
+      Sys.sleep(0.1)
+      
+      cmd <- paste(shQuote(structure_path),
+                   "-i", shQuote(input_file),
                    "-K", rep.df[run_label, "k"],
-                   "-m", mainparams,
-                   "-e", extraparams,
-                   "-o", out_path)
+                   "-m", shQuote(mainparams),
+                   "-e", shQuote(extraparams),
+                   "-o", shQuote(out_path))
       
       
       message("Running STRUCTURE: ", cmd)
@@ -1500,6 +1503,7 @@ running_structure <- function(input_file,
       
       final_out <- paste0(out_path, "_f")
       if (!file.exists(final_out) && file.exists(out_path)) final_out <- out_path
+      final_out <- if (file.exists(paste0(out_path, "_f"))) paste0(out_path, "_f") else out_path
       if (!file.exists(final_out)) {
          warning("Missing output file for run: ", run_label)
          return(NULL)
