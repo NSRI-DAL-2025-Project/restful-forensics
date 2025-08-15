@@ -84,21 +84,21 @@ ui <- navbarPage(
    
    tabPanel(
       title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
-            div(
-               class = "card",
-               style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
-               div(
-                  class = "card-body",
-                  style = "display: block;",
-                  h4(class = "card-title", "From the Authors:"),
-                  p(class = "card-text",
-                    "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
-                    )
-               )
+      div(
+         class = "card",
+         style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
+         div(
+            class = "card-body",
+            style = "display: block;",
+            h4(class = "card-title", "From the Authors:"),
+            p(class = "card-text",
+              "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
             )
+         )
+      )
       
    ), # end of tab panel for homepage
-
+   
    
    ## 1. Instructions Tab ----
    tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
@@ -242,16 +242,16 @@ ui <- navbarPage(
                      mainPanel(
                         tableOutput("previewTable"),
                         fluidRow(
-                        column(6,
-                               h5("This is a sample reference file. Only the first two columns (sample and population information) are used."),
-                               tableOutput("exampleRefCSV")),
-                        column(6,
-                               tags$h4("Sample File"),
-                               tags$ul(
-                                  tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
-                               )  
-                        )
-                     ), # end of fluidRow
+                           column(6,
+                                  h5("This is a sample reference file. Only the first two columns (sample and population information) are used."),
+                                  tableOutput("exampleRefCSV")),
+                           column(6,
+                                  tags$h4("Sample File"),
+                                  tags$ul(
+                                     tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
+                                  )  
+                           )
+                        ), # end of fluidRow
                         downloadButton("downloadConvertedCSV", "Download Converted CSV")
                      )
                   )
@@ -556,7 +556,7 @@ ui <- navbarPage(
    div(
       style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
-   )
+)
 
 # TO ADD
 server <- function(input, output, session) {
@@ -1419,7 +1419,7 @@ server <- function(input, output, session) {
          #structure_file <- reactive({
          #   req(fsnps_gen()$fsnps_gen)
          #   out_path <- file.path(output_dir, "structure_input.str")
-            
+         
          #   structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
          #   #temp_str_file <- tempfile(pattern = "structure_input", fileext = ".str")
          #   write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
@@ -1487,6 +1487,36 @@ server <- function(input, output, session) {
             ))
          })
          
+         incProgress(0.8, detail = "Extracting q matrices...")
+         qmatrices_data <- reactive({
+            req(str_files())
+            q_matrices(str_files()$plot_paths)
+         })
+         
+         incProgress(1.0, detail = "Plotting...")
+         structure_plots <- reactive({
+            req(str_files(), fsnps_gen())  
+            
+            str.dir <- str_files()$output_dir
+            populations_df <- fsnps_gen()$pop_labels  
+            
+            str.files <- list.files(str.dir, pattern = "_f$", full.names = TRUE)
+            str.data <- lapply(str.files, starmie::loadStructure)
+            
+            plot_paths <- list()
+            
+            for (i in seq_along(str.data)) {
+               structure_obj <- str.data[[i]]
+               file_name <- paste0(str.dir, "/", structure_obj$K, "_plot.png")
+               
+               gg <- plotQ(structure_obj, populations_df, outfile = file_name)
+               ggplot2::ggsave(file_name, plot = gg, width = 12, height = 10, dpi = 600)
+               
+               plot_paths[[i]] <- file_name
+            }
+            
+            return(plot_paths)
+         })
          
          # Logs
          log_zip_path <- reactive({
