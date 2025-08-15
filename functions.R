@@ -1489,13 +1489,22 @@ running_structure <- function(input_file,
       
       Sys.sleep(0.1)
       
-      cmd <- paste(shQuote(structure_path),
-                   "-i", shQuote(input_file),
-                   "-K", rep.df[run_label, "k"],
-                   "-m", shQuote(mainparams),
-                   "-e", shQuote(extraparams),
-                   "-o", shQuote(out_path))
+      #cmd <- paste(shQuote(structure_path),
+      #             "-i", shQuote(input_file),
+      #             "-K", rep.df[run_label, "k"],
+      #             "-m", shQuote(mainparams),
+      #             "-e", shQuote(extraparams),
+      #             "-o", shQuote(out_path))
       
+      # added 15 August 2025
+      cmd <- system2("/path/to/run_structure.sh", 
+                     args = c("-i", 
+                              input_file, 
+                              "-K", rep.df[run_label, "k"],
+                              "-m", mainparams,
+                              "-e", extraparams,
+                              "-o", out_path
+                              ))
       
       message("Running STRUCTURE: ", cmd)
       log <- tryCatch(system(cmd, intern = TRUE), error = function(e) e$message)

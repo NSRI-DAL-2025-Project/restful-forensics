@@ -1397,8 +1397,8 @@ server <- function(input, output, session) {
       lastAction(Sys.time())
       
       req(input$structureFile)
-      structure_path <- Sys.which("structure")
-      if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
+      #structure_path <- Sys.which("structure")
+      #if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
       #structure_path <- "./structure.exe"
       
       
@@ -1446,7 +1446,7 @@ server <- function(input, output, session) {
                                         phased = input$phased,
                                         ploidy = input$ploidy,
                                         linkage = input$linkage,
-                                        structure_path = structure_path,
+                                        structure_path = "./structure.sh",
                                         output_dir = output_dir)
             
             return(list(
