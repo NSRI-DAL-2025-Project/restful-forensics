@@ -271,20 +271,29 @@ ui <- navbarPage(
                         downloadButton("downloadUAScsv", "Download Converted CSV")
                      ),
                      mainPanel(
-                        tableOutput("previewTableUAS"),
-                        h4("Example Input XLSX Format"),
-                        fluidRow(
-                           column(6,
-                                  h5("All alleles of available SNPs per sample are listed in a long format."),
-                                  tableOutput("exampleXLSX")
-                           )
-                        ),
-                        tags$h4("Sample File"),
-                        tags$ul(
-                           tags$a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)
-                        )
-                        #possibly add an option to view the first few lines of the result,
-                     )
+                        tags$div(class = "card mb-3",
+                                 tags$div(class = "card-header",
+                                          h4("Sample Files"),
+                                          ),
+                                 tags$div(class = "card-body",
+                                          h5("All alleles of available SNPs per sample are listed in a long format."),
+                                          tableOutput("exampleXLSX"),
+                                          br(),
+                                          tags$h5("Downloadable Sample"),
+                                          tags$ul(
+                                             tags$li(
+                                                tags$a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)
+                                             )
+                                          )
+                                          )
+                                 ), # end of first tag
+                        tags$div(class = "card",
+                                 tags$div(class = "card-header",
+                                          h4("Preview of Output")),
+                                 tags$div(class = "card-body",
+                                          tableOutput("previewTableUAS"))
+                                 ) # end of second tags
+                     ) #end of mainpanel
                   )
          ), #end of tabpanel
          
@@ -303,22 +312,49 @@ ui <- navbarPage(
                         actionButton("convertBtn", "Convert Format", icon = icon("arrow-up-right-from-square"))
                      ),
                      mainPanel(
-                        fluidRow(
-                           column(6,
-                                  h5("Sample input file"),
-                                  tableOutput("exampleTableSnipper")
-                           ),
-                           column(6,
-                                  h5("Sample reference file"),
-                                  tableOutput("exampleRefSnipper"))
-                        ), # end of fluid row
-                        tableOutput("previewTableSNIPPER"),
-                        tags$h4("Sample File"),
-                        tags$ul(
-                           tags$a("Sample file", href = "www/sample.csv", download = NA)
+                        tags$div(class = "card mb-3",
+                                 tags$div(class = "card-header",
+                                          h4("Example SNIPPER Input & Reference Files")
+                                 ),
+                                 tags$div(class = "card-body",
+                                          fluidRow(
+                                             column(6,
+                                                    h5("Sample input file"),
+                                                    tableOutput("exampleTableSnipper")
+                                             ),
+                                             column(6,
+                                                    h5("Sample reference file"),
+                                                    tableOutput("exampleRefSnipper")
+                                             )
+                                          )
+                                 )
                         ),
-                        downloadButton("downloadConverted", "Download Converted File")
-                     )
+                        
+                        tags$div(class = "card mb-3",
+                                 tags$div(class = "card-header",
+                                          h4("Preview of Converted SNIPPER Data")
+                                 ),
+                                 tags$div(class = "card-body",
+                                          tableOutput("previewTableSNIPPER")
+                                 )
+                        ),
+                        
+                        tags$div(class = "card",
+                                 tags$div(class = "card-header",
+                                          h4("Download Sample & Converted File")
+                                 ),
+                                 tags$div(class = "card-body",
+                                          tags$ul(
+                                             tags$li(
+                                                tags$a("Sample file", href = "www/sample.csv", download = NA)
+                                             )
+                                          ),
+                                          br(),
+                                          downloadButton("downloadConverted", "Download Converted File")
+                                 )
+                        )
+                        
+                     ) # end of mainpanel
                   )
          )
          
@@ -530,7 +566,8 @@ ui <- navbarPage(
             checkboxInput("phased", "Phased Genotype", value = FALSE),
             numericInput("ploidy", "Ploidy Level", value = 2),
             checkboxInput("linkage", "Use Linkage Model", value = FALSE),
-            actionButton("runStructure", "Run STRUCTURE", icon = icon("play"))
+            actionButton("runStructure", "Run STRUCTURE", icon = icon("play")),
+            uiOutput("downloadButtons")
          ),
          mainPanel(
             tags$h4("Sample File"),
@@ -539,8 +576,8 @@ ui <- navbarPage(
             ),
             h4("STRUCTURE Visualization"),
             imageOutput("structurePlotPreview"),
-            h4("Download Results"),
-            uiOutput("downloadButtons")
+            h4("Download Results")
+            
             #downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
             #downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
             #downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
