@@ -423,8 +423,10 @@ ui <- navbarPage(
                                  )
                               ),
                               hr(),
-                              downloadButton("downloadExtracted", "Download Extracted Markers (VCF)"),
-                              downloadButton("downloadConverted", "Download Extracter Markers (CSV)")
+                              conditionalPanel(
+                                 condition = "output.showExtractDownload",
+                                 downloadButton("downloadExtracted", "Download Extracted VCF")
+                              )
                            )
                         )
                ),
@@ -1027,6 +1029,8 @@ server <- function(input, output, session) {
       toggleState("extractBtn", isFileUploaded && (isRSIDReady || isPOSReady))
    })
    
+   extracted_file <- reactiveVal(NULL)
+   
    withProgress(message = "Extracting markers...", value = 0, {
       observeEvent(input$extractBtn, {
          lastAction(Sys.time())
@@ -1074,13 +1078,28 @@ server <- function(input, output, session) {
                plink_path  = plink_path
             )
             
+            extracted_file(file.path(temp_dir, "final_merged.vcf"))
+            
             output$downloadExtracted <- downloadHandler(
                filename = function() { "final_merged.vcf" },
                content = function(file) {
-                  source_path <- file.path(temp_dir, "final_merged.vcf")
-                  file.copy(source_path, file)     # would this download??
+                  req(extracted_file_path())
+                  file.copy(extracted_file_path(), file)
                }
             )
+            
+            # download button will appear once ready
+            output$showExtractDownload <- reactive({
+               !is.null(extracted_file_path()) && file.exists(extracted_file_path())
+            })
+            outputOptions(output, "showExtractDownload", suspendWhenHidden = FALSE)
+            #output$downloadExtracted <- downloadHandler(
+            #   filename = function() { "final_merged.vcf" },
+            #   content = function(file) {
+            #      source_path <- file.path(temp_dir, "final_merged.vcf")
+            #      file.copy(source_path, file)     # would this download??
+            #   }
+            #)
          }, error = function(e) {
             showNotification(paste("Error:", e$message), type = "error")
          })
