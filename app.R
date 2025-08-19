@@ -570,13 +570,36 @@ ui <- navbarPage(
             uiOutput("downloadButtons")
          ),
          mainPanel(
-            tags$h4("Sample File"),
-            tags$ul(
-               tags$a("Sample file", href = "www/sample.csv", download = NA)
+            tags$div(class = "card",
+                     tags$div(class = "card-header",
+                              h4("Download Sample File")
+                     ),
+                     tags$div(class = "card-body",
+                              tags$ul(
+                                 tags$li(
+                                    tags$a("Sample file", href = "www/sample.csv", download = NA)
+                                 )
+                              )
+                     )
             ),
-            h4("STRUCTURE Visualization"),
-            imageOutput("structurePlotPreview"),
-            h4("Download Results")
+            
+            tags$div(class = "card mb-3",
+                     tags$div(class = "card-header",
+                              h4("STRUCTURE Visualization")
+                     ),
+                     tags$div(class = "card-body",
+                              imageOutput("structurePlotPreview"),
+                              h4("Download Results")
+                     )
+            )
+            
+            #tags$h4("Sample File"),
+            #tags$ul(
+            #   tags$a("Sample file", href = "www/sample.csv", download = NA)
+            #),
+            #h4("STRUCTURE Visualization"),
+            #imageOutput("structurePlotPreview"),
+            #h4("Download Results")
             
             #downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
             #downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
@@ -586,7 +609,7 @@ ui <- navbarPage(
             #tableOutput("structureSummary"),
             #h4("All STRUCTURE Plots"),
             #uiOutput("structurePlots")
-         )
+         ) # end of mainpanel
       )
    ), #end of tabpanel
    p("© 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved."),
