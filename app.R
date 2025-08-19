@@ -703,6 +703,7 @@ server <- function(input, output, session) {
       
       lastAction(Sys.time())
       
+      disable("convertCSV")
       #csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
       #convertedCSV(csv_result)
       
@@ -724,8 +725,10 @@ server <- function(input, output, session) {
             
             csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
             convertedCSV(csv_result)
+            enable("convertCSV")
          } else {
             showNotification("Unsupported VCF format. Please upload a .vcf or .vcf.gz file.", type = "error")
+            enable("convertCSV")
             return()
          }
          
@@ -741,6 +744,7 @@ server <- function(input, output, session) {
          #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
          convertedCSV(csv_result)
+         enable("convertCSV")
          
       } else if (input$inputType == "plink") {
          bed <- input$bedFile$datapath
@@ -759,6 +763,8 @@ server <- function(input, output, session) {
          #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
          convertedCSV(csv_result)
+         
+         enable("convertCSV")
       }
       
       output$downloadConvertedCSV <- downloadHandler(
@@ -818,6 +824,8 @@ server <- function(input, output, session) {
    observeEvent(input$convertBtn, {
       lastAction(Sys.time())
       
+      disable("convertBtn")
+      
       inputPath <- input$convertFile$datapath
       refPath <- input$refFile$datapath
       targetSet <- input$targetPop
@@ -828,7 +836,9 @@ server <- function(input, output, session) {
       
       outputName <- "snipper.xlsx"
       
-      snipper.file <- tosnipper(input = inputPath,
+      withProgress(message = "Converting to SNIPPER-analysis ready file...", value = 0, {
+      
+                   snipper.file <- tosnipper(input = inputPath,
                                 references = refPath,
                                 target.pop = targetSet,
                                 population.name = targetName,
@@ -836,6 +846,8 @@ server <- function(input, output, session) {
       
       #xlsx_file <- file.path(paste(outputDir, outputName))
       convertedSNIPPER(snipper.file)
+      enable("convertBtn")
+   })
       
       output$downloadConverted <- downloadHandler(
          filename = function() { outputName },
@@ -872,6 +884,8 @@ server <- function(input, output, session) {
    observeEvent(input$run_uas2csv, {
       lastAction(Sys.time())
       
+      disable("run_uas2csv")
+      
       req(input$uas_zip)
       
       temp_dir <- tempdir()
@@ -887,15 +901,20 @@ server <- function(input, output, session) {
          use_reference <- TRUE
       }
       
+      withProgress(message = "Converting file...", value = 0, {
       tryCatch({
          widened.file <- uas2csv(files = input_path,
                                  population = ref_value,
                                  reference = use_reference,
                                  dir = temp_dir)
          convertedUAS(widened.file)
+         
+         enable("run_uas2csv")
          showNotification("Conversion complete!", type = "message")
       }, error = function(e) {
          showNotification(paste("Error:", e$message), type = "error")
+         enable("run_uas2csv")
+      })
       })
       
       outputName <- "01_merged_typed_data.csv"
@@ -928,6 +947,9 @@ server <- function(input, output, session) {
    observeEvent(input$compareBtn, {
       lastAction(Sys.time())
       
+      disable("compareBtn")
+      
+      withProgress(message = "Analyzing files...", value = 0, {
       tryCatch({
          
          req(input$concordanceFile1$datapath, input$concordanceFile2$datapath)
@@ -937,6 +959,8 @@ server <- function(input, output, session) {
          file2_path <- input$concordanceFile2$datapath
          
          result <- concordance(file1_path, file2_path, haplotypes = haplo_flag)
+         
+         enable("compareBtn")
          
          concordanceResult(result$results)
          concordancePlotPath(result$plot)
@@ -986,6 +1010,7 @@ server <- function(input, output, session) {
       }, error = function(e) {
          showNotification(paste("Error during analysis:", e$message), type = "error", duration = 10)
       })
+      }) # end of withprogress
    })
    
    
@@ -1031,12 +1056,17 @@ server <- function(input, output, session) {
    
    extracted_file <- reactiveVal(NULL)
    
-   withProgress(message = "Extracting markers...", value = 0, {
+
       observeEvent(input$extractBtn, {
          lastAction(Sys.time())
          
+         disable("extractBtn")
+         
          req(input$markerFile)
          
+         withProgress(message = "Extracting markers...", value = 0, {
+            
+            tryCatch({
          snps_list <- if (input$markerType == "rsid") {
             if (input$rsidInputType == "manual") {
                temp <- tempfile(fileext = ".txt")
@@ -1057,7 +1087,7 @@ server <- function(input, output, session) {
             }
          } else NULL
          
-         tryCatch({
+         
             # load other parameters
             plink_args <- if (!is.null(input$plink_args) && nzchar(input$plink_args)) {
                strsplit(input$plink_args, "\\s+")[[1]]
@@ -1088,9 +1118,10 @@ server <- function(input, output, session) {
                }
             )
             
+            enable("extractBtn")
             # download button will appear once ready
             output$showExtractDownload <- reactive({
-               !is.null(extracted_file_path()) && file.exists(extracted_file_path())
+               !is.null(extracted_file()) && file.exists(extracted_file())
             })
             outputOptions(output, "showExtractDownload", suspendWhenHidden = FALSE)
             #output$downloadExtracted <- downloadHandler(
@@ -1125,6 +1156,8 @@ server <- function(input, output, session) {
    
    observeEvent(input$runPopStats, {
       lastAction(Sys.time())
+      
+      disable("runPopStats")
       
       req(input$popStatsFile)
       
@@ -1326,9 +1359,10 @@ server <- function(input, output, session) {
             )
             
             incProgress(1, detail = "Finalizing output...")
-            
+            enable("runPopStats")
          }, error = function(e) {
             showNotification(paste("Population stats error:", e$message), type = "error")
+            enable("runPopStats")
          })
       }) #end of withProgress
    }) 
@@ -1360,6 +1394,7 @@ server <- function(input, output, session) {
    observeEvent(input$runPCA, {
       lastAction(Sys.time())
       
+      disable("runPCA")
       req(input$pcaFile)
       
       withProgress(message = "Running PCA...", {
@@ -1462,8 +1497,10 @@ server <- function(input, output, session) {
                contentType = "image/png"
             )
             
+            enable("runPCA")
          }, error = function(e) {
             showNotification(paste("PCA Error:", e$message), type = "error")
+            enable("runPCA")
          })
       })
    })
@@ -1477,6 +1514,7 @@ server <- function(input, output, session) {
    observeEvent(input$runStructure, {
       lastAction(Sys.time())
       
+      disable("runStructure")
       req(input$structureFile)
       #structure_path <- Sys.which("structure")
       #if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
@@ -1654,6 +1692,8 @@ server <- function(input, output, session) {
             zip::zipr(zipfile = zip_file, files = structure_plots())
             zip_file
          })
+         
+         enable("runStructure")
          
          
          output$downloadLogs <- downloadHandler(
