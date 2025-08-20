@@ -766,20 +766,21 @@ server <- function(input, output, session) {
          
          enable("convertCSV")
       }
-      
-      output$downloadConvertedCSV <- downloadHandler(
-         filename = function() { "converted_to_csv.csv" },
-         content = function(file) {
-            readr::write_csv(convertedCSV(), file)
-         }
-      )
-      
-      output$previewTable <- renderTable({
-         req(convertedCSV())
-         head(convertedCSV(), 10)  # Preview top 10 rows
-      })
-   }
+
+   } 
+   ) # end of observeEvent
+   
+   output$downloadConvertedCSV <- downloadHandler(
+      filename = function() { "converted_to_csv.csv" },
+      content = function(file) {
+         readr::write_csv(convertedCSV(), file)
+      }
    )
+   
+   output$previewTable <- renderTable({
+      req(convertedCSV())
+      head(convertedCSV(), 10)  # Preview top 10 rows
+   })
    
    ### For SNIPPER
    output$exampleTableSnipper <- renderTable({
@@ -822,7 +823,7 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$convertBtn, {
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("convertBtn")
       
@@ -849,20 +850,20 @@ server <- function(input, output, session) {
       enable("convertBtn")
    })
       
-      output$downloadConverted <- downloadHandler(
-         filename = function() { outputName },
-         content = function(file) {
-            #file.copy(snipper.file, file)
-            openxlsx::write.xlsx(convertedSNIPPER(), file)
-         }
-      )
-      
-      # try to preview the table
-      output$previewTableSNIPPER <- renderTable({
-         req(convertedSNIPPER())
-         head(convertedSNIPPER(), 10)  # Preview top 10 rows
-      })
-      
+   }) # end of observe Event
+   
+   output$downloadConverted <- downloadHandler(
+      filename = function() { outputName },
+      content = function(file) {
+         #file.copy(snipper.file, file)
+         openxlsx::write.xlsx(convertedSNIPPER(), file)
+      }
+   )
+   
+   # try to preview the table
+   output$previewTableSNIPPER <- renderTable({
+      req(convertedSNIPPER())
+      head(convertedSNIPPER(), 10)  # Preview top 10 rows
    })
    
    ### UAS to CSV
@@ -882,7 +883,7 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$run_uas2csv, {
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("run_uas2csv")
       
@@ -917,23 +918,22 @@ server <- function(input, output, session) {
       })
       })
       
-      outputName <- "01_merged_typed_data.csv"
-      #csv_file <- file.path(paste(temp_dir, outputName))
-      
-      output$downloadUAScsv <- downloadHandler(
-         filename = function() {
-            outputName
-         },
-         content = function(file) {
-            readr::write_csv(convertedUAS(), file)
-         }
-      )
-      
-      output$previewTableUAS <- renderTable({
-         req(convertedUAS())
-         head(convertedUAS(), 10)  # Preview top 10 rows
-      })
-      
+   }) # end of observe Event
+   outputName <- "01_merged_typed_data.csv"
+   #csv_file <- file.path(paste(temp_dir, outputName))
+   
+   output$downloadUAScsv <- downloadHandler(
+      filename = function() {
+         outputName
+      },
+      content = function(file) {
+         readr::write_csv(convertedUAS(), file)
+      }
+   )
+   
+   output$previewTableUAS <- renderTable({
+      req(convertedUAS())
+      head(convertedUAS(), 10)  # Preview top 10 rows
    })
    
    ## Concordance Analysis
@@ -945,7 +945,7 @@ server <- function(input, output, session) {
    concordancePlotPath <- reactiveVal(NULL)
    
    observeEvent(input$compareBtn, {
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("compareBtn")
       
@@ -993,26 +993,25 @@ server <- function(input, output, session) {
             )
          }, deleteFile = FALSE)
          
-         #outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
-         output$downloadConcordancePlot <- downloadHandler(
-            filename = function() {
-               paste0("concordance_plot_", Sys.Date(), ".png")
-            },
-            content = function(file) {
-               #plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
-               #file.copy(plot, file)
-               ggsave(filename, concordancePlotPath(), width = 8, height = 8, dpi = 600)
-               
-            }, contentType = "image/png"
-         )
-         
          
       }, error = function(e) {
          showNotification(paste("Error during analysis:", e$message), type = "error", duration = 10)
       })
       }) # end of withprogress
-   })
+   }) # end of observe event
    
+   #outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
+   output$downloadConcordancePlot <- downloadHandler(
+      filename = function() {
+         paste0("concordance_plot_", Sys.Date(), ".png")
+      },
+      content = function(file) {
+         #plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
+         #file.copy(plot, file)
+         ggsave(filename, concordancePlotPath(), width = 8, height = 8, dpi = 600)
+         
+      }, contentType = "image/png"
+   )
    
    ## MARKER EXTRACTION
    output$exampleRSID <- renderTable({
@@ -1058,7 +1057,7 @@ server <- function(input, output, session) {
    
 
       observeEvent(input$extractBtn, {
-         lastAction(Sys.time())
+         #lastAction(Sys.time())
          
          disable("extractBtn")
          
@@ -1110,20 +1109,7 @@ server <- function(input, output, session) {
             
             extracted_file(file.path(temp_dir, "final_merged.vcf"))
             
-            output$downloadExtracted <- downloadHandler(
-               filename = function() { "final_merged.vcf" },
-               content = function(file) {
-                  req(extracted_file_path())
-                  file.copy(extracted_file_path(), file)
-               }
-            )
-            
-            enable("extractBtn")
-            # download button will appear once ready
-            output$showExtractDownload <- reactive({
-               !is.null(extracted_file()) && file.exists(extracted_file())
-            })
-            outputOptions(output, "showExtractDownload", suspendWhenHidden = FALSE)
+
             #output$downloadExtracted <- downloadHandler(
             #   filename = function() { "final_merged.vcf" },
             #   content = function(file) {
@@ -1131,11 +1117,30 @@ server <- function(input, output, session) {
             #      file.copy(source_path, file)     # would this download??
             #   }
             #)
+            
+            enable("extractBtn")
          }, error = function(e) {
             showNotification(paste("Error:", e$message), type = "error")
+            enable("extractBtn")
          })
+            
       })
    })
+      
+      output$downloadExtracted <- downloadHandler(
+         filename = function() { "final_merged.vcf" },
+         content = function(file) {
+            req(extracted_file())
+            file.copy(extracted_file(), file)
+         }
+      )
+      
+      
+      # download button will appear once ready
+      output$showExtractDownload <- reactive({
+         !is.null(extracted_file()) && file.exists(extracted_file())
+      })
+      outputOptions(output, "showExtractDownload", suspendWhenHidden = FALSE)
    
    
    # POP STAT
@@ -1174,6 +1179,7 @@ server <- function(input, output, session) {
             req(fsnps_gen())
             
             incProgress(0.4, detail = "Computing private alleles...")
+            
             priv_alleles <- poppr::private_alleles(fsnps_gen())
             if (is.null(priv_alleles)) priv_alleles <- list(message = "No private alleles detected")
             
@@ -1231,18 +1237,6 @@ server <- function(input, output, session) {
                )
             }, deleteFile = TRUE)
             
-            output$downloadHeterozygosityPlot <- downloadHandler(
-               filename = function() {
-                  "heterozygosity_plot.png"
-               },
-               content = function(file) {
-                  plot_path <- plot_heterozygosity(
-                     Het_fsnps_df = population_stats()$heterozygosity,
-                     out_dir = tempdir()
-                  )
-                  file.copy(plot_path, file)
-               }
-            )
             
             ## HWE
             incProgress(0.8, detail = "Running HWE and FST calculations...")
@@ -1325,47 +1319,60 @@ server <- function(input, output, session) {
             #   }
             #)
             
-            output$downloadFstHeatmap <- downloadHandler(
-               filename = function() {
-                  "fst_heatmap.png"
-               },
-               content = function(file) {
-                  plot_path <- plot_fst_heatmap_static(
-                     fst_df = fst_data(),
-                     out_dir = tempdir()
-                  )
-                  file.copy(plot_path, file)
-               }
-            )
-            
-            ## download all results
-            stats_matrix <- compute_population_stats(fsnps_gen())
-            hw_matrix <- compute_hardy_weinberg(fsnps_gen())
-            fst_matrix <- compute_fst(fsnps_gen())
-            
-            
-            output$downloadStatsXLSX <- downloadHandler(
-               filename = function() {
-                  timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-                  paste0("population-statistics-results_", timestamp, ".xlsx")
-               },
-               content = function(file) {
-                  req(stats_matrix, hw_matrix, fst_matrix)
-                  path <- export_results(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
-                  
-                  file.copy(path, file)
-                  openxlsx::write.xlsx(path, file = filename)
-               }
-            )
-            
-            incProgress(1, detail = "Finalizing output...")
+            #incProgress(1, detail = "Finalizing output...")
             enable("runPopStats")
          }, error = function(e) {
             showNotification(paste("Population stats error:", e$message), type = "error")
             enable("runPopStats")
          })
       }) #end of withProgress
-   }) 
+   })
+   
+   # download heterozygosity plot
+   output$downloadHeterozygosityPlot <- downloadHandler(
+      filename = function() {
+         "heterozygosity_plot.png"
+      },
+      content = function(file) {
+         plot_path <- plot_heterozygosity(
+            Het_fsnps_df = population_stats()$heterozygosity,
+            out_dir = tempdir()
+         )
+         file.copy(plot_path, file)
+      }
+   )
+   
+   output$downloadFstHeatmap <- downloadHandler(
+      filename = function() {
+         "fst_heatmap.png"
+      },
+      content = function(file) {
+         plot_path <- plot_fst_heatmap_static(
+            fst_df = fst_data(),
+            out_dir = tempdir()
+         )
+         file.copy(plot_path, file)
+      }
+   )
+   
+   ## download all results
+   stats_matrix <- compute_population_stats(fsnps_gen())
+   hw_matrix <- compute_hardy_weinberg(fsnps_gen())
+   fst_matrix <- compute_fst(fsnps_gen())
+   
+   output$downloadStatsXLSX <- downloadHandler(
+      filename = function() {
+         timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+         paste0("population-statistics-results_", timestamp, ".xlsx")
+      },
+      content = function(file) {
+         req(stats_matrix, hw_matrix, fst_matrix)
+         path <- export_results(priv_alleles, stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
+         
+         file.copy(path, file)
+         openxlsx::write.xlsx(path, file = filename)
+      }
+   )
    
    # PCA
    output$examplePCA <- renderTable({
@@ -1444,24 +1451,6 @@ server <- function(input, output, session) {
                                  names.arg = round(pca_results$percent, 1))
             })
             
-            output$downloadbarPlot <- downloadHandler(
-               filename = function() {
-                  paste0("bar_plot_", Sys.Date(), ".png")
-               },
-               content = function(file) {
-                  png(file, width = 800, height = 800, res = 120)
-                  graphics::barplot(
-                     pca_results$percent,
-                     ylab = "Genetic variance explained by eigenvectors (%)",
-                     ylim = c(0, 25),
-                     names.arg = round(pca_results$percent, 1)
-                  )
-                  dev.off()
-               },
-               contentType = "image/png"
-            )
-            
-            
             incProgress(0.8, detail = "Rendering PCA plot...")
             
             output$pcaPlot <- renderPlot({
@@ -1474,29 +1463,7 @@ server <- function(input, output, session) {
                   pc_y = input$pcY
                )
             })
-            
-            
-            
-            output$downloadPCAPlot <- downloadHandler(
-               filename = function() {
-                  paste0("pca_plot_", Sys.Date(), ".png")
-               },
-               content = function(file) {
-                  plot <- plot_pca(
-                     ind_coords = pca_results$ind_coords,
-                     centroid = pca_results$centroid,
-                     percent = pca_results$percent,
-                     labels_colors = labels_colors,
-                     pc_x = input$pcX,
-                     pc_y = input$pcY
-                  )
-                  
-                  # Save directly to the requested file path
-                  ggsave(filename = file, plot = plot, width = 8, height = 8, dpi = 600)
-               },
-               contentType = "image/png"
-            )
-            
+      
             enable("runPCA")
          }, error = function(e) {
             showNotification(paste("PCA Error:", e$message), type = "error")
@@ -1504,6 +1471,43 @@ server <- function(input, output, session) {
          })
       })
    })
+   
+   output$downloadbarPlot <- downloadHandler(
+      filename = function() {
+         paste0("bar_plot_", Sys.Date(), ".png")
+      },
+      content = function(file) {
+         png(file, width = 800, height = 800, res = 120)
+         graphics::barplot(
+            pca_results$percent,
+            ylab = "Genetic variance explained by eigenvectors (%)",
+            ylim = c(0, 25),
+            names.arg = round(pca_results$percent, 1)
+         )
+         dev.off()
+      },
+      contentType = "image/png"
+   )
+   
+   output$downloadPCAPlot <- downloadHandler(
+      filename = function() {
+         paste0("pca_plot_", Sys.Date(), ".png")
+      },
+      content = function(file) {
+         plot <- plot_pca(
+            ind_coords = pca_results$ind_coords,
+            centroid = pca_results$centroid,
+            percent = pca_results$percent,
+            labels_colors = labels_colors,
+            pc_x = input$pcX,
+            pc_y = input$pcY
+         )
+         
+         # Save directly to the requested file path
+         ggsave(filename = file, plot = plot, width = 8, height = 8, dpi = 600)
+      },
+      contentType = "image/png"
+   )
    
    ## STRUCTURE ANALYSIS
    observe({
