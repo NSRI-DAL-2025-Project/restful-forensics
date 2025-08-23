@@ -14,6 +14,8 @@ shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for d
 useShinyjs()
 
 ui <- navbarPage(
+   use_waiter(),
+   
    title = div(
       tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
       tags$span("RESTful Forensics",
@@ -700,15 +702,19 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$convertCSV, {
+      req(input$convertCSV)
       
       lastAction(Sys.time())
       
       disable("convertCSV")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
       #csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
       #convertedCSV(csv_result)
       
       outputDir <- tempdir()
-      outputName <- "converted_to_csv.csv"
+      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+      outputName <- paste0("converted_", timestamp, ".csv")
+      
       
       # Set reference input
       refValue <- if (input$poptype == "multiplepop") {
@@ -725,7 +731,6 @@ server <- function(input, output, session) {
             
             csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
             convertedCSV(csv_result)
-            enable("convertCSV")
          } else {
             showNotification("Unsupported VCF format. Please upload a .vcf or .vcf.gz file.", type = "error")
             enable("convertCSV")
@@ -739,12 +744,18 @@ server <- function(input, output, session) {
             " --const-fid 0 --cow --keep-allele-order --allow-no-sex --allow-extra-chr",
             " --recode vcf --out ", temp_output
          )
-         system(command)
+         
+         exit_code <- system(command)
+         if (exit_code != 0){
+            showNotifications("Plink conversion failed", type = "error")
+            enable("convertCSV")
+            return()
+             }
+
          vcfPath <- paste0(temp_output, ".vcf")
          #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
          convertedCSV(csv_result)
-         enable("convertCSV")
          
       } else if (input$inputType == "plink") {
          bed <- input$bedFile$datapath
@@ -758,17 +769,25 @@ server <- function(input, output, session) {
             " --const-fid 0 --cow --keep-allele-order --allow-no-sex --allow-extra-chr",
             " --recode vcf --out ", outputVCF
          )
-         system(command)
+         
+         exit_code <- system(command)
+         if (exit_code != 0){
+            showNotifications("Plink conversion failed", type = "error")
+            enable("convertCSV")
+            return()
+         }
+         
+         #system(command)
          vcfPath <- paste0(outputVCF, ".vcf")
          #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
          convertedCSV(csv_result)
-         
-         enable("convertCSV")
       }
       
+      enable("convertCSV")
+      
       output$downloadConvertedCSV <- downloadHandler(
-         filename = function() { "converted_to_csv.csv" },
+         filename = function() { outputName },
          content = function(file) {
             readr::write_csv(convertedCSV(), file)
          }
@@ -778,6 +797,8 @@ server <- function(input, output, session) {
          req(convertedCSV())
          head(convertedCSV(), 10)  # Preview top 10 rows
       })
+      
+      waiter_hide()
    }) # end of observeEvent
    
 
@@ -826,6 +847,7 @@ server <- function(input, output, session) {
       #lastAction(Sys.time())
       
       disable("convertBtn")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
       
       inputPath <- input$convertFile$datapath
       refPath <- input$refFile$datapath
@@ -839,29 +861,40 @@ server <- function(input, output, session) {
       
       withProgress(message = "Converting to SNIPPER-analysis ready file...", value = 0, {
       
-                   snipper.file <- tosnipper(input = inputPath,
+      snipper.file <- tryCatch({
+         
+         tosnipper(input = inputPath,
                                 references = refPath,
                                 target.pop = targetSet,
                                 population.name = targetName,
                                 markers = numMarkers)
+         
+         waiter_hide()
+      }, error = function(e){
+         showNotifications(paste("Conversion failed:", e$message), type = "error")
+         NULL
+      })
+      
+      if (!is.null(snipper.file)) {
+         convertedSNIPPER(snipper.file)
+         enable("convertBtn")
+         
+         output$downloadConverted <- downloadHandler(
+            filename = function() { outputName },
+            content = function(file) {
+               openxlsx::write.xlsx(convertedSNIPPER(), file)
+            }
+         )
+         
+         output$previewTableSNIPPER <- renderTable({
+            req(convertedSNIPPER())
+            head(convertedSNIPPER(), 10)
+         })
+      }
       
       #xlsx_file <- file.path(paste(outputDir, outputName))
-      convertedSNIPPER(snipper.file)
-      enable("convertBtn")
-      
-      output$downloadConverted <- downloadHandler(
-         filename = function() { outputName },
-         content = function(file) {
-            #file.copy(snipper.file, file)
-            openxlsx::write.xlsx(convertedSNIPPER(), file)
-         }
-      )
-      
-      # try to preview the table
-      output$previewTableSNIPPER <- renderTable({
-         req(convertedSNIPPER())
-         head(convertedSNIPPER(), 10)  # Preview top 10 rows
-      })
+      #convertedSNIPPER(snipper.file)
+      #enable("convertBtn")
    })
       
    }) # end of observe Event
@@ -888,6 +921,7 @@ server <- function(input, output, session) {
       #lastAction(Sys.time())
       
       disable("run_uas2csv")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
       
       req(input$uas_zip)
       
@@ -931,6 +965,7 @@ server <- function(input, output, session) {
             head(convertedUAS(), 10)  # Preview top 10 rows
          })
          
+         waiter_hide()
          showNotification("Conversion complete!", type = "message")
       }, error = function(e) {
          showNotification(paste("Error:", e$message), type = "error")
@@ -952,6 +987,7 @@ server <- function(input, output, session) {
       #lastAction(Sys.time())
       
       disable("compareBtn")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
       
       withProgress(message = "Analyzing files...", value = 0, {
       tryCatch({
@@ -1010,11 +1046,12 @@ server <- function(input, output, session) {
             }, contentType = "image/png"
          )
          
-         
+         waiter_hide()
       }, error = function(e) {
          showNotification(paste("Error during analysis:", e$message), type = "error", duration = 10)
       })
       }) # end of withprogress
+     
    }) # end of observe event
    
    ## MARKER EXTRACTION
@@ -1064,6 +1101,7 @@ server <- function(input, output, session) {
          #lastAction(Sys.time())
          
          disable("extractBtn")
+         waiter_show(html = spin_fading_circles(), color = "#ffffff")
          
          req(input$markerFile)
          
@@ -1110,6 +1148,8 @@ server <- function(input, output, session) {
                merged.file = "final_merged.vcf",
                plink_path  = plink_path
             )
+            
+            extracted_file(file.path(temp_dir, "final_merged.vcf"))
 
             #output$downloadExtracted <- downloadHandler(
             #   filename = function() { "final_merged.vcf" },
@@ -1120,14 +1160,16 @@ server <- function(input, output, session) {
             #)
             
             enable("extractBtn")
+            waiter_hide()
          }, error = function(e) {
             showNotification(paste("Error:", e$message), type = "error")
             enable("extractBtn")
          })
             
       })
+         
    })
-      extracted_file(file.path(temp_dir, "final_merged.vcf"))
+     
       
       output$downloadExtracted <- downloadHandler(
          filename = function() { "final_merged.vcf" },
@@ -1165,6 +1207,7 @@ server <- function(input, output, session) {
       lastAction(Sys.time())
       
       disable("runPopStats")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
       
       req(input$popStatsFile)
       
@@ -1265,9 +1308,15 @@ server <- function(input, output, session) {
             
             ## FST
             incProgress(1.0, detail = "Still running HWE and FST calculations...")
+            
             fst_stats <- reactive({
                req(fsnps_gen())
                compute_fst(fsnps_gen())
+            })
+            
+            fst_data <- reactive({
+               req(fst_stats())
+               fst_stats()$fst_dataframe
             })
             
             output$fstMatrixUI <- renderUI({
@@ -1322,6 +1371,7 @@ server <- function(input, output, session) {
             #)
             
             #incProgress(1, detail = "Finalizing output...")
+            
             enable("runPopStats")
             
             # download heterozygosity plot
@@ -1366,10 +1416,10 @@ server <- function(input, output, session) {
                   path <- export_results(priv_alleles, stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
                   
                   file.copy(path, file)
-                  openxlsx::write.xlsx(path, file = filename)
+                  #openxlsx::write.xlsx(path, file = filename)
                }
             )
-            
+            waiter_hide()
          }, error = function(e) {
             showNotification(paste("Population stats error:", e$message), type = "error")
             enable("runPopStats")
@@ -1406,6 +1456,8 @@ server <- function(input, output, session) {
       lastAction(Sys.time())
       
       disable("runPCA")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
+      
       req(input$pcaFile)
       
       withProgress(message = "Running PCA...", {
@@ -1468,6 +1520,7 @@ server <- function(input, output, session) {
                )
             })
       
+            waiter_hide()
             enable("runPCA")
          }, error = function(e) {
             showNotification(paste("PCA Error:", e$message), type = "error")
@@ -1481,7 +1534,7 @@ server <- function(input, output, session) {
          paste0("bar_plot_", Sys.Date(), ".png")
       },
       content = function(file) {
-         png(file, width = 800, height = 800, res = 120)
+         png(file, width = 800, height = 800, res = 300)
          graphics::barplot(
             pca_results$percent,
             ylab = "Genetic variance explained by eigenvectors (%)",
@@ -1523,6 +1576,8 @@ server <- function(input, output, session) {
       lastAction(Sys.time())
       
       disable("runStructure")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
+      
       req(input$structureFile)
       #structure_path <- Sys.which("structure")
       #if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
@@ -1773,6 +1828,7 @@ server <- function(input, output, session) {
             )
          })
          
+         waiter_hide()
       }) # end of with progress
       
       

@@ -919,7 +919,7 @@ export_results <- function(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
       "Pairwise Fst Matrix"       = as.data.frame(fst_matrix$fst_matrix)
    )
    
-   #openxlsx::write.xlsx(datasets, file = out_file)
+   openxlsx::write.xlsx(datasets, file = out_file)
    return(out_file)
 }
 
