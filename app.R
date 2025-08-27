@@ -420,7 +420,7 @@ ui <- tagList(
                                         tableOutput("examplePOS")
                                  )
                               ),
-                              downloadButton("downloadExtracted", "Download Extracted VCF", id = "downloadExtractedBtn")
+                              downloadButton("downloadExtracted", "Download Extracted VCF")
                               
                            )
                         )
@@ -1095,7 +1095,7 @@ server <- function(input, output, session) {
          #lastAction(Sys.time())
          
          disable("extractBtn")
-         shinyjs::disable("downloadExtractedBtn")
+         #shinyjs::disable("downloadExtractedBtn")
          
          req(input$markerFile)
          
@@ -1154,8 +1154,17 @@ server <- function(input, output, session) {
             #      file.copy(source_path, file)     # would this download??
             #   }
             #)
-
+            
+            output$downloadExtracted <- downloadHandler(
+               filename = function() { "final_merged.vcf" },
+               content = function(file) {
+                  req(extracted_file())
+                  file.copy(extracted_file(), file)
+               }
+            )
+            
             enable("extractBtn")
+            #shinyjs::enable("downloadExtractedBtn")
             waiter_hide()
          }, error = function(e) {
             showNotification(paste("Error:", e$message), type = "error")
@@ -1166,21 +1175,14 @@ server <- function(input, output, session) {
          
    })
      
-      observe({
-         if (!is.null(extracted_file()) && file.exists(extracted_file())) {
-            shinyjs::enable("downloadExtractedBtn")
-            showNotification("VCF file ready for download!", type = "message")
-         }
-      })
+     # observe({
+      #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
+      #      shinyjs::enable("downloadExtractedBtn")
+      #      showNotification("VCF file ready for download!", type = "message")
+      #   }
+      #})
       
-      output$downloadExtracted <- downloadHandler(
-         filename = function() { "final_merged.vcf" },
-         content = function(file) {
-            req(extracted_file())
-            file.copy(extracted_file(), file)
-         }
-      )
-      
+
       
    # POP STAT
    output$examplePop <- renderTable({
