@@ -1143,17 +1143,17 @@ server <- function(input, output, session) {
                plink_path  = plink_path
             )
             
-            #extracted_file(file.path(temp_dir, "final_merged.vcf"))
-            #showNotification("VCF file successfully extracted and ready for download!", type = "message")
+            extracted_file(file.path(temp_dir, "final_merged.vcf"))
+            showNotification("VCF file successfully extracted and ready for download!", type = "message")
             
             
-            output$downloadExtracted <- downloadHandler(
-               filename = function() { "final_merged.vcf" },
-               content = function(file) {
-                  source_path <- file.path(temp_dir, "final_merged.vcf")
-                  file.copy(source_path, file)     # would this download??
-               }
-            )
+            #output$downloadExtracted <- downloadHandler(
+            #   filename = function() { "final_merged.vcf" },
+            #   content = function(file) {
+            #      source_path <- file.path(temp_dir, "final_merged.vcf")
+            #      file.copy(source_path, file)     # would this download??
+            #   }
+            #)
             
 
             enable("extractBtn")
@@ -1167,13 +1167,13 @@ server <- function(input, output, session) {
       })
          
    })
-      #output$downloadExtracted <- downloadHandler(
-      #   filename = function() { "final_merged.vcf" },
-      #   content = function(file) {
-      #      req(extracted_file())
-      #      file.copy(extracted_file(), file)
-      #   }
-      #)
+      output$downloadExtracted <- downloadHandler(
+         filename = function() { "final_merged.vcf" },
+         content = function(file) {
+            req(extracted_file())
+            file.copy(extracted_file(), file)
+         }
+      )
      
      # observe({
       #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
