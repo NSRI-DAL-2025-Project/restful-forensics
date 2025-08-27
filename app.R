@@ -10,35 +10,22 @@ library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
 source("global.R")
-shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
+#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
-ui <- navbarPage(
+ui <- tagList(
    use_waiter(),
-   
-   title = div(
-      tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: center;"),
-      tags$span("RESTful Forensics",
-                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
-      #tags$div(
-      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
-      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
-      #)
-   ), # end of title
-   
    tags$head(
       tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Carme&display=swap"),
       tags$style(HTML("
             body {font-family: 'Carme';}
             .navbar-nav > li:nth-child(1) > a { background-color: transparent !important; }
-            .navbar-nav > li:nth-child(2) > a { background-color: transparent !important; }
-            .navbar-nav > li:nth-child(3) > a { background-color: transparent !important; }
-            .navbar-nav > li:nth-child(4) > a { background-color: #75a2bf !important; }
-            .navbar-nav > li:nth-child(5) > a { background-color: #5e8cad !important; }
-            .navbar-nav > li:nth-child(6) > a { background-color: #46769b !important; }
-            .navbar-nav > li:nth-child(7) > a { background-color: #2f5f8a !important; }
-            .navbar-nav > li:nth-child(8) > a { background-color: #174978 !important; }
-            .navbar-nav > li:nth-child(9) > a { background-color: #003366 !important; }
+            .navbar-nav > li:nth-child(2) > a { background-color: #75a2bf !important; }
+            .navbar-nav > li:nth-child(3) > a { background-color: #5e8cad !important; }
+            .navbar-nav > li:nth-child(4) > a { background-color: #46769b !important; }
+            .navbar-nav > li:nth-child(5) > a { background-color: #2f5f8a !important; }
+            .navbar-nav > li:nth-child(6) > a { background-color: #174978 !important; }
+            .navbar-nav > li:nth-child(7) > a { background-color: #003366 !important; }
       
             .clickable-card {
                 border: 1px solid #ccc;
@@ -83,6 +70,17 @@ ui <- navbarPage(
             });
           ")),
    
+   navbarPage(
+   
+   title = div(
+      tags$img(src = "logo.png", height = "30px", style = "display: inline-block; vertical-align: middle;"),
+      tags$span("RESTful Forensics",
+                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
+      #tags$div(
+      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
+      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
+      #)
+   ), # end of title
    
    tabPanel(
       title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
@@ -100,8 +98,6 @@ ui <- navbarPage(
       )
       
    ), # end of tab panel for homepage
-   
-   
    ## 1. Instructions Tab ----
    tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
             fluidPage(
@@ -408,7 +404,7 @@ ui <- navbarPage(
                                           
                                           actionButton("extractBtn", "Run Marker Extraction", icon = icon("play")),
                                           
-                                          downloadButton("downloadExtracted", "Download Merged VCF")
+                                          #downloadButton("downloadExtracted", "Download Merged VCF")
                                        )
                               )
                            ),
@@ -424,11 +420,8 @@ ui <- navbarPage(
                                         tableOutput("examplePOS")
                                  )
                               ),
-                              hr(),
-                              conditionalPanel(
-                                 condition = "output.showExtractDownload",
-                                 downloadButton("downloadExtracted", "Download Extracted VCF")
-                              )
+                              downloadButton("downloadExtracted", "Download Extracted VCF", id = "downloadExtractedBtn")
+                              
                            )
                         )
                ),
@@ -621,7 +614,7 @@ ui <- navbarPage(
       style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
 )
-
+)
 # TO ADD
 server <- function(input, output, session) {
    
@@ -1094,14 +1087,15 @@ server <- function(input, output, session) {
       toggleState("extractBtn", isFileUploaded && (isRSIDReady || isPOSReady))
    })
    
+
+   
    extracted_file <- reactiveVal(NULL)
    
-
       observeEvent(input$extractBtn, {
          #lastAction(Sys.time())
          
          disable("extractBtn")
-         waiter_show(html = spin_fading_circles(), color = "#ffffff")
+         shinyjs::disable("downloadExtractedBtn")
          
          req(input$markerFile)
          
@@ -1150,7 +1144,9 @@ server <- function(input, output, session) {
             )
             
             extracted_file(file.path(temp_dir, "final_merged.vcf"))
-
+            showNotification("VCF file successfully extracted and ready for download!", type = "message")
+            
+            
             #output$downloadExtracted <- downloadHandler(
             #   filename = function() { "final_merged.vcf" },
             #   content = function(file) {
@@ -1158,7 +1154,7 @@ server <- function(input, output, session) {
             #      file.copy(source_path, file)     # would this download??
             #   }
             #)
-            
+
             enable("extractBtn")
             waiter_hide()
          }, error = function(e) {
@@ -1170,6 +1166,12 @@ server <- function(input, output, session) {
          
    })
      
+      observe({
+         if (!is.null(extracted_file()) && file.exists(extracted_file())) {
+            shinyjs::enable("downloadExtractedBtn")
+            showNotification("VCF file ready for download!", type = "message")
+         }
+      })
       
       output$downloadExtracted <- downloadHandler(
          filename = function() { "final_merged.vcf" },
@@ -1180,13 +1182,6 @@ server <- function(input, output, session) {
       )
       
       
-      # download button will appear once ready
-      output$showExtractDownload <- reactive({
-         !is.null(extracted_file()) && file.exists(extracted_file())
-      })
-      outputOptions(output, "showExtractDownload", suspendWhenHidden = FALSE)
-   
-   
    # POP STAT
    output$examplePop <- renderTable({
       data.frame(
