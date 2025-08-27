@@ -810,7 +810,7 @@ compute_population_stats <- function(fsnps_gen) {
    fis_df <- data.frame(Population = names(fis_values), Fis = fis_values)
    
    # Allele frequencies
-   fsnps_gpop <- genind2genepop(fsnps_gen)
+   fsnps_gpop <- adegenet::genind2genpop(fsnps_gen)
    allele_freqs <- t(adegenet::makefreq(fsnps_gpop, quiet = FALSE, missing = NA)) %>%
       as.data.frame()
    
