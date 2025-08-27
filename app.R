@@ -10,6 +10,7 @@ library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
 source("global.R")
+devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
 shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
