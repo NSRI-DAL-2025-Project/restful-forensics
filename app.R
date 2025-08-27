@@ -691,7 +691,7 @@ server <- function(input, output, session) {
          
          exit_code <- system(command)
          if (exit_code != 0){
-            showNotifications("Plink conversion failed", type = "error")
+            showNotification("Plink conversion failed", type = "error")
             enable("convertCSV")
             return()
          }
@@ -716,7 +716,7 @@ server <- function(input, output, session) {
          
          exit_code <- system(command)
          if (exit_code != 0){
-            showNotifications("Plink conversion failed", type = "error")
+            showNotification("Plink conversion failed", type = "error")
             enable("convertCSV")
             return()
          }
@@ -815,7 +815,7 @@ server <- function(input, output, session) {
             
             waiter_hide()
          }, error = function(e){
-            showNotifications(paste("Conversion failed:", e$message), type = "error")
+            showNotification(paste("Conversion failed:", e$message), type = "error")
             NULL
          })
          
