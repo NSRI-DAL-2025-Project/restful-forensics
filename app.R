@@ -265,7 +265,7 @@ ui <- tagList(
                         fileInput("ref_file", "Optional Reference File (CSV or XLSX)",
                                   accept = c(".csv", ".xlsx")),
                         actionButton("run_uas2csv", "Run Conversion"),
-                        br(), br(),
+                        br(), 
                         downloadButton("downloadUAScsv", "Download Converted CSV")
                      ),
                      mainPanel(
@@ -368,7 +368,7 @@ ui <- tagList(
                                                         width = "100%"),
                                           helpText("See https://www.cog-genomics.org/plink/ for options."),
                                           
-                                          actionButton("extractBtn", "Run Marker Extraction", icon = icon("play")),
+                                          actionButton("extractBtn", "Run Marker Extraction", icon = icon("play"))
                                           
                                           #downloadButton("downloadExtracted", "Download Merged VCF")
                                        )
@@ -571,7 +571,8 @@ ui <- tagList(
       style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
 )
-)
+))
+
 # TO ADD
 server <- function(input, output, session) {
    
