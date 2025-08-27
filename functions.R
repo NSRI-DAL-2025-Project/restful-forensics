@@ -782,7 +782,7 @@ convert_to_genind <- function(file) {
 # Need to correct, genind2hierfstat is outputting an error 
 compute_population_stats <- function(fsnps_gen) {
    library(dplyr)
-   #devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
+   devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
    
    mar_matrix <- hierfstat::allelic.richness(hierfstat::genind2hierfstat(fsnps_gen))$Ar %>%
       apply(MARGIN = 2, FUN = mean) %>%
@@ -808,8 +808,7 @@ compute_population_stats <- function(fsnps_gen) {
    fis_df <- data.frame(Population = names(fis_values), Fis = fis_values)
    
    # Allele frequencies
-   
-   fsnps_gpop <- genind2genpop(fsnps_gen)
+   fsnps_gpop <- genind2genepop(fsnps_gen)
    allele_freqs <- t(makefreq(fsnps_gpop, quiet = FALSE, missing = NA)) %>%
       as.data.frame()
    
