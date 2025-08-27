@@ -450,8 +450,8 @@ merge_vcf_files <- function(output.dir, merged.file) {
                             stdout = paste(vcf_files, collapse = " "))
    
    system(merge_command)
-   return(file.path(output.dir))
-   print(paste("Merged VCF file created:", merged.file))
+   return(file.path(output.dir, "final_merged.vcf"))
+   #print(paste("Merged VCF file created:", merged.file))
 }
 
 extraction <- function(file_type, 
@@ -507,7 +507,8 @@ extraction <- function(file_type,
                                                  file.path(output.dir, "rsid_extracted"))
       )
       system(command)  # Execute PLINK
-      return(file.path(output.dir))
+      extracted_file <- file.path(output.dir, "rsid_extracted.vcf")
+      return(extracted_file)
    } else if (!is.null(pos.list)) {
       args <- if (!is.null(plink_args)) paste(plink_args, collapse = " ") else ""
       
@@ -531,17 +532,16 @@ extraction <- function(file_type,
          )
          
          system(cmd)  # Run immediately
-         return(cmd)
       })
       
-      merge_vcf_files(output.dir, merged.file)  # Merge extracted files
+      extracted_file <- merge_vcf_files(output.dir, merged.file)  # Merge extracted files
       
       #return(command_list)
-      return(file.path(output.dir))
+      return(extracted_file)
    } else {
       stop("Either `snps.list` or `pos.list` must be provided.")
    }
-   #return(command)
+   return(extracted_file)
 }
 
 
