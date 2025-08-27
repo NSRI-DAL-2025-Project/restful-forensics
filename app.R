@@ -269,7 +269,7 @@ ui <- tagList(
                         downloadButton("downloadUAScsv", "Download Converted CSV")
                      ),
                      mainPanel(
-                        tags$div(class = "card mb-3",
+                        tags$div(class = "card",
                                  tags$div(class = "card-header",
                                           h4("Sample Files"),
                                           ),
@@ -310,7 +310,7 @@ ui <- tagList(
                         actionButton("convertBtn", "Convert Format", icon = icon("arrow-up-right-from-square"))
                      ),
                      mainPanel(
-                        tags$div(class = "card mb-3",
+                        tags$div(class = "card",
                                  tags$div(class = "card-header",
                                           h4("Example SNIPPER Input & Reference Files")
                                  ),
@@ -328,7 +328,7 @@ ui <- tagList(
                                  )
                         ),
                         
-                        tags$div(class = "card mb-3",
+                        tags$div(class = "card",
                                  tags$div(class = "card-header",
                                           h4("Preview of Converted SNIPPER Data")
                                  ),
@@ -1174,7 +1174,6 @@ server <- function(input, output, session) {
             file.copy(extracted_file(), file)
          }
       )
-      
      
      # observe({
       #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
