@@ -270,6 +270,7 @@ ui <- tagList(
                      ),
                      mainPanel(
                         tags$div(class = "card",
+                                 style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
                                  tags$div(class = "card-header",
                                           h4("Sample Files"),
                                           ),
@@ -286,6 +287,7 @@ ui <- tagList(
                                           )
                                  ), # end of first tag
                         tags$div(class = "card",
+                                 style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
                                  tags$div(class = "card-header",
                                           h4("Preview of Output")),
                                  tags$div(class = "card-body",
