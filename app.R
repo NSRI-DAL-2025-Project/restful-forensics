@@ -1155,13 +1155,7 @@ server <- function(input, output, session) {
             #   }
             #)
             
-            output$downloadExtracted <- downloadHandler(
-               filename = function() { "final_merged.vcf" },
-               content = function(file) {
-                  req(extracted_file())
-                  file.copy(extracted_file(), file)
-               }
-            )
+
             
             enable("extractBtn")
             #shinyjs::enable("downloadExtractedBtn")
@@ -1174,6 +1168,13 @@ server <- function(input, output, session) {
       })
          
    })
+      output$downloadExtracted <- downloadHandler(
+         filename = function() { "final_merged.vcf" },
+         content = function(file) {
+            req(extracted_file())
+            file.copy(extracted_file(), file)
+         }
+      )
      
      # observe({
       #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
