@@ -10,7 +10,7 @@ library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
 source("global.R")
-#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
+shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
 ui <- tagList(
@@ -43,7 +43,8 @@ ui <- tagList(
               }
               .card-body {
                 display: none;
-                margin-top: 10px;
+                margin-top: 20px;
+                margin-bottom: 20px;
                 font-size: 14px;
                 color: #333;
               }
@@ -53,8 +54,8 @@ ui <- tagList(
                 border: 1px solid #bdd3eb;
                 border-radius: 6px;
                 padding: 12px;
-                margin-top: 10px;
-                margin-bottom: 10px;
+                margin-top: 20px;
+                margin-bottom: 20px;
               }
               .inner-card h5 {
                 margin-top: 0;
@@ -71,508 +72,500 @@ ui <- tagList(
           ")),
    
    navbarPage(
-   
-   title = div(
-      tags$img(src = "logo.png", height = "30px", style = "display: inline-block; vertical-align: middle;"),
-      tags$span("RESTful Forensics",
-                style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
-      #tags$div(
-      #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
-      #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
-      #)
-   ), # end of title
-   
-   tabPanel(
-      title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
-      div(
-         class = "card",
-         style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
-         div(
-            class = "card-body",
-            style = "display: block;",
-            h4(class = "card-title", "From the Authors:"),
-            p(class = "card-text",
-              "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
-            )
-         )
-      )
       
-   ), # end of tab panel for homepage
-   ## 1. Instructions Tab ----
-   tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
-            fluidPage(
-               
-               div(class = "clickable-card",
-                   div(class = "card-header", "🔄 File Conversion"),
-                   div(class = "card-body",
-                       p("Convert various files to commonly used input files."),
-                       
-                       div(class = "inner-card",
-                           h5("A. Convert files to CSV and add population info"),
-                           p("Input file: VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
-                           p("Expected output file: CSV file.")
-                       ),
-                       div(class = "inner-card",
-                           h5("B. Convert ForenSeq UAS outputs to wide format"),
-                           p("Input file: Compressed folder (.zip or .tar) of XLSX files."),
-                           p("Expected output file: Single CSV file (merged XLSX files).")
-                       ),
-                       div(class = "inner-card",
-                           h5("C. Convert CSV or XLSX files to a SNIPPER-compatible file"),
-                           p("Input file: CSV or XLSX file."),
-                           p("Expected output file: XLSX file.")
-                       )
-                       
-                   )
-               ),
-               ## extraction
-               div(class = "clickable-card",
-                   div(class = "card-header", "🧬 SNP Extraction"),
-                   div(class = "card-body",
-                       p("Extract markers from sequenced data and perform concordance analysis."),
-                       
-                       div(class = "inner-card",
-                           h5("A. Extract SNPs based on rsID or GRCh37/GRCh38 position"),
-                           p("Input file:"),
-                           p("(1) VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
-                           p("(2) Markers/position list — you may type rsIDs manually, upload a list, or use a POS txt file."),
-                           p("The position list (txt file) should include:"),
-                           tags$ul(
-                              tags$li("[1] Chromosome number (integer)"),
-                              tags$li("[2] Starting base-pair position"),
-                              tags$li("[3] Final base-pair position")
-                           )
-                       ),
-                       
-                       div(class = "inner-card",
-                           h5("B. Concordance analysis between files with the same samples"),
-                           p("Input files: Two CSV or XLSX files."),
-                           p("Expected output:"),
-                           tags$ul(
-                              tags$li("Concordance table"),
-                              tags$li("Concordance plot")
-                           )
-                       )
-                       
-                   )
-               ), # end of div for tab2
-               
-               ### POP Stat
-               div(class = "clickable-card",
-                   div(class = "card-header", "📝 Population Statistics"),
-                   div(class = "card-body",
-                       p("Calculate private alleles, heterozygosity, inbreeding coefficients, allele frequencies, and other basic populations statistics"),
-                       p("Input file: CSV or XLSX file"),
-                       p("Expected output files:"),
-                       tags$ul(
-                          tags$li("XLSX file with all table results"),
-                          tags$li("Heterozygosity Plot"),
-                          tags$li("Fst Plot")
-                       )
-                   )
-               ), #end of div for popstat
-               
-               div(class = "clickable-card",
-                   div(class = "card-header", "🔍 Exploratory Analysis"),
-                   div(class = "card-body",
-                       p("Run principal component analysis"),
-                       p("Input file: CSV or XLSX file"),
-                       p("Expected output file: PNG plots"))
-               ), # end of div for pca
-               
-               div(class = "clickable-card",
-                   div(class = "card-header", "📊 STRUCTURE Analysis"),
-                   div(class = "card-body",
-                       p("Generate STRUCTURE input files and pong compatible files. Visualize the possible results"),
-                       p("Input file: CSV or XLSX file"),
-                       p("Expected output file: Zipped files and PNG plots")))
-            ) # end of fluidpage
-            
-   ), # end of tab panel 
-   
-   ## FILE CONVERSION
-   tabPanel(
-      title = HTML("<span style = 'color:#ffffff;'>File Conversion</span>"),
-      tabsetPanel(
-         
-         # Subtab 1: Convert to CSV
-         tabPanel("Convert files to CSV",
-                  useShinyjs(),
-                  sidebarLayout(
-                     sidebarPanel(
-                        radioButtons("inputType", "Choose Input File Type",
-                                     choices = c("VCF file" = "vcf", "BCF file" = "bcf", "PLINK files (.bed/.bim/.fam)" = "plink")),
-                        
-                        conditionalPanel(
-                           condition = "input.inputType == 'vcf'",
-                           fileInput("vcfFile", "Upload VCF File")
-                        ),
-                        # added 4 Aug (missed)
-                        conditionalPanel(
-                           condition = "input.inputType == 'bcf'",
-                           fileInput("bcfFile", "Upload BCF File")
-                        ),
-                        
-                        conditionalPanel(
-                           condition = "input.inputType == 'plink'",
-                           fileInput("bedFile", "Upload BED File"),
-                           fileInput("bimFile", "Upload BIM File"),
-                           fileInput("famFile", "Upload FAM File")
-                        ),
-                        
-                        radioButtons("poptype", "Do samples come from a single population?",
-                                     choices = c("Yes" = "single", "No" = "multiplepop")),
-                        
-                        conditionalPanel(
-                           condition = "input.poptype == 'multiplepop'",
-                           fileInput("multiplepop", "Input reference file with sample ID and population"),
-                           helpText("*Accepts XLSX and CSV files")
-                        ),
-                        
-                        conditionalPanel(
-                           condition = "input.poptype == 'single'",
-                           textAreaInput("typePop", "Enter population", rows = 1)
-                        ),
-                        
-                        actionButton("convertCSV", "Convert File to CSV", icon = icon("arrow-up-right-from-square"))
-                        
-                     ),
-                     mainPanel(
-                        tableOutput("previewTable"),
-                        fluidRow(
-                           column(6,
-                                  h5("This is a sample reference file. Only the first two columns (sample and population information) are used."),
-                                  tableOutput("exampleRefCSV")),
-                           column(6,
-                                  tags$h4("Sample File"),
-                                  tags$ul(
-                                     tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
-                                  )  
-                           )
-                        ), # end of fluidRow
-                        downloadButton("downloadConvertedCSV", "Download Converted CSV")
-                     )
-                  )
-         ),
-         
-         tabPanel("Widen ForenSeq UAS files",
-                  useShinyjs(),
-                  sidebarLayout(
-                     sidebarPanel(
-                        fileInput("uas_zip", "Upload ZIP or TAR file",
-                                  accept = c(".zip", ".tar")),
-                        helpText("*Accepts compressed files containing XLSX files."),
-                        fileInput("ref_file", "Optional Reference File (CSV or XLSX)",
-                                  accept = c(".csv", ".xlsx")),
-                        actionButton("run_uas2csv", "Run Conversion"),
-                        br(), 
-                        downloadButton("downloadUAScsv", "Download Converted CSV")
-                     ),
-                     mainPanel(
-                        h4("Preview of Output"),
-                        tableOutput("previewTableUAS"),
-                        fluidRow(
-                           column(6,
-                                  h5("All alleles of available SNPs per sample are listed in a long format."),
-                                  tableOutput("exampleXLSX")),
-                           column(6,
-                                  tags$h5("Downloadable Sample"),
-                                  tags$ul(
-                                     tags$a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)
-                                  )  
-                           )
-                        ) # end of fluidrow
-                     ) #end of mainpanel
-                  )
-         ), #end of tabpanel
-         
-         
-         tabPanel("Convert to SNIPPER-analysis ready file",
-                  useShinyjs(),
-                  sidebarLayout(
-                     sidebarPanel(
-                        fileInput("convertFile", "Upload File"),
-                        helpText("*Accepts VCF, XLSX, and CSV files"),
-                        fileInput("refFile", "Upload Reference File"),
-                        helpText("*Accepts XLSX and CSV files"),
-                        
-                        checkboxInput("targetPop", "Subset Target Population?", value = FALSE),
-                        textInput("targetPopName", "Target Population Name"),
-                        actionButton("convertBtn", "Convert Format", icon = icon("arrow-up-right-from-square"))
-                     ),
-                     mainPanel(
-                        h4("Preview of Converted SNIPPER Data"),
-                        tableOutput("previewTableSNIPPER"),
-                        fluidRow(
-                           column(6,
-                                  h5("Example SNIPPER Input & Reference Files"),
-                                  tableOutput("exampleTableSnipper")),
-                           column(6,
-                                  h5("Sample reference file"),
-                                  tableOutput("exampleRefSnipper")),
-                           column(6, 
-                                  tags$h5("Download Sample & Converted File"),
-                                  tags$ul(
-                                     tags$a("Sample file", href = "www/sample.csv", download = NA)
-                                  )
-                        ), # end of fluidrow
-                        br(),
-                        downloadButton("downloadConverted", "Download Converted File")
-                     ) # end of mainpanel
-                  )
+      title = div(
+         tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: middle;"),
+         tags$span("RESTful Forensics",
+                   style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
+         #tags$div(
+         #   style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;",
+         #   HTML("&copy; 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved.")
+         #)
+      ), # end of title
+      
+      tabPanel(
+         title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
+         div(
+            class = "card",
+            style = "margin: 30px; box-shadow: 0 5px 10px rgba(0,0,0,0.08);",
+            div(
+               class = "card-body",
+               style = "display: block;",
+               h4(class = "card-title", "From the Authors:"),
+               p(class = "card-text",
+                 "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
+               )
+            )
          )
          
-      )
-   ), # end of tabpanel
-   
-   ## MARKER EXTRACTION
-   tabPanel(title = HTML("<span style = 'color:#ffffff;'>SNP Extraction</span>"),
-            tabsetPanel(
-               tabPanel("SNP Extraction",
-                        useShinyjs(),
-                        sidebarLayout(
-                           sidebarPanel(
-                              tabPanel("Marker Extraction",
-                                       fluidPage(
-                                          fileInput("markerFile", "Upload Genotype (VCF, BCF or PLINK) File"),
-                                          
-                                          radioButtons("markerType", "Choose Marker Type",
-                                                       choices = c("rsid", "pos"), inline = TRUE),
-                                          
-                                          conditionalPanel(
-                                             condition = "input.markerType == 'rsid'",
-                                             radioButtons("rsidInputType", "RSID Input",
-                                                          choices = c("manual", "upload")),
-                                             conditionalPanel(
-                                                condition = "input.rsidInputType == 'manual'",
-                                                textAreaInput("typedRSIDs", "Enter RSIDs (one per line)", rows = 5)
-                                             ),
-                                             conditionalPanel(
-                                                condition = "input.rsidInputType == 'upload'",
-                                                fileInput("markerList1", "Upload RSID List File")
-                                             )
-                                          ),
-                                          
-                                          conditionalPanel(
-                                             condition = "input.markerType == 'pos'",
-                                             fileInput("markerList2", "Upload POS List (.csv, .xlsx)")
-                                          ),
-                                          
-                                          fileInput("bedFile", "PLINK BED file (optional)"),
-                                          fileInput("bimFile", "PLINK BIM file (optional)"),
-                                          fileInput("famFile", "PLINK FAM file (optional)"),
-                                          textAreaInput("plink_args",
-                                                        label = "Additional PLINK Arguments",
-                                                        placeholder = "--maf 0.05 --geno 0.1",
-                                                        rows = 3,
-                                                        width = "100%"),
-                                          helpText("See https://www.cog-genomics.org/plink/ for options."),
-                                          
-                                          actionButton("extractBtn", "Run Marker Extraction", icon = icon("play"))
-                                          
-                                          #downloadButton("downloadExtracted", "Download Merged VCF")
-                                       )
-                              )
-                           ),
-                           mainPanel(
-                              h4("Example Input Formats"),
-                              fluidRow(
-                                 column(6,
-                                        h5("rsID Format"),
-                                        tableOutput("exampleRSID")
-                                 ),
-                                 column(6,
-                                        h5("Position Format"),
-                                        tableOutput("examplePOS")
-                                 )
-                              ),
-                              downloadButton("downloadExtracted", "Download Extracted VCF")
-                              
-                           )
-                        )
-               ),
-               tabPanel(HTML("<span style = 'color:#000000;'>Concordance Analysis</span>"),
-                        useShinyjs(),
-                        sidebarLayout(
-                           sidebarPanel(
-                              fileInput("concordanceFile1", "Upload File A"),
-                              fileInput("concordanceFile2", "Upload File B"),
-                              checkboxInput("isHaplotype", "Treat data as haplotypes", value = FALSE),
-                              actionButton("compareBtn", "Run Concordance Analysis", icon = icon("play"))
-                           ),
-                           mainPanel(
-                              h4("Example Input Formats"),
-                              fluidRow(
-                                 column(6,
-                                        h5("File Format (for concordance)"),
-                                        tableOutput("exampleTable")
-                                 )
-                              ),
-                              hr(),
-                              h4("Concordance Summary Table"),
-                              tableOutput("concordanceResults"),
-                              hr(),
-                              h4("Concordance Plot"),
-                              imageOutput("concordancePlot"),
-                              hr(),
-                              downloadButton("downloadConcordance", "Download Concordance Results"),
-                              downloadButton("downloadConcordancePlot", "Download Plot")
-                           )
-                        )
-               )
-            )
-   ), # end of tabpanel
-   
-   ## POP STAT
-   tabPanel(HTML("<span style = 'color:#ffffff;'>Population Statistics</span>"),
-            tabsetPanel(
-               tabPanel("Perform Analysis",
-                        useShinyjs(),
-                        fileInput("popStatsFile", "Upload CSV or XLSX Dataset"),
-                        actionButton("runPopStats", "Analyze", icon = icon("magnifying-glass-chart")),
-                        downloadButton("downloadStats", "Download Results (Excel)"),
-                        
-                        hr(),
-                        h4("Example: Population File Format"),
-                        tableOutput("examplePop"),
-                        tags$h4("Sample File"),
-                        tags$ul(
-                           tags$a("Sample file", href = "www/sample.csv", download = NA)
-                        )
-               ), 
-               tabPanel("1 Private Alleles",
-                        h4("Private Alleles Summary"),
-                        uiOutput("privateAllelePlot")
-               ),
-               tabPanel("2 Heterozygosity",
-                        h4("Observed vs Expected Heterozygosity"),
-                        DT::dataTableOutput("heterozygosity_table"),
-                        hr(),
-                        h4("Heterozygosity Plot"),
-                        imageOutput("heterozygosity_plot"),
-                        downloadButton("downloadHeterozygosityPlot", "Download Plot")
-               ),
-               tabPanel("3 Inbreeding Coefficients",
-                        h4("Inbreeding Coefficient by Population"),
-                        DT::dataTableOutput("inbreeding_table")
-               ),
-               tabPanel("4 Allele Frequencies",
-                        h4("Allele Frequency Table"),
-                        DT::dataTableOutput("allele_freq_table")
-               ),
-               tabPanel("5 Hardy-Weinberg Equilibrium",
-                        h4("HWE P-value Summary"),
-                        uiOutput("hwe_summary"),
-                        h4("Population-wise HWE Chi-Square Table"),
-                        DT::dataTableOutput("hwe_chisq_table")
-               ),
-               tabPanel("6 Fst Values",
-                        h4("Pairwise Fst Matrix"),
-                        uiOutput("fstMatrixUI"),  
-                        h4("Tidy Pairwise Fst Data"),
-                        DT::dataTableOutput("fstDfTable"),
-                        hr(),
-                        h4("Fst Heatmap"),
-                        imageOutput("fst_heatmap_plot", width = "100%")                        #imageOutput("fst_heatmap"),
-                        #downloadButton("downloadFstHeatmap", "Download Heatmap")
-                        
-               )
-            )
-   ), # end of tabpanel
-   
-   ## PCA
-   tabPanel(HTML("<span style = 'color:#ffffff;'>Exploratory Analysis</span>"),
-            sidebarLayout(
-               sidebarPanel(
-                  fileInput("pcaFile", "Upload SNP Data (in CSV or XLSX) for PCA", accept = c(".csv", ".txt")),
-                  checkboxInput("useDefaultColors", "Use Default Colors and Labels", TRUE),
-                  conditionalPanel(
-                     condition = "!input.useDefaultColors",
-                     fileInput("pcaLabels", "Upload PCA Labels"),
-                     fileInput("colorPalette", "Upload Color Palette")
-                  ),
-                  numericInput("pcX", "PC Axis X", value = 1, min = 1),
-                  numericInput("pcY", "PC Axis Y", value = 2, min = 1),
-                  actionButton("runPCA", "Run PCA Analysis", icon = icon("play"))
-               ),
-               mainPanel(
-                  h4("Example: PCA Input Format"),
-                  tableOutput("examplePCA"),
-                  tags$h4("Sample File"),
-                  tags$ul(
-                     tags$a("Sample file", href = "www/sample.csv", download = NA)
-                  ),
+      ), # end of tab panel for homepage
+      ## 1. Instructions Tab ----
+      tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
+               fluidPage(
                   
-                  hr(),
-                  plotOutput("barPlot"),
-                  downloadButton("downloadbarPlot", "Download Bar Plot"),
-                  hr(),
-                  plotOutput("pcaPlot"),
-                  downloadButton("downloadPCAPlot", "Download PCA Plot")
-                  #hr(),
-               )
-            )
-   ), # end of tabpanel
-   
-   ## STRUCTURE Analysis
-   tabPanel(
-      HTML("<span style='color:#ffffff;'>STRUCTURE Analysis</span>"),
-      sidebarLayout(
-         sidebarPanel(
-            fileInput("structureFile", "Upload STRUCTURE Input"),
-            numericInput("kMin", "Min K", value = 2, min = 1),
-            numericInput("kMax", "Max K", value = 5, min = 1),
-            numericInput("numKRep", "Replicates per K", value = 5, min = 1),
-            numericInput("burnin", "Burn-in Period", value = 1000),
-            numericInput("numreps", "MCMC Reps After Burn-in", value = 10000),
-            checkboxInput("noadmix", "No Admixture Model", value = FALSE),
-            checkboxInput("phased", "Phased Genotype", value = FALSE),
-            numericInput("ploidy", "Ploidy Level", value = 2),
-            checkboxInput("linkage", "Use Linkage Model", value = FALSE),
-            actionButton("runStructure", "Run STRUCTURE", icon = icon("play")),
-            uiOutput("downloadButtons")
-         ),
-         mainPanel(
-            #h4("Preview of Converted SNIPPER Data"),
-            #tableOutput("previewTableSNIPPER"),
-            fluidRow(
-               column(6, 
-                      tags$h5("Download Sample File"),
-                      tags$ul(
-                         tags$a("Sample file", href = "www/sample.csv", download = NA)
+                  div(class = "clickable-card",
+                      div(class = "card-header", "🔄 File Conversion"),
+                      div(class = "card-body",
+                          p("Convert various files to commonly used input files."),
+                          
+                          div(class = "inner-card",
+                              h5("A. Convert files to CSV and add population info"),
+                              p("Input file: VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
+                              p("Expected output file: CSV file.")
+                          ),
+                          div(class = "inner-card",
+                              h5("B. Convert ForenSeq UAS outputs to wide format"),
+                              p("Input file: Compressed folder (.zip or .tar) of XLSX files."),
+                              p("Expected output file: Single CSV file (merged XLSX files).")
+                          ),
+                          div(class = "inner-card",
+                              h5("C. Convert CSV or XLSX files to a SNIPPER-compatible file"),
+                              p("Input file: CSV or XLSX file."),
+                              p("Expected output file: XLSX file.")
+                          )
+                          
                       )
-               ), # end of fluidrow
-               br(),
+                  ),
+                  ## extraction
+                  div(class = "clickable-card",
+                      div(class = "card-header", "🧬 SNP Extraction"),
+                      div(class = "card-body",
+                          p("Extract markers from sequenced data and perform concordance analysis."),
+                          
+                          div(class = "inner-card",
+                              h5("A. Extract SNPs based on rsID or GRCh37/GRCh38 position"),
+                              p("Input file:"),
+                              p("(1) VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
+                              p("(2) Markers/position list — you may type rsIDs manually, upload a list, or use a POS txt file."),
+                              p("The position list (txt file) should include:"),
+                              tags$ul(
+                                 tags$li("[1] Chromosome number (integer)"),
+                                 tags$li("[2] Starting base-pair position"),
+                                 tags$li("[3] Final base-pair position")
+                              )
+                          ),
+                          
+                          div(class = "inner-card",
+                              h5("B. Concordance analysis between files with the same samples"),
+                              p("Input files: Two CSV or XLSX files."),
+                              p("Expected output:"),
+                              tags$ul(
+                                 tags$li("Concordance table"),
+                                 tags$li("Concordance plot")
+                              )
+                          )
+                          
+                      )
+                  ), # end of div for tab2
+                  
+                  ### POP Stat
+                  div(class = "clickable-card",
+                      div(class = "card-header", "📝 Population Statistics"),
+                      div(class = "card-body",
+                          p("Calculate private alleles, heterozygosity, inbreeding coefficients, allele frequencies, and other basic populations statistics"),
+                          p("Input file: CSV or XLSX file"),
+                          p("Expected output files:"),
+                          tags$ul(
+                             tags$li("XLSX file with all table results"),
+                             tags$li("Heterozygosity Plot"),
+                             tags$li("Fst Plot")
+                          )
+                      )
+                  ), #end of div for popstat
+                  
+                  div(class = "clickable-card",
+                      div(class = "card-header", "🔍 Exploratory Analysis"),
+                      div(class = "card-body",
+                          p("Run principal component analysis"),
+                          p("Input file: CSV or XLSX file"),
+                          p("Expected output file: PNG plots"))
+                  ), # end of div for pca
+                  
+                  div(class = "clickable-card",
+                      div(class = "card-header", "📊 STRUCTURE Analysis"),
+                      div(class = "card-body",
+                          p("Generate STRUCTURE input files and pong compatible files. Visualize the possible results"),
+                          p("Input file: CSV or XLSX file"),
+                          p("Expected output file: Zipped files and PNG plots")))
+               ) # end of fluidpage
+               
+      ), # end of tab panel 
+      
+      ## FILE CONVERSION
+      tabPanel(
+         title = HTML("<span style = 'color:#ffffff;'>File Conversion</span>"),
+         tabsetPanel(
+            
+            # Subtab 1: Convert to CSV
+            tabPanel("Convert files to CSV",
+                     useShinyjs(),
+                     sidebarLayout(
+                        sidebarPanel(
+                           radioButtons("inputType", "Choose Input File Type",
+                                        choices = c("VCF file" = "vcf", "BCF file" = "bcf", "PLINK files (.bed/.bim/.fam)" = "plink")),
+                           
+                           conditionalPanel(
+                              condition = "input.inputType == 'vcf'",
+                              fileInput("vcfFile", "Upload VCF File")
+                           ),
+                           # added 4 Aug (missed)
+                           conditionalPanel(
+                              condition = "input.inputType == 'bcf'",
+                              fileInput("bcfFile", "Upload BCF File")
+                           ),
+                           
+                           conditionalPanel(
+                              condition = "input.inputType == 'plink'",
+                              fileInput("bedFile", "Upload BED File"),
+                              fileInput("bimFile", "Upload BIM File"),
+                              fileInput("famFile", "Upload FAM File")
+                           ),
+                           
+                           radioButtons("poptype", "Do samples come from a single population?",
+                                        choices = c("Yes" = "single", "No" = "multiplepop")),
+                           
+                           conditionalPanel(
+                              condition = "input.poptype == 'multiplepop'",
+                              fileInput("multiplepop", "Input reference file with sample ID and population"),
+                              helpText("*Accepts XLSX and CSV files")
+                           ),
+                           
+                           conditionalPanel(
+                              condition = "input.poptype == 'single'",
+                              textAreaInput("typePop", "Enter population", rows = 1)
+                           ),
+                           
+                           actionButton("convertCSV", "Convert File to CSV", icon = icon("arrow-up-right-from-square"))
+                           
+                        ),
+                        mainPanel(
+                           tableOutput("previewTable"),
+                           fluidRow(
+                              column(6,
+                                     h5("This is a sample reference file. Only the first two columns (sample and population information) are used."),
+                                     tableOutput("exampleRefCSV")),
+                              column(6,
+                                     tags$h4("Sample File"),
+                                     tags$ul(
+                                        tags$a("Sample VCF file", href = "www/sample_hgdp.vcf", download = NA)
+                                     )  
+                              )
+                           ), # end of fluidRow
+                           downloadButton("downloadConvertedCSV", "Download Converted CSV")
+                        ) # end of main panel
+                     )
+            ),
+            
+            tabPanel("Widen ForenSeq UAS files",
+                     useShinyjs(),
+                     sidebarLayout(
+                        sidebarPanel(
+                           fileInput("uas_zip", "Upload ZIP or TAR file",
+                                     accept = c(".zip", ".tar")),
+                           helpText("*Accepts compressed files containing XLSX files."),
+                           fileInput("ref_file", "Optional Reference File (CSV or XLSX)",
+                                     accept = c(".csv", ".xlsx")),
+                           actionButton("run_uas2csv", "Run Conversion"),
+                           br(), br(),
+                           downloadButton("downloadUAScsv", "Download Converted CSV")
+                        ),
+                        mainPanel(
+                           h4("Preview of Output"),
+                           tableOutput("previewTableUAS"),
+                           fluidRow(
+                              column(6,
+                                     h5("Sample input file. All alleles of available SNPs per sample are listed in a long format."),
+                                     tableOutput("exampleXLSX")),
+                              column(6,
+                                     tags$h4("Downloadable Sample"),
+                                     tags$ul(
+                                        tags$a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)
+                                     )  
+                              )
+                           ) # end of fluidRow
+                        ) #end of mainpanel
+                     )
+            ), #end of tabpanel
+            
+            
+            tabPanel("Convert to SNIPPER-analysis ready file",
+                     useShinyjs(),
+                     sidebarLayout(
+                        sidebarPanel(
+                           fileInput("convertFile", "Upload File"),
+                           helpText("*Accepts VCF, XLSX, and CSV files"),
+                           fileInput("refFile", "Upload Reference File"),
+                           helpText("*Accepts XLSX and CSV files"),
+                           
+                           checkboxInput("targetPop", "Subset Target Population?", value = FALSE),
+                           textInput("targetPopName", "Target Population Name"),
+                           actionButton("convertBtn", "Convert Format", icon = icon("arrow-up-right-from-square"))
+                        ),
+                        mainPanel(
+                           h4("Preview of Converted SNIPPER Data"),
+                           tableOutput("previewTableSNIPPER"),
+                           fluidRow(
+                              column(6,
+                                     h5("Sample input file."),
+                                     tableOutput("exampleTableSnipper")),
+                              column(6, 
+                                     h5("Sample reference file"),
+                                     tableOutput("exampleRefSnipper")),
+                              column(6,
+                                     tags$h4("Downloadable Sample"),
+                                     tags$ul(
+                                        tags$a("Sample file", href = "www/sample.csv", download = NA)
+                                     )  
+                              )
+                           ) # end of fluidRow
+                        ) # end of mainpanel
+                     )
+            )
+            
+         )
+      ), # end of tabpanel
+      
+      ## MARKER EXTRACTION
+      tabPanel(title = HTML("<span style = 'color:#ffffff;'>SNP Extraction</span>"),
+               tabsetPanel(
+                  tabPanel("SNP Extraction",
+                           useShinyjs(),
+                           sidebarLayout(
+                              sidebarPanel(
+                                 tabPanel("Marker Extraction",
+                                          fluidPage(
+                                             fileInput("markerFile", "Upload Genotype (VCF, BCF or PLINK) File"),
+                                             
+                                             radioButtons("markerType", "Choose Marker Type",
+                                                          choices = c("rsid", "pos"), inline = TRUE),
+                                             
+                                             conditionalPanel(
+                                                condition = "input.markerType == 'rsid'",
+                                                radioButtons("rsidInputType", "RSID Input",
+                                                             choices = c("manual", "upload")),
+                                                conditionalPanel(
+                                                   condition = "input.rsidInputType == 'manual'",
+                                                   textAreaInput("typedRSIDs", "Enter RSIDs (one per line)", rows = 5)
+                                                ),
+                                                conditionalPanel(
+                                                   condition = "input.rsidInputType == 'upload'",
+                                                   fileInput("markerList1", "Upload RSID List File")
+                                                )
+                                             ),
+                                             
+                                             conditionalPanel(
+                                                condition = "input.markerType == 'pos'",
+                                                fileInput("markerList2", "Upload POS List (.csv, .xlsx)")
+                                             ),
+                                             
+                                             fileInput("bedFile", "PLINK BED file (optional)"),
+                                             fileInput("bimFile", "PLINK BIM file (optional)"),
+                                             fileInput("famFile", "PLINK FAM file (optional)"),
+                                             textAreaInput("plink_args",
+                                                           label = "Additional PLINK Arguments",
+                                                           placeholder = "--maf 0.05 --geno 0.1",
+                                                           rows = 3,
+                                                           width = "100%"),
+                                             helpText("See https://www.cog-genomics.org/plink/ for options."),
+                                             
+                                             actionButton("extractBtn", "Run Marker Extraction", icon = icon("play")),
+                                             
+                                             #downloadButton("downloadExtracted", "Download Merged VCF")
+                                          )
+                                 )
+                              ),
+                              mainPanel(
+                                 h4("Example Input Formats"),
+                                 fluidRow(
+                                    column(6,
+                                           h5("rsID Format"),
+                                           tableOutput("exampleRSID")
+                                    ),
+                                    column(6,
+                                           h5("Position Format"),
+                                           tableOutput("examplePOS")
+                                    )
+                                 ),
+                                 downloadButton("downloadExtracted", "Download Extracted VCF")
+                                 
+                              ) # end of mainpanel
+                           )
+                  ),
+                  tabPanel(HTML("<span style = 'color:#000000;'>Concordance Analysis</span>"),
+                           useShinyjs(),
+                           sidebarLayout(
+                              sidebarPanel(
+                                 fileInput("concordanceFile1", "Upload File A"),
+                                 fileInput("concordanceFile2", "Upload File B"),
+                                 checkboxInput("isHaplotype", "Treat data as haplotypes", value = FALSE),
+                                 actionButton("compareBtn", "Run Concordance Analysis", icon = icon("play"))
+                              ),
+                              mainPanel(
+                                 h4("Example Input Formats"),
+                                 fluidRow(
+                                    column(6,
+                                           h5("File Format (for concordance)"),
+                                           tableOutput("exampleTable")
+                                    )
+                                 ),
+                                 hr(),
+                                 h4("Concordance Summary Table"),
+                                 tableOutput("concordanceResults"),
+                                 hr(),
+                                 h4("Concordance Plot"),
+                                 imageOutput("concordancePlot"),
+                                 hr(),
+                                 downloadButton("downloadConcordance", "Download Concordance Results"),
+                                 downloadButton("downloadConcordancePlot", "Download Plot")
+                              )
+                           )
+                  )
+               )
+      ), # end of tabpanel
+      
+      ## POP STAT
+      tabPanel(HTML("<span style = 'color:#ffffff;'>Population Statistics</span>"),
+               tabsetPanel(
+                  tabPanel("Perform Analysis",
+                           useShinyjs(),
+                           fileInput("popStatsFile", "Upload CSV or XLSX Dataset"),
+                           actionButton("runPopStats", "Analyze", icon = icon("magnifying-glass-chart")),
+                           downloadButton("downloadStats", "Download Results (Excel)"),
+                           
+                           hr(),
+                           h4("Example: Population File Format"),
+                           tableOutput("examplePop"),
+                           tags$h4("Sample File"),
+                           tags$ul(
+                              tags$a("Sample file", href = "www/sample.csv", download = NA)
+                           )
+                  ), 
+                  tabPanel("1 Private Alleles",
+                           h4("Private Alleles Summary"),
+                           uiOutput("privateAllelePlot")
+                  ),
+                  tabPanel("2 Heterozygosity",
+                           h4("Observed vs Expected Heterozygosity"),
+                           DT::dataTableOutput("heterozygosity_table"),
+                           hr(),
+                           h4("Heterozygosity Plot"),
+                           imageOutput("heterozygosity_plot"),
+                           downloadButton("downloadHeterozygosityPlot", "Download Plot")
+                  ),
+                  tabPanel("3 Inbreeding Coefficients",
+                           h4("Inbreeding Coefficient by Population"),
+                           DT::dataTableOutput("inbreeding_table")
+                  ),
+                  tabPanel("4 Allele Frequencies",
+                           h4("Allele Frequency Table"),
+                           DT::dataTableOutput("allele_freq_table")
+                  ),
+                  tabPanel("5 Hardy-Weinberg Equilibrium",
+                           h4("HWE P-value Summary"),
+                           uiOutput("hwe_summary"),
+                           h4("Population-wise HWE Chi-Square Table"),
+                           DT::dataTableOutput("hwe_chisq_table")
+                  ),
+                  tabPanel("6 Fst Values",
+                           h4("Pairwise Fst Matrix"),
+                           uiOutput("fstMatrixUI"),  
+                           h4("Tidy Pairwise Fst Data"),
+                           DT::dataTableOutput("fstDfTable"),
+                           hr(),
+                           h4("Fst Heatmap"),
+                           imageOutput("fst_heatmap_plot", width = "100%")                        #imageOutput("fst_heatmap"),
+                           #downloadButton("downloadFstHeatmap", "Download Heatmap")
+                           
+                  )
+               )
+      ), # end of tabpanel
+      
+      ## PCA
+      tabPanel(HTML("<span style = 'color:#ffffff;'>Exploratory Analysis</span>"),
+               sidebarLayout(
+                  sidebarPanel(
+                     fileInput("pcaFile", "Upload SNP Data (in CSV or XLSX) for PCA", accept = c(".csv", ".txt")),
+                     checkboxInput("useDefaultColors", "Use Default Colors and Labels", TRUE),
+                     conditionalPanel(
+                        condition = "!input.useDefaultColors",
+                        fileInput("pcaLabels", "Upload PCA Labels"),
+                        fileInput("colorPalette", "Upload Color Palette")
+                     ),
+                     numericInput("pcX", "PC Axis X", value = 1, min = 1),
+                     numericInput("pcY", "PC Axis Y", value = 2, min = 1),
+                     actionButton("runPCA", "Run PCA Analysis", icon = icon("play"))
+                  ),
+                  mainPanel(
+                     h4("Example: PCA Input Format"),
+                     tableOutput("examplePCA"),
+                     tags$h4("Sample File"),
+                     tags$ul(
+                        tags$a("Sample file", href = "www/sample.csv", download = NA)
+                     ),
+                     
+                     hr(),
+                     plotOutput("barPlot"),
+                     downloadButton("downloadbarPlot", "Download Bar Plot"),
+                     hr(),
+                     plotOutput("pcaPlot"),
+                     downloadButton("downloadPCAPlot", "Download PCA Plot")
+                     #hr(),
+                  )
+               )
+      ), # end of tabpanel
+      
+      ## STRUCTURE Analysis
+      tabPanel(
+         HTML("<span style='color:#ffffff;'>STRUCTURE Analysis</span>"),
+         sidebarLayout(
+            sidebarPanel(
+               fileInput("structureFile", "Upload STRUCTURE Input"),
+               numericInput("kMin", "Min K", value = 2, min = 1),
+               numericInput("kMax", "Max K", value = 5, min = 1),
+               numericInput("numKRep", "Replicates per K", value = 5, min = 1),
+               numericInput("burnin", "Burn-in Period", value = 1000),
+               numericInput("numreps", "MCMC Reps After Burn-in", value = 10000),
+               checkboxInput("noadmix", "No Admixture Model", value = FALSE),
+               checkboxInput("phased", "Phased Genotype", value = FALSE),
+               numericInput("ploidy", "Ploidy Level", value = 2),
+               checkboxInput("linkage", "Use Linkage Model", value = FALSE),
+               actionButton("runStructure", "Run STRUCTURE", icon = icon("play")),
+               uiOutput("downloadButtons")
+            ),
+            mainPanel(
+               tags$h4("Download Sample File"),
+               tags$ul(
+                  tags$a("Sample file", href = "www/sample.csv", download = NA)
+               ),
                h4("STRUCTURE Visualization"),
                imageOutput("structurePlotPreview"),
                h4("Download Results")
-            
-            #tags$h4("Sample File"),
-            #tags$ul(
-            #   tags$a("Sample file", href = "www/sample.csv", download = NA)
-            #),
-            #h4("STRUCTURE Visualization"),
-            #imageOutput("structurePlotPreview"),
-            #h4("Download Results")
-            
-            #downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
-            #downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
-            #downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
-            #downloadButton("downloadStructurePlots", "Download STRUCTURE Plots")
-            #h4("Run Summary"),
-            #tableOutput("structureSummary"),
-            #h4("All STRUCTURE Plots"),
-            #uiOutput("structurePlots")
-         ) # end of mainpanel
+               
+               #tags$h4("Sample File"),
+               #tags$ul(
+               #   tags$a("Sample file", href = "www/sample.csv", download = NA)
+               #),
+               #h4("STRUCTURE Visualization"),
+               #imageOutput("structurePlotPreview"),
+               #h4("Download Results")
+               
+               #downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
+               #downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
+               #downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
+               #downloadButton("downloadStructurePlots", "Download STRUCTURE Plots")
+               #h4("Run Summary"),
+               #tableOutput("structureSummary"),
+               #h4("All STRUCTURE Plots"),
+               #uiOutput("structurePlots")
+            ) # end of mainpanel
+         )
+      ), #end of tabpanel
+      p("© 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved."),
+      div(
+         style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
       )
-   ), #end of tabpanel
-   p("© 2025 DNA Analysis Laboratory, Natural Sciences Research Institute, University of the Philippines Diliman. All rights reserved."),
-   div(
-      style = "position: fixed; bottom: 0, width: 100%; background-color: transparent; padding: 8px; text-align: center; font-size: 10px; color: #666;"
    )
 )
-))
-
 # TO ADD
 server <- function(input, output, session) {
    
@@ -701,8 +694,8 @@ server <- function(input, output, session) {
             showNotifications("Plink conversion failed", type = "error")
             enable("convertCSV")
             return()
-             }
-
+         }
+         
          vcfPath <- paste0(temp_output, ".vcf")
          #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
@@ -752,7 +745,7 @@ server <- function(input, output, session) {
       waiter_hide()
    }) # end of observeEvent
    
-
+   
    
    ### For SNIPPER
    output$exampleTableSnipper <- renderTable({
@@ -811,46 +804,46 @@ server <- function(input, output, session) {
       outputName <- "snipper.xlsx"
       
       withProgress(message = "Converting to SNIPPER-analysis ready file...", value = 0, {
-      
-      snipper.file <- tryCatch({
          
-         tosnipper(input = inputPath,
-                                references = refPath,
-                                target.pop = targetSet,
-                                population.name = targetName,
-                                markers = numMarkers)
-         
-         waiter_hide()
-      }, error = function(e){
-         showNotifications(paste("Conversion failed:", e$message), type = "error")
-         NULL
-      })
-      
-      if (!is.null(snipper.file)) {
-         convertedSNIPPER(snipper.file)
-         enable("convertBtn")
-         
-         output$downloadConverted <- downloadHandler(
-            filename = function() { outputName },
-            content = function(file) {
-               openxlsx::write.xlsx(convertedSNIPPER(), file)
-            }
-         )
-         
-         output$previewTableSNIPPER <- renderTable({
-            req(convertedSNIPPER())
-            head(convertedSNIPPER(), 10)
+         snipper.file <- tryCatch({
+            
+            tosnipper(input = inputPath,
+                      references = refPath,
+                      target.pop = targetSet,
+                      population.name = targetName,
+                      markers = numMarkers)
+            
+            waiter_hide()
+         }, error = function(e){
+            showNotifications(paste("Conversion failed:", e$message), type = "error")
+            NULL
          })
-      }
-      
-      #xlsx_file <- file.path(paste(outputDir, outputName))
-      #convertedSNIPPER(snipper.file)
-      #enable("convertBtn")
-   })
+         
+         if (!is.null(snipper.file)) {
+            convertedSNIPPER(snipper.file)
+            enable("convertBtn")
+            
+            output$downloadConverted <- downloadHandler(
+               filename = function() { outputName },
+               content = function(file) {
+                  openxlsx::write.xlsx(convertedSNIPPER(), file)
+               }
+            )
+            
+            output$previewTableSNIPPER <- renderTable({
+               req(convertedSNIPPER())
+               head(convertedSNIPPER(), 10)
+            })
+         }
+         
+         #xlsx_file <- file.path(paste(outputDir, outputName))
+         #convertedSNIPPER(snipper.file)
+         #enable("convertBtn")
+      })
       
    }) # end of observe Event
    
-
+   
    
    ### UAS to CSV
    convertedUAS <- reactiveVal(NULL)
@@ -890,38 +883,38 @@ server <- function(input, output, session) {
       }
       
       withProgress(message = "Converting file...", value = 0, {
-      tryCatch({
-         widened.file <- uas2csv(files = input_path,
-                                 population = ref_value,
-                                 reference = use_reference,
-                                 dir = temp_dir)
-         convertedUAS(widened.file)
-         
-         enable("run_uas2csv")
-         
-         outputName <- "01_merged_typed_data.csv"
-         #csv_file <- file.path(paste(temp_dir, outputName))
-         
-         output$downloadUAScsv <- downloadHandler(
-            filename = function() {
-               outputName
-            },
-            content = function(file) {
-               readr::write_csv(convertedUAS(), file)
-            }
-         )
-         
-         output$previewTableUAS <- renderTable({
-            req(convertedUAS())
-            head(convertedUAS(), 10)  # Preview top 10 rows
+         tryCatch({
+            widened.file <- uas2csv(files = input_path,
+                                    population = ref_value,
+                                    reference = use_reference,
+                                    dir = temp_dir)
+            convertedUAS(widened.file)
+            
+            enable("run_uas2csv")
+            
+            outputName <- "01_merged_typed_data.csv"
+            #csv_file <- file.path(paste(temp_dir, outputName))
+            
+            output$downloadUAScsv <- downloadHandler(
+               filename = function() {
+                  outputName
+               },
+               content = function(file) {
+                  readr::write_csv(convertedUAS(), file)
+               }
+            )
+            
+            output$previewTableUAS <- renderTable({
+               req(convertedUAS())
+               head(convertedUAS(), 10)  # Preview top 10 rows
+            })
+            
+            waiter_hide()
+            showNotification("Conversion complete!", type = "message")
+         }, error = function(e) {
+            showNotification(paste("Error:", e$message), type = "error")
+            enable("run_uas2csv")
          })
-         
-         waiter_hide()
-         showNotification("Conversion complete!", type = "message")
-      }, error = function(e) {
-         showNotification(paste("Error:", e$message), type = "error")
-         enable("run_uas2csv")
-      })
       })
       
    }) # end of observe Event
@@ -941,68 +934,68 @@ server <- function(input, output, session) {
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
       
       withProgress(message = "Analyzing files...", value = 0, {
-      tryCatch({
-         
-         req(input$concordanceFile1$datapath, input$concordanceFile2$datapath)
-         
-         haplo_flag <- input$isHaplotype
-         file1_path <- input$concordanceFile1$datapath
-         file2_path <- input$concordanceFile2$datapath
-         
-         result <- concordance(file1_path, file2_path, haplotypes = haplo_flag)
-         
-         enable("compareBtn")
-         
-         concordanceResult(result$results)
-         concordancePlotPath(result$plot)
-         
-         output$concordanceResults <- renderTable({
-            req(concordanceResult())
-            concordanceResult()
-         })
-         
-         output$concordancePlot <- renderPlot({
-            req(concordancePlotPath())
-            concordancePlotPath()
-         })
-         
-         output$downloadConcordance <- downloadHandler(
-            filename = function() {"concordance.csv"},
-            content = function(file) {
-               #file.copy("concordance.csv", file)            # DO I NEED TO FILE.COPY?
-               readr::write_csv(concordanceResult(), file)
-            }
-         )
-         
-         output$concordancePlot <- renderImage({ # will renderImage work???
-            req(concordancePlotPath())
+         tryCatch({
             
-            list(
-               src = concordancePlotPath(),
-               contentType = "image/png",
-               alt = "Concordance Plot"
+            req(input$concordanceFile1$datapath, input$concordanceFile2$datapath)
+            
+            haplo_flag <- input$isHaplotype
+            file1_path <- input$concordanceFile1$datapath
+            file2_path <- input$concordanceFile2$datapath
+            
+            result <- concordance(file1_path, file2_path, haplotypes = haplo_flag)
+            
+            enable("compareBtn")
+            
+            concordanceResult(result$results)
+            concordancePlotPath(result$plot)
+            
+            output$concordanceResults <- renderTable({
+               req(concordanceResult())
+               concordanceResult()
+            })
+            
+            output$concordancePlot <- renderPlot({
+               req(concordancePlotPath())
+               concordancePlotPath()
+            })
+            
+            output$downloadConcordance <- downloadHandler(
+               filename = function() {"concordance.csv"},
+               content = function(file) {
+                  #file.copy("concordance.csv", file)            # DO I NEED TO FILE.COPY?
+                  readr::write_csv(concordanceResult(), file)
+               }
             )
-         }, deleteFile = FALSE)
-         
-         #outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
-         output$downloadConcordancePlot <- downloadHandler(
-            filename = function() {
-               paste0("concordance_plot_", Sys.Date(), ".png")
-            },
-            content = function(file) {
-               #plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
-               #file.copy(plot, file)
-               ggsave(filename, concordancePlotPath(), width = 8, height = 8, dpi = 600)
+            
+            output$concordancePlot <- renderImage({ # will renderImage work???
+               req(concordancePlotPath())
                
-            }, contentType = "image/png"
-         )
-         
-         waiter_hide()
-      }, error = function(e) {
-         showNotification(paste("Error during analysis:", e$message), type = "error", duration = 10)
-      })
+               list(
+                  src = concordancePlotPath(),
+                  contentType = "image/png",
+                  alt = "Concordance Plot"
+               )
+            }, deleteFile = FALSE)
+            
+            #outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
+            output$downloadConcordancePlot <- downloadHandler(
+               filename = function() {
+                  paste0("concordance_plot_", Sys.Date(), ".png")
+               },
+               content = function(file) {
+                  #plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
+                  #file.copy(plot, file)
+                  ggsave(filename, concordancePlotPath(), width = 8, height = 8, dpi = 600)
+                  
+               }, contentType = "image/png"
+            )
+            
+            waiter_hide()
+         }, error = function(e) {
+            showNotification(paste("Error during analysis:", e$message), type = "error", duration = 10)
+         })
       }) # end of withprogress
-     
+      
    }) # end of observe event
    
    ## MARKER EXTRACTION
@@ -1045,42 +1038,42 @@ server <- function(input, output, session) {
       toggleState("extractBtn", isFileUploaded && (isRSIDReady || isPOSReady))
    })
    
-
+   
    
    extracted_file <- reactiveVal(NULL)
    
-      observeEvent(input$extractBtn, {
-         #lastAction(Sys.time())
+   observeEvent(input$extractBtn, {
+      #lastAction(Sys.time())
+      
+      disable("extractBtn")
+      #shinyjs::disable("downloadExtractedBtn")
+      
+      req(input$markerFile)
+      
+      withProgress(message = "Extracting markers...", value = 0, {
          
-         disable("extractBtn")
-         #shinyjs::disable("downloadExtractedBtn")
-         
-         req(input$markerFile)
-         
-         withProgress(message = "Extracting markers...", value = 0, {
+         tryCatch({
+            snps_list <- if (input$markerType == "rsid") {
+               if (input$rsidInputType == "manual") {
+                  temp <- tempfile(fileext = ".txt")
+                  writeLines(strsplit(input$typedRSIDs, "\n")[[1]], temp)
+                  temp
+               } else if (!is.null(input$markerList1)) {
+                  input$markerList1$datapath
+               }
+            } else NULL
             
-            tryCatch({
-         snps_list <- if (input$markerType == "rsid") {
-            if (input$rsidInputType == "manual") {
-               temp <- tempfile(fileext = ".txt")
-               writeLines(strsplit(input$typedRSIDs, "\n")[[1]], temp)
-               temp
-            } else if (!is.null(input$markerList1)) {
-               input$markerList1$datapath
-            }
-         } else NULL
-         
-         pos_list <- if (input$markerType == "pos" && !is.null(input$markerList2)) {
-            ext <- tools::file_ext(input$markerList2$name)
-            if (ext == "csv") read.csv(input$markerList2$datapath, header = FALSE)
-            else if (ext %in% c("xlsx", "xls")) readxl::read_excel(input$markerList2$datapath, col_names = FALSE)
-            else {
-               showNotification("Invalid file type", type = "error")
-               return(NULL)
-            }
-         } else NULL
-         
-         
+            pos_list <- if (input$markerType == "pos" && !is.null(input$markerList2)) {
+               ext <- tools::file_ext(input$markerList2$name)
+               if (ext == "csv") read.csv(input$markerList2$datapath, header = FALSE)
+               else if (ext %in% c("xlsx", "xls")) readxl::read_excel(input$markerList2$datapath, col_names = FALSE)
+               else {
+                  showNotification("Invalid file type", type = "error")
+                  return(NULL)
+               }
+            } else NULL
+            
+            
             # load other parameters
             plink_args <- if (!is.null(input$plink_args) && nzchar(input$plink_args)) {
                strsplit(input$plink_args, "\\s+")[[1]]
@@ -1121,27 +1114,27 @@ server <- function(input, output, session) {
             showNotification(paste("Error:", e$message), type = "error")
             enable("extractBtn")
          })
-            
-      })
          
+      })
+      
    })
-      output$downloadExtracted <- downloadHandler(
-         filename = function() { "final_merged.vcf" },
-         content = function(file) {
-            req(extracted_file())
-            file.copy(extracted_file(), file)
-         }
-      )
-     
-     # observe({
-      #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
-      #      shinyjs::enable("downloadExtractedBtn")
-      #      showNotification("VCF file ready for download!", type = "message")
-      #   }
-      #})
-      
-
-      
+   output$downloadExtracted <- downloadHandler(
+      filename = function() { "final_merged.vcf" },
+      content = function(file) {
+         req(extracted_file())
+         file.copy(extracted_file(), file)
+      }
+   )
+   
+   # observe({
+   #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
+   #      shinyjs::enable("downloadExtractedBtn")
+   #      showNotification("VCF file ready for download!", type = "message")
+   #   }
+   #})
+   
+   
+   
    # POP STAT
    output$examplePop <- renderTable({
       data.frame(
@@ -1474,7 +1467,7 @@ server <- function(input, output, session) {
                   pc_y = input$pcY
                )
             })
-      
+            
             waiter_hide()
             enable("runPCA")
          }, error = function(e) {
