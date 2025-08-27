@@ -806,7 +806,7 @@ compute_population_stats <- function(fsnps_gen) {
    fis_df <- data.frame(Population = names(fis_values), Fis = fis_values)
    
    # Allele frequencies
-   #devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
+   devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
    fsnps_gpop <- genind2genpop(fsnps_gen)
    allele_freqs <- t(makefreq(fsnps_gpop, quiet = FALSE, missing = NA)) %>%
       as.data.frame()
