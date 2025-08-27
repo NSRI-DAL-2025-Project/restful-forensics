@@ -269,30 +269,19 @@ ui <- tagList(
                         downloadButton("downloadUAScsv", "Download Converted CSV")
                      ),
                      mainPanel(
-                        tags$div(class = "card",
-                                 style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
-                                 tags$div(class = "card-header",
-                                          h4("Sample Files"),
-                                          ),
-                                 tags$div(class = "card-body",
-                                          h5("All alleles of available SNPs per sample are listed in a long format."),
-                                          tableOutput("exampleXLSX"),
-                                          br(),
-                                          tags$h5("Downloadable Sample"),
-                                          tags$ul(
-                                             tags$li(
-                                                tags$a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)
-                                             )
-                                          )
-                                          )
-                                 ), # end of first tag
-                        tags$div(class = "card",
-                                 style = "margin: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);",
-                                 tags$div(class = "card-header",
-                                          h4("Preview of Output")),
-                                 tags$div(class = "card-body",
-                                          tableOutput("previewTableUAS"))
-                                 ) # end of second tags
+                        h4("Preview of Output"),
+                        tableOutput("previewTableUAS"),
+                        fluidRow(
+                           column(6,
+                                  h5("All alleles of available SNPs per sample are listed in a long format."),
+                                  tableOutput("exampleXLSX")),
+                           column(6,
+                                  tags$h5("Downloadable Sample"),
+                                  tags$ul(
+                                     tags$a("Sample zipped file", href = "www/sample_forenseq.zip", download = NA)
+                                  )  
+                           )
+                        ) # end of fluidrow
                      ) #end of mainpanel
                   )
          ), #end of tabpanel
@@ -312,48 +301,23 @@ ui <- tagList(
                         actionButton("convertBtn", "Convert Format", icon = icon("arrow-up-right-from-square"))
                      ),
                      mainPanel(
-                        tags$div(class = "card",
-                                 tags$div(class = "card-header",
-                                          h4("Example SNIPPER Input & Reference Files")
-                                 ),
-                                 tags$div(class = "card-body",
-                                          fluidRow(
-                                             column(6,
-                                                    h5("Sample input file"),
-                                                    tableOutput("exampleTableSnipper")
-                                             ),
-                                             column(6,
-                                                    h5("Sample reference file"),
-                                                    tableOutput("exampleRefSnipper")
-                                             )
-                                          )
-                                 )
-                        ),
-                        
-                        tags$div(class = "card",
-                                 tags$div(class = "card-header",
-                                          h4("Preview of Converted SNIPPER Data")
-                                 ),
-                                 tags$div(class = "card-body",
-                                          tableOutput("previewTableSNIPPER")
-                                 )
-                        ),
-                        
-                        tags$div(class = "card",
-                                 tags$div(class = "card-header",
-                                          h4("Download Sample & Converted File")
-                                 ),
-                                 tags$div(class = "card-body",
-                                          tags$ul(
-                                             tags$li(
-                                                tags$a("Sample file", href = "www/sample.csv", download = NA)
-                                             )
-                                          ),
-                                          br(),
-                                          downloadButton("downloadConverted", "Download Converted File")
-                                 )
-                        )
-                        
+                        h4("Preview of Converted SNIPPER Data"),
+                        tableOutput("previewTableSNIPPER"),
+                        fluidRow(
+                           column(6,
+                                  h5("Example SNIPPER Input & Reference Files"),
+                                  tableOutput("exampleTableSnipper")),
+                           column(6,
+                                  h5("Sample reference file"),
+                                  tableOutput("exampleRefSnipper")),
+                           column(6, 
+                                  tags$h5("Download Sample & Converted File"),
+                                  tags$ul(
+                                     tags$a("Sample file", href = "www/sample.csv", download = NA)
+                                  )
+                        ), # end of fluidrow
+                        br(),
+                        downloadButton("downloadConverted", "Download Converted File")
                      ) # end of mainpanel
                   )
          )
@@ -569,28 +533,19 @@ ui <- tagList(
             uiOutput("downloadButtons")
          ),
          mainPanel(
-            tags$div(class = "card",
-                     tags$div(class = "card-header",
-                              h4("Download Sample File")
-                     ),
-                     tags$div(class = "card-body",
-                              tags$ul(
-                                 tags$li(
-                                    tags$a("Sample file", href = "www/sample.csv", download = NA)
-                                 )
-                              )
-                     )
-            ),
-            
-            tags$div(class = "card mb-3",
-                     tags$div(class = "card-header",
-                              h4("STRUCTURE Visualization")
-                     ),
-                     tags$div(class = "card-body",
-                              imageOutput("structurePlotPreview"),
-                              h4("Download Results")
-                     )
-            )
+            #h4("Preview of Converted SNIPPER Data"),
+            #tableOutput("previewTableSNIPPER"),
+            fluidRow(
+               column(6, 
+                      tags$h5("Download Sample File"),
+                      tags$ul(
+                         tags$a("Sample file", href = "www/sample.csv", download = NA)
+                      )
+               ), # end of fluidrow
+               br(),
+               h4("STRUCTURE Visualization"),
+               imageOutput("structurePlotPreview"),
+               h4("Download Results")
             
             #tags$h4("Sample File"),
             #tags$ul(
