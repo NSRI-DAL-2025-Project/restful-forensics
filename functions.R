@@ -415,9 +415,10 @@ extract_markers <- function(input.file,
                           merged.file,
                           plink_path)
    
-   return(list(
-      extracted_files = list.files(output.dir, full.names = FALSE)
-   ))
+   #return(list(
+   #   extracted_files = list.files(output.dir, full.names = FALSE)
+   #))
+   return(commands)
 }
 
 # TO DO #1: ADDITIONAL ARGUMENTS FOR PLINK - OPTIONAL FILTERING PROCEDURES

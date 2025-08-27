@@ -1130,7 +1130,7 @@ server <- function(input, output, session) {
             
             
             temp_dir <- tempdir()
-            extract_markers(
+            extracted_markers <- extract_markers(
                input.file  = input$markerFile$datapath,
                snps.list = snps_list,
                pos.list = pos_list,
@@ -1143,7 +1143,8 @@ server <- function(input, output, session) {
                plink_path  = plink_path
             )
             
-            extracted_file(file.path(temp_dir, "final_merged.vcf"))
+            extracted_file(extracted_markers)
+            #extracted_file(file.path(temp_dir, "final_merged.vcf"))
             showNotification("VCF file successfully extracted and ready for download!", type = "message")
             
             
@@ -1155,7 +1156,6 @@ server <- function(input, output, session) {
             #   }
             #)
             
-
             enable("extractBtn")
             #shinyjs::enable("downloadExtractedBtn")
             waiter_hide()
@@ -1174,6 +1174,7 @@ server <- function(input, output, session) {
             file.copy(extracted_file(), file)
          }
       )
+      
      
      # observe({
       #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
