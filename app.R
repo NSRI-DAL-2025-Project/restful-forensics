@@ -430,7 +430,7 @@ ui <- tagList(
                            useShinyjs(),
                            fileInput("popStatsFile", "Upload CSV or XLSX Dataset"),
                            actionButton("runPopStats", "Analyze", icon = icon("magnifying-glass-chart")),
-                           downloadButton("downloadStats", "Download Results (Excel)"),
+                           downloadButton("downloadStatsXLSX", "Download Results (Excel)"),
                            
                            hr(),
                            h4("Example: Population File Format"),
@@ -1296,7 +1296,7 @@ server <- function(input, output, session) {
             output$fst_heatmap_plot <- renderImage({
                req(fst_data())
                
-               plot_path <- plot_fst_heatmap_static(
+               plot_path <- plot_fst_heatmap(
                   fst_df = fst_data(),
                   out_dir = tempdir()
                )

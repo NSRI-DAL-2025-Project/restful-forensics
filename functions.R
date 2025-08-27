@@ -886,7 +886,7 @@ plot_heterozygosity <- function(Het_fsnps_df, out_dir) {
    return(out_path)
 }
 
-plot_fst_heatmap_interactive <- function(fst_df, out_dir) {
+plot_fst_heatmap <- function(fst_df, out_dir) {
    library(ggplot2)
    out_path <- file.path(out_dir, "fst_heatmap.png")
    
@@ -986,49 +986,44 @@ plot_pca <- function(ind_coords, centroid, percent, labels_colors, width = 8, he
    library(ggplot2)
    library(ggrepel)
    library(stats)
-   # Convert matrices to data frames if needed
+   
+   # Ensure data frames
    if (!is.data.frame(ind_coords)) ind_coords <- as.data.frame(ind_coords)
    if (!is.data.frame(centroid)) centroid <- as.data.frame(centroid)
    
-   if (!is.list(labels_colors)) {
-      stop("labels_colors must be a named list containing 'labels' and 'colors'.")
-   }
-   
-   # Ensure Site column exists and matches colors
-   #ind_coords$Site <- factor(ind_coords$Site, levels = labels_colors$labels)
-   colors_named <- setNames(labels_colors$colors, labels_colors$labels)
-   
-   # Labels for axes
+   # Axis labels
    xlab <- paste("PC", pc_x, " (", format(round(percent[pc_x], 1), nsmall = 1), "%)", sep = "")
    ylab <- paste("PC", pc_y, " (", format(round(percent[pc_y], 1), nsmall = 1), "%)", sep = "")
    
-   ggtheme = theme(axis.text.y = element_text(colour="black", size=12),
-                   axis.text.x = element_text(colour="black", size=12),
-                   axis.title = element_text(colour="black", size=12),
-                   panel.border = element_rect(colour="black", fill=NA, size=1),
-                   panel.background = element_blank(),
-                   plot.title = element_text(hjust=0.5, size=15) 
+   # Theme
+   ggtheme <- theme(
+      axis.text.y = element_text(colour = "black", size = 12),
+      axis.text.x = element_text(colour = "black", size = 12),
+      axis.title = element_text(colour = "black", size = 12),
+      panel.border = element_rect(colour = "black", fill = NA, size = 1),
+      panel.background = element_blank(),
+      plot.title = element_text(hjust = 0.5, size = 15)
    )
    
-   # Create plot
-   plot <- ggplot(data = ind_coords, aes(x = paste0("PC", pc_x, sep = ""), y = paste0("PC", pc_y, sep = ""))) +
+   # Plot
+   plot <- ggplot(ind_coords, aes(x = ind_coords[[paste0("PC", pc_x)]],
+                                  y = ind_coords[[paste0("PC", pc_y)]],
+                                  fill = Site)) +
       geom_hline(yintercept = 0) +
       geom_vline(xintercept = 0) +
-      geom_point(aes(fill = Site), shape = 21, size = 4, show.legend = FALSE) +
-      geom_label_repel(data = centroid, 
-                       aes(x = paste0("PC", pc_x, sep = ""), 
-                           y = paste0("PC", pc_y, sep = ""), 
-                           label = Site, fill = Site), 
+      geom_point(shape = 21, size = 4, show.legend = FALSE) +
+      geom_label_repel(data = centroid,
+                       aes(x = centroid[[paste0("PC", pc_x)]],
+                           y = centroid[[paste0("PC", pc_y)]],
+                           label = Site,
+                           fill = Site),
                        size = 4, show.legend = FALSE) +
       scale_fill_manual(breaks = labels_colors$labels, values = labels_colors$colors) +
-      scale_colour_manual(breaks = labels_colors$labels, values = labels_colors$colors) +
-      labs(x = xlab, y = ylab)
+      labs(x = xlab, y = ylab) +
+      ggtheme
    
-   # Save plot
-   #ggsave(filename = filename, plot = plot, width = width, height = height, dpi = 600)
    return(plot)
 }
-
 
 explore.pca <- function(input, default.colors.labels = TRUE, pca.labels = NULL, color.palette = NULL, set.size = FALSE, width = NULL, height = NULL, add.pc = FALSE, add.pc.x = NULL, add.pc.y = NULL) {
    file <- load_input_file(input)
