@@ -1650,7 +1650,7 @@ server <- function(input, output, session) {
          # Logs
          log_zip_path <- reactive({
             req(str_files())
-            files <- list.files(str_files()$plot_paths, pattern = "\\.log\\.txt$", full.names = TRUE)
+            files <- list.files(str_files()$plot_paths, pattern = "\\_log$", full.names = TRUE)
             if (length(files) == 0) return(NULL)
             zip_file <- tempfile(fileext = ".zip")
             zip::zipr(zipfile = zip_file, files = files)
