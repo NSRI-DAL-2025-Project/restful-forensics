@@ -1531,9 +1531,11 @@ server <- function(input, output, session) {
       df
    })
    
+   output_dir <- tempdir()
+
    structure_file <- reactive({
       req(structure_df())
-      out_path <- file.path(tempdir(), "structure_input.str")
+      out_path <- file.path(output_dir, "structure_input.str")
       write.table(structure_df(), file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
       out_path
    })
