@@ -134,6 +134,7 @@ ui <- tagList(
                           
                           div(class = "inner-card",
                               h5("A. Extract SNPs based on rsID or GRCh37/GRCh38 position"),
+                              p("See https://www.cog-genomics.org/plink/ for filtering options."),
                               p("Input file:"),
                               p("(1) VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
                               p("(2) Markers/position list — you may type rsIDs manually, upload a list, or use a POS txt file."),
@@ -177,7 +178,7 @@ ui <- tagList(
                       div(class = "card-header", "🔍 Exploratory Analysis"),
                       div(class = "card-body",
                           p("Run principal component analysis"),
-                          p("Input file: CSV or XLSX file"),
+                          p("Input file: CSV or XLSX file and color labels (optional)"),
                           p("Expected output file: PNG plots"))
                   ), # end of div for pca
                   
@@ -186,7 +187,9 @@ ui <- tagList(
                       div(class = "card-body",
                           p("Generate STRUCTURE input files and pong compatible files. Visualize the possible results"),
                           p("Input file: CSV or XLSX file"),
-                          p("Expected output file: Zipped files and PNG plots")))
+                          p("Expected output file: Zipped qmatrices, individual files, and PNG plots"),
+                          p("See https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_doc.pdf for the documentation.")
+                          ))
                ) # end of fluidpage
                
       ), # end of tab panel 
