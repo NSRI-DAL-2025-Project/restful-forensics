@@ -1526,8 +1526,8 @@ server <- function(input, output, session) {
       req(fsnps_gen())
       df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
       df[] <- lapply(df, function(col) as.numeric(as.character(col)))
-      validate_msg <- validate_structure_input(df)
-      validate(need(is.null(validate_msg), paste("STRUCTURE input error:", validate_msg)))
+      #validate_msg <- validate_structure_input(df)
+      #validate(need(is.null(validate_msg), paste("STRUCTURE input error:", validate_msg)))
       df
    })
    
