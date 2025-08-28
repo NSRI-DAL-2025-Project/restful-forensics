@@ -539,8 +539,7 @@ ui <- tagList(
                ),
                h4("STRUCTURE Visualization"),
                imageOutput("structurePlotPreview"),
-               br(),
-               h4("Download Results")
+
                
                #tags$h4("Sample File"),
                #tags$ul(
