@@ -458,7 +458,7 @@ ui <- tagList(
                            fileInput("fastaFile", "Upload zipped FASTA files"),
                            actionButton("runMSA", "Align", icon = icon("align-justify")),
                            radioButtons("substitutionMatrix", "Choose Substitution Matrix for MSA",
-                                        choices = c("ClustalW" = "clustalw", "ClustalOmega" = "clustalomega", "MUSCLE" = "muscle"))
+                                        choices = c("ClustalW" = "ClustalW", "ClustalOmega" = "ClustalOmega", "MUSCLE" = "Muscle"))
                            
                   ), #tabPanel
                   mainPanel(
@@ -507,7 +507,7 @@ ui <- tagList(
                      verbatimTextOutput("treeAlignmentPreview"),
                      br(),
                      h4("Phylogenetic Tree"),
-                     imageOutput("treeImage")
+                     uiOutput("treeImage")
                   )
                   
                ) # end of sidebar layout
@@ -1269,8 +1269,9 @@ server <- function(input, output, session) {
    observeEvent(input$runMSA, {
       req(input$fastaFile)
       
-      fasta_data(read_fasta(input$fastaFile$datapath))
-      aligned <- msa_results(fasta_data(), method = input$substitutionMatrix)
+      directory <- tempdir()
+      fasta_data(read_fasta(input$fastaFile$datapath, directory = directory))
+      aligned <- msa_results(fasta_data(), algorithm = input$substitutionMatrix, directory = directory)
       aligned_data(aligned$alignment)
       alignment_scores(aligned$scores)
       alignment_pdf(aligned$pdf)
@@ -1345,7 +1346,7 @@ server <- function(input, output, session) {
          tree_path(path)
          tree_model("Parsimony")
       } else if (tree_type == "Maximum Likelihood"){
-         result <- build_ml_tree(aligned, outgroup=outgroup, directory = directory, seed = seed, bs = bs)
+         results <- build_ml_tree(aligned, outgroup=outgroup, directory = directory, seed = seed, bs = bs)
          tree_plot(NULL)
          tree_path(results$filename)
          tree_model(results$best_model)

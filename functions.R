@@ -1873,38 +1873,39 @@ read_fasta <- function(zipped, directory){
 
 msa_results <- function(files, algorithm, directory){
    # Creating Substitution Matrix
-   personal_matrix <- pwalign::nucleotideSubstitutionMatrix(match = 1, mismatch = 0, baseOnly = TRUE, type = "DNA")
+   personal_matrix <- pwalign::nucleotideSubstitutionMatrix(match = 1, mismatch = 0, baseOnly = FALSE, type = "DNA")
    gap_penalty <- -2
-   dna_matrix_wgaps <- rbind(personal_matrix, gap_penalty)
-   dna_matrix_wgaps <- cbind(dna_matrix_wgaps, gap_penalty)
-   rownames(dna_matrix_wgaps)[nrow(dna_matrix_wgaps)] <- "-"
-   colnames(dna_matrix_wgaps)[ncol(dna_matrix_wgaps)] <- "-"
-   colnames(dna_matrix_wgaps) <- c("A", "C", "G", "T", "-")
-   rownames(dna_matrix_wgaps) <-  c("A", "C", "G", "T", "-")
-   dna_matrix_wgaps <- as.matrix(dna_matrix_wgaps)
+   personal_matrix <- rbind(personal_matrix, "-" = gap_penalty)
+   personal_matrix <- cbind(personal_matrix, "-" = gap_penalty)
+   #rownames(dna_matrix_wgaps)[nrow(dna_matrix_wgaps)] <- "-"
+   #colnames(dna_matrix_wgaps)[ncol(dna_matrix_wgaps)] <- "-"
+   colnames(personal_matrix) <- c("A", "C", "G", "T", "M", "R", "W", "S", "Y", "K", "V", "H", "D", "B", "N", "-")
+   rownames(personal_matrix) <-  c("A", "C", "G", "T", "M", "R", "W", "S", "Y", "K", "V", "H", "D", "B", "N", "-")
+   personal_matrix <- as.matrix(personal_matrix)
    
-   filename1 <- paste0(directory, "/aligned_seqs.txt")
-   filename2 <- paste0(directory, "/aligned_seqs_wscores.txt")
+   #filename1 <- paste0(directory, "/aligned_seqs.txt")
+   #filename2 <- paste0(directory, "/aligned_seqs_wscores.txt")
    
    # perform msa
-   aligned_sequences <- msa::msa(files,substitutionMatrix = dna_matrix_wgaps, method = algorithm) # ClustalW, ClustalOmega, MUSCLE
+   aligned_sequences <- msa::msa(files,substitutionMatrix = personal_matrix, method = algorithm) # ClustalW, ClustalOmega, MUSCLE
    #output_aligned <- utils::capture.output(print(aligned_sequences, show = "complete"))
    #writeLines(output_aligned, filename1)
    
    # calculate alignment score
-   alignment_scores <- msa::msaConservationScore(aligned_sequences, substitutionMatrix = dna_matrix_wgaps)
+   alignment_scores <- msa::msaConservationScore(aligned_sequences, substitutionMatrix = personal_matrix)
    #output_scores <- utils::capture.output(print(alignment_scores, show = "complete"))
    #writeLines(output_scores, filename2)
    
-   filename3 <- paste0(directory, "/aligned_seqs.pdf")
+   # UNCOMMENT OUT
+   #filename3 <- paste0(directory, "/aligned_seqs.pdf")
    # saving a pdf file
-   msa::msaPrettyPrint(aligned_sequences, output="pdf", file = filename3, showNames= "none", showLogo = "none")
+   #msa::msaPrettyPrint(aligned_sequences, output="pdf", file = filename3, showNames= "none", showLogo = "none")
    
    # double check directory where this is saved
    return(list(
       alignment = aligned_sequences,
-      scores = alignment_scores,
-      pdf = filename3
+      scores = alignment_scores #,
+      #pdf = filename3
    ))
 }
 
@@ -2054,6 +2055,7 @@ build_ml_tree <- function(alignment,
    # find best-fit model
    model_test <- modelTest(phy, tree = start_tree)
    best_model <- model_test$Model[which.min(model_test$BIC)]
+   best_model <- sub("\\+.*", "", best_model)
    fit_opt <- optim.pml(fit, model = best_model, optGamma = TRUE, optInv = TRUE, rearrangement = "stochastic")
    
    tree <- fit_opt$tree
