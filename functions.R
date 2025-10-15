@@ -1,7 +1,9 @@
 # TO DO #1: (DONE) ADDITIONAL ARGUMENTS FOR PLINK - OPTIONAL FILTERING PROCEDURES
 # TO DO #2: ADD DOWNLOADABLE SAMPLE FILES - can do, create sample files
 
-###========================FILE CONVERSION (SNIPPER)===============###
+##############################
+# FILE CONVERSION TO SNIPPER #
+##############################
 
 tosnipper <- function(input, references, target.pop = TRUE, population.name = NULL, markers = snps){
    if (!dir.exists(dir))  dir.create(dir, recursive = TRUE)
@@ -174,7 +176,9 @@ tosnipper <- function(input, references, target.pop = TRUE, population.name = NU
    
 }
 
-### =======================FILE CONVERSION (to CSV)================###
+##########################
+# VCF FILE CONVERSION TO CSV #
+##########################
 # Issue (06 August 2025): Pop added at the end of the file
 vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    library(dplyr)
@@ -250,7 +254,10 @@ vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    return(final_df)
 }
 
-### =======================FILE CONVERSION (UAS2CSV)===============###
+###############################
+# UAS FILES CONVERSION TO CSV #
+###############################
+
 uas2csv <- function(files = files, population = pop_file, reference = FALSE, dir = dir){
    
    if(!require("pacman")) {
@@ -389,7 +396,26 @@ uas2csv <- function(files = files, population = pop_file, reference = FALSE, dir
    }
 } 
 
-### ======================= MARKER EXTRACTION =======================###
+################
+# VCF TO FASTA #
+################
+
+vcf_to_fasta <- function(vcf_file, reference, bcftools_path, directory){
+   output_file <- file.path(directory, "consensus.fa")
+   
+   cmd <-  stringr::str_c(
+      bcftools_path, "consensus -f ", reference, " ", vcf_file, " -o ", output_file
+   )
+   
+   system(cmd)
+   return(output_file)
+
+}
+
+#####################
+# MARKER EXTRACTION #
+#####################
+
 extract_markers <- function(input.file, 
                             snps.list = NULL, 
                             pos.list = NULL, 
@@ -546,15 +572,17 @@ extraction <- function(file_type,
 }
 
 
-### ========================== CONCORDANCE =======================###
+########################
+# CONCORDANCE ANALYSIS #
+########################
 
 concordance <- function(file1, file2, haplotypes = FALSE){
    
-   if (!require("pacman")){
-      install.packages("pacman")
-   }
+   #if (!require("pacman")){
+   #   install.packages("pacman")
+   #}
    
-   pacman::p_load(readr, readxl, tools, dplyr, janitor, purrr, tibble, tidyselect, QurvE, tidyr, ggplot2, forcats, install = TRUE)
+   #pacman::p_load(readr, readxl, tools, dplyr, janitor, purrr, tibble, tidyselect, QurvE, tidyr, ggplot2, forcats, install = TRUE)
    
    # check if file exists
    # read in the file
@@ -621,7 +649,6 @@ concordance <- function(file1, file2, haplotypes = FALSE){
          relocate(x, any_of(overlaps)) 
       }
    )
-   
    
    #re-add marker column
    file_list4[[1]]$markers = markers1
@@ -731,7 +758,10 @@ concordance <- function(file1, file2, haplotypes = FALSE){
 }
 
 
-### ================= POP STAT ====================###
+#########################
+# POPULATION STATISTICS #
+#########################
+
 load_input_file <- function(input) {
    if (tools::file_ext(input) == "csv") {
       return(readr::read_csv(input))
@@ -931,7 +961,9 @@ export_results <- function(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
 
 
 
-### ====================PCA======================###
+################################
+# PRINCIPAL COMPONENT ANALYSIS #
+################################
 
 compute_pca <- function(fsnps_gen) {
    library(ade4)
@@ -1051,7 +1083,10 @@ explore.pca <- function(input, default.colors.labels = TRUE, pca.labels = NULL, 
    }
 }
 
-### ===================== STRUCTURE ANALYSIS ===============###
+######################
+# STRUCTURE ANALYSIS #
+######################
+
 clean_input_data_str <- function(file) {
    library(dplyr)
    
@@ -1809,5 +1844,234 @@ genind2genepop = function(data, file=""){
    
    # Export file
    write.table(mat, file=file, quote=FALSE, col.names=F, row.names=F)
+   
+}
+
+###############################
+# Multiple Sequence Alignment #
+###############################
+
+# READING FASTA FILES
+
+read_fasta <- function(zipped, directory){
+   utils::unzip(zipped, 
+                files = NULL, 
+                list = FALSE, 
+                overwrite = TRUE, 
+                exdir = file.path(directory, "fasta_files"))
+   
+   data_path <- file.path(directory, "fasta_files")
+   fasta_patterns <- paste("\\.fasta$", "\\.fa$", "\\.fna$", "\\fas$", sep = "|")
+   fasta_files <- list.files(path = data_path, pattern = fasta_patterns, full.names = TRUE)
+   
+   dna_sequences <- Biostrings::readDNAStringSet(fasta_files)
+   
+   return(dna_sequences)
+}
+
+# ALIGNMENT
+
+msa_results <- function(files, algorithm, directory){
+   # Creating Substitution Matrix
+   personal_matrix <- pwalign::nucleotideSubstitutionMatrix(match = 1, mismatch = 0, baseOnly = TRUE, type = "DNA")
+   gap_penalty <- -2
+   dna_matrix_wgaps <- rbind(personal_matrix, gap_penalty)
+   dna_matrix_wgaps <- cbind(dna_matrix_wgaps, gap_penalty)
+   rownames(dna_matrix_wgaps)[nrow(dna_matrix_wgaps)] <- "-"
+   colnames(dna_matrix_wgaps)[ncol(dna_matrix_wgaps)] <- "-"
+   colnames(dna_matrix_wgaps) <- c("A", "C", "G", "T", "-")
+   rownames(dna_matrix_wgaps) <-  c("A", "C", "G", "T", "-")
+   dna_matrix_wgaps <- as.matrix(dna_matrix_wgaps)
+   
+   filename1 <- paste0(directory, "/aligned_seqs.txt")
+   filename2 <- paste0(directory, "/aligned_seqs_wscores.txt")
+   
+   # perform msa
+   aligned_sequences <- msa::msa(files,substitutionMatrix = dna_matrix_wgaps, method = algorithm) # ClustalW, ClustalOmega, MUSCLE
+   #output_aligned <- utils::capture.output(print(aligned_sequences, show = "complete"))
+   #writeLines(output_aligned, filename1)
+   
+   # calculate alignment score
+   alignment_scores <- msa::msaConservationScore(aligned_sequences, substitutionMatrix = dna_matrix_wgaps)
+   #output_scores <- utils::capture.output(print(alignment_scores, show = "complete"))
+   #writeLines(output_scores, filename2)
+   
+   filename3 <- paste0(directory, "/aligned_seqs.pdf")
+   # saving a pdf file
+   msa::msaPrettyPrint(aligned_sequences, output="pdf", file = filename3, showNames= "none", showLogo = "none")
+   
+   # double check directory where this is saved
+   return(list(
+      alignment = aligned_sequences,
+      scores = alignment_scores,
+      pdf = filename3
+   ))
+}
+
+build_nj_tree <- function(alignment, outgroup = NULL, seed = 123, model = model){
+   library(ape)
+   library(ggtree)
+   bins <- ape::as.DNAbin(alignment)
+   distance <- ape::dist.dna(bins, model = model)
+   nj_tree <- ape::nj(distance)
+   
+   # Rooting
+   if (!is.null(outgroup) && outgroup %in% nj_tree$tip.label){
+      nj_tree <- ape::root(nj_tree, outgroup = outgroup)
+   }
+   
+   nj_tree <- ape::ladderize(nj_tree)
+   
+   num_sites <- ncol(bins)
+   if (num_sites < 10){
+      warning("Alignment has fewer than 10 sites. Skipping bootstrap.")
+      
+      tree_plot <- ggtree(nj_tree, branch.length = "none") +
+         theme_tree2() +
+         geom_tiplab() +
+         ggtitle("NJ Tree")
+      
+      return(tree_plot)
+   } 
+   
+   # Bootstrapping
+   set.seed(seed)
+   boots <- ape::boot.phylo(nj_tree, bins, 
+                            FUN = function(x){
+                               tree <- ape::nj(ape::dist.dna(x, model = model))
+                               if (!is.null(outgroup) && outgroup %in% tree$tip.label){
+                                  tree <- ape::root(tree, outgroup = outgroup)
+                               }
+                               ape::ladderize(tree)
+                            }, rooted = TRUE
+   )
+   
+   boots[is.na(boots)] <- 0
+   nj_tree$node.label <- as.character(boots)
+   tree_plot <- ggtree(nj_tree, branch.length = "none") +
+      theme_tree2() +
+      geom_tiplab() +
+      geom_text2(aes(subset = !isTip, label = label), hjust = -0.3) +
+      ggtitle("NJ Tree") +
+      xlim(0, 20)
+   
+   return(tree_plot)
+}
+
+build_upgma_tree <- function(alignment, outgroup = NULL, seed =123, model = model){
+   library(ape)
+   
+   bins <- ape::as.DNAbin(alignment)
+   distance <- ape::dist.dna(bins, model = model)
+   upgma_tree <- upgma(distance)
+   
+   if (!is.null(outgroup) && outgroup %in% upgma_tree$tip.label){
+      upgma_tree <- ape::root(upgma_tree, outgroup = outgroup)
+   }
+   
+   upgma_tree <- ape::ladderize(upgma_tree)
+   
+   num_sites <- ncol(bins)
+   if (num_sites < 10){
+      warning("Alignment has fewer than 10 sites. Skipping bootstrap.")
+      
+      tree_plot <- ggtree(upgma_tree, branch.length = "none") +
+         theme_tree2() +
+         geom_tiplab() +
+         ggtitle("UPGMA Tree")
+      
+      return(tree_plot)
+   } # end of num_sites check
+   
+   
+   set.seed(seed)
+   boots <- ape::boot.phylo(upgma_tree, bins, 
+                            FUN = function(x){
+                               tree <- ape::nj(ape::dist.dna(x, model = model))
+                               if (!is.null(outgroup) && outgroup %in% tree$tip.label){
+                                  tree <- ape::root(tree, outgroup = outgroup)
+                               }
+                               ape::ladderize(tree)
+                            }, rooted = TRUE, 
+   )
+   
+   boots[is.na(boots)] <- 0
+   upgma_tree$node.label <- as.character(boots)
+   tree_plot <- ggtree(upgma_tree, branch.length = "none") +
+      theme_tree2() +
+      geom_tiplab() +
+      geom_text2(aes(subset = !isTip, label = label), hjust = -0.3) +
+      ggtitle("UPGMA Tree") +
+      xlim(0, 20)
+   
+   return(tree_plot)
+}
+
+
+build_max_parsimony <- function(alignment, outgroup = NULL, seed = 123, directory){
+   library(phangorn)
+   library(ape)
+   
+   bins <- ape::as.DNAbin(alignment)
+   phy <- phangorn::phyDat(bins, type = "DNA")
+   dm <- dist.ml(phy)
+   start_tree <- NJ(dm)
+   parsimony_tree <- optim.parsimony(start_tree, phy)
+   
+   # Rooting
+   if (!is.null(outgroup) && outgroup %in% parsimony_tree$tip.label){
+      parsimony_tree <- root(parsimony_tree, outgroup = outgroup, resolve.root = TRUE)
+   } 
+   
+   # boostrapping
+   set.seed(seed)
+   bs_pars <- bootstrap.phyDat(phy, \(x) optim.parsimony(NJ(dist.ml(x)), x))
+   
+   # plot
+   filename <- paste(directory, "parsimony_tree.png")
+   png(filename, width = 800, height = 600)
+   plotBS(parsimony_tree, bs_pars, main = "Parsimony Tree")
+   dev.off()
+   
+   return(filename)
+}
+
+build_ml_tree <- function(alignment, 
+                          outgroup = NULL, 
+                          seed = 123, 
+                          bs_reps = 100,
+                          directory){
+   library(phangorn)
+   library(ape)
+   
+   bins <- ape::as.DNAbin(alignment)
+   phy <- phyDat(bins, type = "DNA")
+   
+   dm <- dist.ml(phy)
+   start_tree <- NJ(dm)
+   
+   fit <- pml(start_tree, data = phy)
+   # find best-fit model
+   model_test <- modelTest(phy, tree = start_tree)
+   best_model <- model_test$Model[which.min(model_test$BIC)]
+   fit_opt <- optim.pml(fit, model = best_model, optGamma = TRUE, optInv = TRUE, rearrangement = "stochastic")
+   
+   tree <- fit_opt$tree
+   if (!is.null(outgroup) && outgroup %in% tree$tip.label){
+      tree <- root(tree, outgroup = outgroup, resolve.root=TRUE)
+   } 
+   
+   # bootstrapping
+   set.seed(seed)
+   bs <- bootstrap.pml(fit_opt, bs = bs_reps, optNni = TRUE)
+   
+   filename <-  paste(directory, "ml_tree.png")
+   png(filename, width = 800, height = 600)
+   plotBS(tree, bs, main = paste("ML Tree (", best_model, ")"))
+   dev.off()
+   return(list(
+      best_model = best_model,
+      filename = filename
+   ))
    
 }

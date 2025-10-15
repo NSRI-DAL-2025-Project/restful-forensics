@@ -10,7 +10,7 @@ library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
 source("global.R")
-shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
+#shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
 useShinyjs()
 
 ui <- tagList(
@@ -20,12 +20,14 @@ ui <- tagList(
       tags$style(HTML("
             body {font-family: 'Carme';}
             .navbar-nav > li:nth-child(1) > a { background-color: transparent !important; }
-            .navbar-nav > li:nth-child(2) > a { background-color: #75a2bf !important; }
-            .navbar-nav > li:nth-child(3) > a { background-color: #5e8cad !important; }
-            .navbar-nav > li:nth-child(4) > a { background-color: #46769b !important; }
-            .navbar-nav > li:nth-child(5) > a { background-color: #2f5f8a !important; }
-            .navbar-nav > li:nth-child(6) > a { background-color: #174978 !important; }
-            .navbar-nav > li:nth-child(7) > a { background-color: #003366 !important; }
+            .navbar-nav > li:nth-child(2) > a { background-color: #aec8d9 !important; }
+            .navbar-nav > li:nth-child(3) > a { background-color: #94b8d0 !important; }
+            .navbar-nav > li:nth-child(4) > a { background-color: #75a2bf !important; }
+            .navbar-nav > li:nth-child(5) > a { background-color: #5e8cad !important; }
+            .navbar-nav > li:nth-child(6) > a { background-color: #487aa7 !important; }
+            .navbar-nav > li:nth-child(7) > a { background-color: #326f9e !important; }
+            .navbar-nav > li:nth-child(8) > a { background-color: #295b8a !important; }
+            .navbar-nav > li:nth-child(9) > a { background-color: #174978 !important; }
       
             .clickable-card {
                 border: 1px solid #ccc;
@@ -100,7 +102,7 @@ ui <- tagList(
          
       ), # end of tab panel for homepage
       ## 1. Instructions Tab ----
-      tabPanel(title = HTML("<span style = 'color:#ffffff;'>Instructions</span>"),
+      tabPanel(title = HTML("<span style = 'color:#000000;'>Instructions</span>"),
                fluidPage(
                   
                   div(class = "clickable-card",
@@ -238,7 +240,7 @@ ui <- tagList(
                               textAreaInput("typePop", "Enter population", rows = 1)
                            ),
                            
-                           actionButton("convertCSV", "Convert File to CSV", icon = icon("arrow-up-right-from-square"))
+                           actionButton("convertCSV", "Convert File to CSV", icon = icon("file-csv"))
                            
                         ),
                         mainPanel(
@@ -290,6 +292,24 @@ ui <- tagList(
                      )
             ), #end of tabpanel
             
+            tabPanel("VCF to FASTA",
+                     useShinyjs(),
+                     sidebarLayout(
+                        sidebarPanel(
+                           fileInput("vcfFile", "Upload VCF file"),
+                           fileInput("refFasta", "Upload reference file genome"),
+                           actionButton("converttoFasta", "Convert to FASTA", icon = icon("file-invoice"))
+                        ), # end of sidebarPanel
+                        mainPanel(
+                           verbatimTextOutput("fastaPreview"),
+                           conditionalPanel(
+                              condition = "output.readyFasta",
+                              downloadButton("downloadFasta", "Download FASTA file")
+                           )
+                        ) # end of mainpanel
+                     ) # end of sidebarLayout
+               
+            ), # end of tabPanel for VCF to fasta
             
             tabPanel("Convert to SNIPPER-analysis ready file",
                      useShinyjs(),
@@ -426,10 +446,77 @@ ui <- tagList(
                )
       ), # end of tabpanel
       
+      
+      ###########
+      # ADD MSA #
+      ###########
+      
+      tabPanel(HTML("<span style = 'color:#ffffff;'> Multiple Sequence Alignment</span>"),
+               sidebarLayout(
+                  sidebarPanel(
+                           #useShinyjs(),
+                           fileInput("fastaFile", "Upload zipped FASTA files"),
+                           actionButton("runMSA", "Align", icon = icon("align-justify")),
+                           radioButtons("substitutionMatrix", "Choose Substitution Matrix for MSA",
+                                        choices = c("ClustalW" = "clustalw", "ClustalOmega" = "clustalomega", "MUSCLE" = "muscle"))
+                           
+                  ), #tabPanel
+                  mainPanel(
+                     verbatimTextOutput("alignmentPreview"),
+                     br(),
+                     verbatimTextOutput("alignmentScoresPreview"),
+                     br(),
+                     downloadButton("downloadAlignedFASTA", "Download Aligned Sequences"),
+                     br(), br(),
+                     downloadButton("downloadAlignmentScores", "Download Alignment Scores"),
+                     br(), br(),
+                     downloadButton("downloadAlignmentPDF", "Download Alignment PDF")
+                  ) # end of mainPanel
+               ) # end of sidebarLayout
+         
+      ), # end of tabpanel for MSA
+      
+      tabPanel(HTML("<span style='color:#ffffff;'>Phylogenetic Tree</span>"),
+               sidebarLayout(
+                  sidebarPanel(
+                     selectInput("treeType", "Choose Method for Tree Construction",
+                                 choices = c("NJ", "UPGMA", "Parsimony", "Maximum Likelihood")),
+                     
+                     conditionalPanel(
+                        condition = "input.treeType == 'NJ' || input.treeType == 'UPGMA'",
+                        selectInput("model", "Choose Substitution Model",
+                                    choices = c("N", "TS", "TV", "JC69", "K80", "F81", "K81", "F84", "BH87", "T92", "TN93", "GG95"),
+                                    selected = "K80")
+                                    ),
+                     
+                     conditionalPanel(
+                        condition = "input.treeType == 'Maximum Likelihood'",
+                        textInput("boostrapSamples", "Set number of bootstrap samples", placeholder = "100")
+                     ),
+                     
+                     textInput("outgroup", "Outgroup (optional)", placeholder = "e.g. Sample1"),
+                     textInput("seed", "Set Seed Value", placeholder = "123"),
+                     actionButton("buildTree", "Build Tree", icon = icon("tree")),
+                     br(), br(),
+                     downloadButton("downloadTree", "Download Tree"),
+                     downloadButton("downloadAll", "Download All Outputs")
+                     ),
+                  
+                  mainPanel(
+                     h4("Aligned Sequences Preview"),
+                     verbatimTextOutput("treeAlignmentPreview"),
+                     br(),
+                     h4("Phylogenetic Tree"),
+                     imageOutput("treeImage")
+                  )
+                  
+               ) # end of sidebar layout
+               ), # end of tab panel
+      
       ## POP STAT
       tabPanel(HTML("<span style = 'color:#ffffff;'>Population Statistics</span>"),
                tabsetPanel(
-                  tabPanel("Perform Analysis",
+                  sidebarPanel("Perform Analysis",
                            useShinyjs(),
                            fileInput("popStatsFile", "Upload CSV or XLSX Dataset"),
                            actionButton("runPopStats", "Analyze", icon = icon("magnifying-glass-chart")),
@@ -748,6 +835,40 @@ server <- function(input, output, session) {
       waiter_hide()
    }) # end of observeEvent
    
+   
+   observeEvent(input$converttoFasta, {
+      req(input$vcfFile, input$refFasta)
+      
+      disable("converttoFasta")
+      temp_dir <- tempdir()
+      
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
+      
+      fasta_path <- vcf_to_fasta(
+         vcf_file = input$vcfFile$datapath,
+         reference = input$refFasta$datapath,
+         bcftools_path = bcftools_path,
+         directory = temp_dir
+      )
+      
+      output$downloadFasta <- downloadHandler(
+         filename = function() { "consensus.fa"},
+         content = function(file){
+            file.copy(fasta_path, file)
+         }
+      )
+      
+      output$readyFasta <- reactive({ file.exists(fasta_path)})
+      outputOptions(output, "readyFasta", suspendWhenHidden = FALSE)
+      
+      output$fastaPreview <- renderText({
+         req(file.exists(fasta_path))
+         paste(readLines(fasta_path, n = 10), collapse = "\n")
+      })
+      
+      enable("converttoFasta")
+      waiter_hide()
+   }) # end of observe event convert to FASTA
    
    
    ### For SNIPPER
@@ -1136,6 +1257,150 @@ server <- function(input, output, session) {
    #   }
    #})
    
+   #######
+   # MSA #
+   #######
+   
+   fasta_data <- reactiveVal(NULL)
+   aligned_data <- reactiveVal(NULL)
+   alignment_scores <- reactiveVal(NULL)
+   alignment_pdf <- reactiveVal(NULL)
+   
+   observeEvent(input$runMSA, {
+      req(input$fastaFile)
+      
+      fasta_data(read_fasta(input$fastaFile$datapath))
+      aligned <- msa_results(fasta_data(), method = input$substitutionMatrix)
+      aligned_data(aligned$alignment)
+      alignment_scores(aligned$scores)
+      alignment_pdf(aligned$pdf)
+      
+   }) # end of observe event for run msa
+   
+   output$alignmentPreview <- renderPrint({
+      req(aligned_data())
+      aligned_data()
+   })
+   
+   output$alignmentScoresPreview <- renderPrint({
+      req(alignment_scores())
+      alignment_scores()
+   })
+   
+   output$downloadAlignedFASTA <- downloadHandler(
+      filename = function() { "aligned_sequences.fasta"},
+      content = function(file){
+      writeLines(utils::capture.output(print(aligned_data())), file)   
+      }
+   )
+   
+   output$downloadAlignmentScores <- downloadHandler(
+      filename = function() { "alignment_scores.txt"},
+      content = function(file){
+         writeLines(utils::capture.output(print(alignment_scores())), file)   
+      }
+   )
+   
+   output$downloadAlignmentPDF <- downloadHandler(
+      filename = function(){"aligned_sequences.pdf"},
+      content = function(file){
+         req(alignment_pdf())
+         file.copy(alignment_pdf(), file)
+      }
+   )
+   
+   # Phylogenetic Tree Construction
+   tree_plot <- reactiveVal(NULL)
+   tree_path <- reactiveVal(NULL)
+   tree_model <- reactiveVal(NULL)
+   
+   observeEvent(input$buildTree, {
+      req(aligned_data())
+      tree_type <- input$treeType
+      outgroup <- input$outgroup
+      bs <- input$boostrapSamples
+      model <- input$model
+      aligned <- aligned_data()
+      directory <- tempdir()
+      
+      if (!is.null(input$seed)){
+         seed <- input$seed
+      } else {
+         seed <- "123"
+      }
+      
+      if (tree_type == "NJ"){
+         plot_obj <- build_nj_tree(aligned, outgroup = outgroup, model = model, seed = seed)
+         tree_plot(plot_obj)
+         tree_path(NULL)
+         tree_model(paste("NJ C", model, ")", sep = ""))
+      } else if (tree_type == "UPGMA"){
+         plot_obj <- build_upgma_tree(aligned, outgroup = outgroup, model = model, seed = seed)
+         tree_plot(plot_obj)
+         tree_path(NULL)
+         tree_model(paste("UPGMA (", model, ")", sep=""))
+      } else if (tree_type == "Parsimony"){
+         path <- build_max_parsimony(aligned, outgroup = outgroup, directory = directory, seed = seed)
+         tree_plot(NULL)
+         tree_path(path)
+         tree_model("Parsimony")
+      } else if (tree_type == "Maximum Likelihood"){
+         result <- build_ml_tree(aligned, outgroup=outgroup, directory = directory, seed = seed, bs = bs)
+         tree_plot(NULL)
+         tree_path(results$filename)
+         tree_model(results$best_model)
+      }
+   }) # end of observe event tree
+   
+   output$treeImage <- renderUI({
+      if (!is.null(tree_plot())){
+         plotOutput("treePlot")
+      } else if (!is.null(tree_path())) {
+         imageOutput("treePNG")
+      }
+   })
+   
+   output$treePlot <- renderPlot({
+      req(tree_plot())
+      tree_plot()
+   })
+   
+   output$treePNG <- renderImage({
+      req(tree_path())
+      list(src = tree_path(), contentType = "image/png", width = 800, height = 600)
+   }, deleteFile = FALSE)
+   
+   output$downloadTree <- downloadHandler(
+      filename = function() {"tree.png"},
+      content = function(file){
+         if (!is.null(tree_plot())) {
+            ggsave(file, plot = tree_plot(), width = 8, height = 6, dpi = 600)
+         } else if (!is.null(tree_path())) {
+            file.copy(tree_path(), file)
+         }
+      }
+   )
+   
+   output$downloadAll <- downloadHandler(
+      filename = function() {"phylo_outputs.zip"},
+      content = function(file){
+         tmp_fasta <- tempfile(fileext = ".fasta")
+         tmp_scores <- tempfile(fileext = ".txt")
+         tmp_pdf <- alignment_pdf()
+         tmp_tree <- if(!is.null(tree_plot())){
+            tmp <- tempfile(fileext=".png")
+            ggsave(tmp, plot = tree_plot(), width = 8, height = 6, dpi = 300)
+            tmp
+         } else {
+            tree_path()
+         }
+         
+         writeLines(capture.output(print(aligned_data())), tmp_fasta)
+         writeLines(capture.output(print(alignment_scores())), tmp_scores)
+         
+         zip::zip(file, files = c(tmp_fasta, tmp_scores, tmp_pdf, tmp_tree))
+      }
+   )
    
    
    # POP STAT
