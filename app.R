@@ -11,23 +11,28 @@ library(shinyjs)
 source("functions.R", local = TRUE)
 source("global.R")
 #shiny::addResourcePath('www', '/srv/shiny-server/restful-forensics/www') # for docker
-useShinyjs()
 
 ui <- tagList(
-   use_waiter(),
+   useShinyjs(),
+   waiter::waiter_preloader(
+      html = waiter::spin_fading_circles(),
+      color = "rgba(255,255,255,0.6)"
+   ),
    tags$head(
       tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Carme&display=swap"),
       tags$style(HTML("
             body {font-family: 'Carme';}
             .navbar-nav > li:nth-child(1) > a { background-color: transparent !important; }
-            .navbar-nav > li:nth-child(2) > a { background-color: #aec8d9 !important; }
-            .navbar-nav > li:nth-child(3) > a { background-color: #94b8d0 !important; }
-            .navbar-nav > li:nth-child(4) > a { background-color: #75a2bf !important; }
-            .navbar-nav > li:nth-child(5) > a { background-color: #5e8cad !important; }
-            .navbar-nav > li:nth-child(6) > a { background-color: #487aa7 !important; }
-            .navbar-nav > li:nth-child(7) > a { background-color: #326f9e !important; }
-            .navbar-nav > li:nth-child(8) > a { background-color: #295b8a !important; }
-            .navbar-nav > li:nth-child(9) > a { background-color: #174978 !important; }
+            .navbar-nav > li:nth-child(2) > a { background-color: transparent !important; }
+            .navbar-nav > li:nth-child(3) > a { background-color: #aec8d9 !important; }
+            .navbar-nav > li:nth-child(4) > a { background-color: #94b8d0 !important; }
+            .navbar-nav > li:nth-child(5) > a { background-color: #75a2bf !important; }
+            .navbar-nav > li:nth-child(6) > a { background-color: #5e8cad !important; }
+            .navbar-nav > li:nth-child(7) > a { background-color: #487aa7 !important; }
+            .navbar-nav > li:nth-child(8) > a { background-color: #326f9e !important; }
+            .navbar-nav > li:nth-child(9) > a { background-color: #295b8a !important; }
+            .navbar-nav > li:nth-child(10) > a { background-color: #174978 !important; }
+            .navbar-nav > li:nth-child(11) > a { background-color: #003366 !important; }
       
             .clickable-card {
                 border: 1px solid #ccc;
@@ -40,7 +45,7 @@ ui <- tagList(
               }
               .card-header {
                 font-weight: bold;
-                font-size: 16px;
+                font-size: 20px;
                 color: #1c4e80;
               }
               .card-body {
@@ -65,6 +70,9 @@ ui <- tagList(
                 color: #1c4e80;
               }
       
+               .waiter-overlay{
+                         backdrop-filter: blur(4px);
+                      } 
           "))
    ), # end of tags$head
    tags$script(HTML("
@@ -76,7 +84,8 @@ ui <- tagList(
    navbarPage(
       
       title = div(
-         tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: middle;"),
+         #tags$img(src = "www/logo.png", height = "30px", style = "display: inline-block; vertical-align: middle;"), ############ UNCOMMENT OUT IF USING DOCKER
+         tags$img(src = "logo.png", height = "30px", style = "display: inline-block; vertical-align: middle;"),
          tags$span("RESTful Forensics",
                    style = "font-family: Carme, sans-serif; font-size: 26px; color: #92b2e4; vertical-align: middle; padding-left: 0px;") #,
          #tags$div(
@@ -87,28 +96,30 @@ ui <- tagList(
       
       tabPanel(
          title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
+         
+         
          div(
             class = "card",
             style = "margin: 30px; box-shadow: 0 5px 10px rgba(0,0,0,0.08);",
-            div(
-               class = "card-body",
-               style = "display: block;",
-               h4(class = "card-title", "From the Authors:"),
-               p(class = "card-text",
-                 "This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."
-               )
-            )
-         )
+            div(class = "card-header", "From the Authors:"),
+            div(class = "card-text",
+                p("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types.")
+                )
+         ) # end of div
          
       ), # end of tab panel for homepage
-      ## 1. Instructions Tab ----
+      
+      
+      ## 1. Instructions Tab
       tabPanel(title = HTML("<span style = 'color:#000000;'>Instructions</span>"),
+               h4("Instructions page (typical workflow for marker analysis)"),
+               p("Click each section for the specific instructions."),
                fluidPage(
                   
                   div(class = "clickable-card",
                       div(class = "card-header", "🔄 File Conversion"),
                       div(class = "card-body",
-                          p("Convert various files to commonly used input files."),
+                          h4("Convert various genetic data structures to commonly used input files."),
                           
                           div(class = "inner-card",
                               h5("A. Convert files to CSV and add population info"),
@@ -118,40 +129,55 @@ ui <- tagList(
                           div(class = "inner-card",
                               h5("B. Convert ForenSeq UAS outputs to wide format"),
                               p("Input file: Compressed folder (.zip or .tar) of XLSX files."),
-                              p("Expected output file: Single CSV file (merged XLSX files).")
+                              p("Expected output file: Single CSV file (merged XLSX files)."),
+                              br(),
+                              p("This section builds upon the work of Ms. Maeviviene Sosing as part of the Filipino Genomes Research Program 2"),
                           ),
                           div(class = "inner-card",
-                              h5("C. Convert CSV or XLSX files to a SNIPPER-compatible file"),
+                              h5("C. Convert VCF files to FASTA"),
+                              p("Input file: VCF file"),
+                              p("Expected output file: FASTA file.")
+                              ), 
+                          div(class = "inner-card",
+                              h5("D. Convert CSV or XLSX files to a SNIPPER-compatible file"),
                               p("Input file: CSV or XLSX file."),
-                              p("Expected output file: XLSX file.")
-                          )
-                          
+                              p("Expected output file: XLSX file."),
+                              p("SNIPPER tool for sample classification: https://mathgene.usc.es/snipper/index.php")
+                          ),
+                          div(class = "inner-card",
+                              h5("E. Convert CSV files to STRUCTURE files."),
+                              p("Input file: CSV file with marker and population data."),
+                              p("Expected output file: str file and revised input file"),
+                              br(),
+                              p("STRUCTURE generally can't handle sample labels with alphabets, the function would convert sample labels to their associated row number."),
+                              p("For users who opt to use STRUCTURE via the terminal or using the GUI, instructions can be found here: https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html")
+                              )
                       )
                   ),
                   ## extraction
                   div(class = "clickable-card",
                       div(class = "card-header", "🧬 SNP Extraction"),
                       div(class = "card-body",
-                          p("Extract markers from sequenced data and perform concordance analysis."),
+                          h4("Extract markers using PLINK v1.9 from sequenced data and perform concordance analysis."),
+                          p("See https://www.cog-genomics.org/plink/ for filtering options."),
                           
                           div(class = "inner-card",
-                              h5("A. Extract SNPs based on rsID or GRCh37/GRCh38 position"),
-                              p("See https://www.cog-genomics.org/plink/ for filtering options."),
+                              h5("A. Extract SNPs based on rsID (marker identification) or GRCh37/GRCh38 position"),
                               p("Input file:"),
                               p("(1) VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
                               p("(2) Markers/position list — you may type rsIDs manually, upload a list, or use a POS txt file."),
                               p("The position list (txt file) should include:"),
                               tags$ul(
                                  tags$li("[1] Chromosome number (integer)"),
-                                 tags$li("[2] Starting base-pair position"),
-                                 tags$li("[3] Final base-pair position")
+                                 tags$li("[2] Starting base-pair position (integer)"),
+                                 tags$li("[3] Final base-pair position (integer)")
                               )
                           ),
                           
                           div(class = "inner-card",
                               h5("B. Concordance analysis between files with the same samples"),
                               p("Input files: Two CSV or XLSX files."),
-                              p("Expected output:"),
+                              p("Expected outputs:"),
                               tags$ul(
                                  tags$li("Concordance table"),
                                  tags$li("Concordance plot")
@@ -160,26 +186,97 @@ ui <- tagList(
                           
                       )
                   ), # end of div for tab2
+                  div(class = "clickable-card",
+                      div(class = "card-header", "🔽 Filtering"),
+                      div(class = "card-body",
+                          h4("Filter individuals and variants using standard options in PLINK 1.9."),
+                          p("Standard filtering flags are indicated. For other PLINK flags, see https://www.cog-genomics.org/plink/ for options to be specified in the 'Additional PLINK flags' text box."),
+                          br(),
+                          p("Input file: VCF file"),
+                          p("Expected outputs:"),
+                          tags$ul(
+                             tags$li("VCF file"),
+                             tags$li("Depth of Coverage Plots")
+                          )
+                          )
+                      ), # end of div
+                  
+                  div(class = "clickable-card",
+                      div(class = "card-header", "↔️ Multiple Sequence Alignment"),
+                      div(class = "card-body",
+                          h4("Perform multiple sequence alignment using the msa R package."),
+                          p("Post-processing of alignment is performed using the DECIPHER package in R. https://bioconductor.org/packages/devel/bioc/vignettes/DECIPHER/inst/doc/ArtOfAlignmentInR.pdf"),
+                          br(),
+                          p("Input file: Zipped folder of FASTA files."),
+                          p("Expected outputs:"),
+                          tags$ul(
+                             tags$li("Aligned sequences"),
+                             tags$li("Alignment scores"),
+                             tags$li("Alignment PDF")
+                          ),
+                          br(),
+                          p("The aligned sequences can be used in the tab 'Phylogenetic Tree'")
+                          )
+                      ),
+                  
+                  div(class = "clickable-card",
+                      div(class = "card-header", "🌲 Phylogenetic Tree"),
+                      div(class = "card-body",
+                          h4("Perform phylogenetic tree reconstruction using ape and phangorn R packages."),
+                          p("Approaches to tree construction are NJ, UPGMA, Maximum Parsimony, and Maximum Likelihood. Check the assumptions and constraints of each approach [1]."),
+                          br(),
+                          p("Input file used is the alignment output from the MSA tab. There is an option of using the raw, adjusted, or staggered alignment for tree construction."),
+                          p("Expected output is the phylogenetic tree in PNG format."),
+                          br(), br(),
+                          h5("References"),
+                          p("[1] Zuo, Y., Zhang, Z., Zeng, Y., Hu, H., Hao, Y., Huang, S., and Li, B. (2024). Common methods for Phylogenetic Tree Construction and Their Implementation in R. Bioengineering(Basel), 11(5): 480. https://doi.org/10.3390/bioengineering11050480")
+                          )
+                      ),
+                  div(class = "clickable-card",
+                      div(class = "card-header", "📑 Barcoding"),
+                      div(class = "card-body")
+                      ),
                   
                   ### POP Stat
                   div(class = "clickable-card",
                       div(class = "card-header", "📝 Population Statistics"),
                       div(class = "card-body",
-                          p("Calculate private alleles, heterozygosity, inbreeding coefficients, allele frequencies, and other basic populations statistics"),
+                          #h4("Calculate private alleles [1], heterozygosity [2], inbreeding coefficients [3], allele frequencies [4], hardy-weinberg equilibrium [5], and FST values [6]."),
+                          p("Calculation of common population statistics:"),
+                          tags$ul(
+                            tags$li("Private alleles [1] calculated using the poppr R package"),
+                            tags$li("Mean Allelic Richness [2] using the hierfstat R package"),
+                            tags$li("Heterozygosity [3] using the hierfstat R package"),
+                            tags$li("Inbreeding Coefficient [4] using the hierfstat R package"),
+                            tags$li("Allele frequency [5] using the adegenet R package"),
+                            tags$li("Hardy-Weinberg equilibrium [6] using the pegas R package"),
+                            tags$li("FST values [7] using the hierfstat R package")
+                          ),
+                          br(),
                           p("Input file: CSV or XLSX file"),
                           p("Expected output files:"),
                           tags$ul(
-                             tags$li("XLSX file with all table results"),
+                             tags$li("XLSX file with all results"),
                              tags$li("Heterozygosity Plot"),
-                             tags$li("Fst Plot")
-                          )
+                             tags$li("Fst Plots")
+                          ),
+                          br(), br(),
+                          h5("References"),
+                          p("[1] Petit, R.J., El Mousadik, A., and Pons, O. (1998). Identifying populations for conservation on the basis of genetic markers. Conservation Biology, 12:844-855"),
+                          p("[2] Foulley, J.F., and Ollivier, L. (2005). Estimating allelic richness and its diversity. Livestock Science, 101:150-158. https://doi.org/10.1016/j.livprodsci.2005.10.021"),
+                          p("[3] Nei, M. (1978). Estimation of average heterozygosity and genetic distance from a small number of individuals. Genetics:89:583-590. https://doi.org/10.1093/genetics/89.3.583"),
+                          p("[4] Rousset, F. (2002). Inbreeding and relatedness coefficients: what do they measure? Heredity, 88:371-380."),
+                          p("[5] Rezaei, N., and Hedayat, M. (2013). Allele Frequency. Brenner's Encyclopedia of Genetics (Second Edition). https://doi.org/10.1016/B978-0-12-374984-0.00032-2"),
+                          p("[6] Tiret, L., and Cambien, F. (1995). Departure from Hardy-Weinberg equilibrium should be systematically tested in studies of association between genetic markers and disease. Circulation, 92(11):3364-3365."),
+                          p("[7] Weir, B.S., and Cockerham, C.C. (1984). Estimating F-statistics for the analysis of population structure. Evolution; International Journal of Organic Evolution, 38(6): 1358-1370. https://doi.org/10.1111/j.1558-5646.1984.tb05657.x")
                       )
                   ), #end of div for popstat
                   
                   div(class = "clickable-card",
                       div(class = "card-header", "🔍 Exploratory Analysis"),
                       div(class = "card-body",
-                          p("Run principal component analysis"),
+                          h4("Run principal component analysis using the ade4 R package."),
+                          br(),
                           p("Input file: CSV or XLSX file and color labels (optional)"),
                           p("Expected output file: PNG plots"))
                   ), # end of div for pca
@@ -187,10 +284,11 @@ ui <- tagList(
                   div(class = "clickable-card",
                       div(class = "card-header", "📊 STRUCTURE Analysis"),
                       div(class = "card-body",
-                          p("Generate STRUCTURE input files and pong compatible files. Visualize the possible results"),
+                          h4("Generate STRUCTURE input files and pong compatible files. Visualize the possible results"),
+                          p("See https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_doc.pdf for the documentation."),
+                          br(),
                           p("Input file: CSV or XLSX file"),
-                          p("Expected output file: Zipped qmatrices, individual files, and PNG plots"),
-                          p("See https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_doc.pdf for the documentation.")
+                          p("Expected output file: Zipped qmatrices, individual files, and PNG plots")                          
                           ))
                ) # end of fluidpage
                
@@ -343,7 +441,37 @@ ui <- tagList(
                            ) # end of fluidRow
                         ) # end of mainpanel
                      )
-            )
+            ),
+            
+            tabPanel("CSV to STRUCTURE file",
+                     useShinyjs(),
+                     sidebarLayout(
+                        sidebarPanel(
+                           fileInput("tostrFile", "Upload CSV file"),
+                           helpText("Use the 'Convert files to CSV' file if using VCF, BCF, or PLINK files. Population data is necessary."),
+                           radioButtons("systemFile", "Choose the operating system where STRUCTURE v2.3.4 is installed",
+                                        choices = c("Linux" = "Linux", "Windows" = "Windows")),
+                           actionButton("csv2str", "Generate STRUCTURE File", icon = icon("arrow-up-right-from-square"))   
+                        ),
+                        mainPanel(
+                           h4("Preview of output files"),
+                           fluidRow(
+                              column(6,
+                                     h5("Revised input file"),
+                                     tableOutput("revisedCSV") # REVISE
+                              ),
+                              column(6,
+                                     h5("Preview of str file"),
+                                     tableOutput("strFile") # REVISE
+                              )
+                           ),
+                           br(), br(),
+                           downloadButton("downloadrevised", "Download Revised CSV file"),
+                           downloadButton("downloadSTRfile", "Download STR file")
+                           
+                        ) # end of mainpanel
+                     )
+                     ) # end of tabpanel for csv to structure file
             
          )
       ), # end of tabpanel
@@ -391,7 +519,7 @@ ui <- tagList(
                                                            width = "100%"),
                                              helpText("See https://www.cog-genomics.org/plink/ for options."),
                                              
-                                             actionButton("extractBtn", "Run Marker Extraction", icon = icon("play")),
+                                             actionButton("extractBtn", "Run Marker Extraction", icon = icon("play"))
                                              
                                              #downloadButton("downloadExtracted", "Download Merged VCF")
                                           )
@@ -436,7 +564,7 @@ ui <- tagList(
                                  tableOutput("concordanceResults"),
                                  hr(),
                                  h4("Concordance Plot"),
-                                 imageOutput("concordancePlot"),
+                                 plotOutput("concordancePlot", height = "600px"),
                                  hr(),
                                  downloadButton("downloadConcordance", "Download Concordance Results"),
                                  downloadButton("downloadConcordancePlot", "Download Plot")
@@ -446,6 +574,70 @@ ui <- tagList(
                )
       ), # end of tabpanel
       
+      #############
+      # FILTERING #
+      #############
+      
+      tabPanel(HTML("<span style = 'color:#ffffff;'> Filtering </span>"),
+         sidebarLayout(
+            sidebarPanel(
+               fileInput("forFilter", "Upload VCF file"),
+               fileInput("highlightRef", "Optional Reference file for highlighting (CSV/XLSX)"),
+               checkboxInput("enableDP", "Plot Depth of Coverage", value = TRUE),
+               selectInput("colorPalette", "Color Palette", choices = rownames(RColorBrewer::brewer.pal.info), selected = "Set2"),
+               hr(),
+               
+               h4("PLINK 1.9 Filtering Options"),
+               checkboxInput("filterIndiv", "Filter Individuals (--mind)", value = FALSE),
+               helpText("Exclude individuals with a missing genotype rate greater than the threshold"),
+               conditionalPanel("input.filterIndiv == true",
+                                numericInput("mindThresh", "Missingness Threshold (--mind)", value = 0.1, min = 0, max = 1, step = 0.01)
+                                ),
+               checkboxInput("filterVariant", "Filter Variants (--geno)", value = FALSE),
+               helpText("Exclude SNPs with a missing genotype rate greater than the threshold."),
+               conditionalPanel("input.filterVariant == true",
+                                numericInput("genoThresh", "Missingness Threshold (--geno)", value = 0.1, min = 0, max = 1, step = 0.01)
+                                ),
+               checkboxInput("filterAllele", "Filter Variants (--maf)", value = FALSE),
+               helpText("Exclude SNPs with a minor allele frequency less than the threshold."),
+               conditionalPanel("input.filterAllele == true",
+                                numericInput("mafThresh == true", "Minor Allele Frequency Threshold (--maf)", value = 0.1)
+                                ),
+               checkboxInput("filterQuality", "Filter by Quality (--qual-threshold)", value = FALSE),
+               helpText("Exclude variants with quality scores below the threshold."),
+               conditionalPanel("input.filterQuality == true",
+                                numericInput("qualThresh == true", "Quality Score Threshold (--qual-threshold)", value = 5)
+                                ),
+               checkboxInput("filterHWE", "Filter Variants (--hwe)", value = FALSE),
+               helpText("Exclude SNPs deviating from the Hardy-Weinberg Equilibrium."),
+               conditionalPanel("input.filterHWE == true",
+                                numericInput("qualHWE == true", "Hardy-Weinberg equilibrium exact test p-value Threshold (--hwe)", value = 0.000001, min = 0.0000000001)
+                                ),
+               checkboxInput("filterLD", "Filter Variants (--indep-pairwise)", value = FALSE),
+               helpText("Prune markers in approximate linkage equilibrium with each other."),
+               conditionalPanel("input.filterLD == true",
+                                numericInput("ldWindow", "Window Size (kb)", value = 500, min = 1, step = 1),
+                                numericInput("ldStep", "Step Size (variants)", value = 50, min = 1, step = 1),
+                                numericInput("ldR2", "r2 Threshold", value = 0.2, min = 0, max = 1, step = 0.01)
+                                ),
+               textInput("customFilter", "Additional PLINK flags", placeholder = "--keep filestokeep.txt"),
+               fileInput("extraFile1", "Optional file for first flag", accept = c(".txt", ".ped", ".psam", ".pheno")),
+               fileInput("extraFile2", "Optional file for second flag", accept = c(".txt", ".ped", ".psam", ".pheno")),
+               helpText("Upload extra files only if required by additional PLINK flags."),
+               actionButton("calcDP", "Run Filtering & Plotting", icon = icon("filter")),
+               textOutput("filterWarning")
+            ), # end of side panel
+            mainPanel(
+               verbatimTextOutput("plinkCommandPreview"),
+               h4("Depth of Coverage Plots"),
+               uiOutput("depthPlots"),
+               br(),
+               downloadButton("downloadFilteredFile", "Download Filtered File"),
+               downloadButton("downloadDepthPlots", "Download Plots")
+            ) # end of mainPanel
+            
+         ) # sidebar layout
+   ), # end of tab panel for filtering
       
       ###########
       # ADD MSA #
@@ -457,20 +649,31 @@ ui <- tagList(
                            #useShinyjs(),
                            fileInput("fastaFile", "Upload zipped FASTA files"),
                            actionButton("runMSA", "Align", icon = icon("align-justify")),
+                           br(),
                            radioButtons("substitutionMatrix", "Choose Substitution Matrix for MSA",
-                                        choices = c("ClustalW" = "ClustalW", "ClustalOmega" = "ClustalOmega", "MUSCLE" = "Muscle"))
+                                        choices = c("ClustalW" = "ClustalW", "ClustalOmega" = "ClustalOmega", "MUSCLE" = "Muscle")),
+                           selectInput("msaDownloadType", "Choose alignment version to download:",
+                                       choices = c(
+                                          "Initial" = "initial",
+                                          "Adjusted" = "adjusted",
+                                          "Staggered" = "staggered"
+                                       ),
+                                       selected = "initial"),
+                           downloadButton("downloadAlignedFASTA", "Download Aligned Sequences"),
+                           br(), br(),
+                           downloadButton("downloadAlignmentScores", "Download Alignment Scores"),
+                           br(), br(),
+                           downloadButton("downloadAlignmentPDF", "Download Alignment PDF")
                            
                   ), #tabPanel
                   mainPanel(
-                     verbatimTextOutput("alignmentPreview"),
+                     verbatimTextOutput("initialAlignmentText"),
                      br(),
-                     verbatimTextOutput("alignmentScoresPreview"),
+                     verbatimTextOutput("adjustedAlignmentText"),
                      br(),
-                     downloadButton("downloadAlignedFASTA", "Download Aligned Sequences"),
-                     br(), br(),
-                     downloadButton("downloadAlignmentScores", "Download Alignment Scores"),
-                     br(), br(),
-                     downloadButton("downloadAlignmentPDF", "Download Alignment PDF")
+                     verbatimTextOutput("staggeredAlignmentText"),
+                     br(),
+                     verbatimTextOutput("alignmentScoresPreview")
                   ) # end of mainPanel
                ) # end of sidebarLayout
          
@@ -479,6 +682,14 @@ ui <- tagList(
       tabPanel(HTML("<span style='color:#ffffff;'>Phylogenetic Tree</span>"),
                sidebarLayout(
                   sidebarPanel(
+                     selectInput("treeAlignmentType", "Use alignment for tree construction:",
+                                 choices = c(
+                                    "Initial" = "initial",
+                                    "Adjusted" = "adjusted",
+                                    "Staggered" = "staggered"
+                                 ),
+                                 selected = "initial"
+                                 ),
                      selectInput("treeType", "Choose Method for Tree Construction",
                                  choices = c("NJ", "UPGMA", "Parsimony", "Maximum Likelihood")),
                      
@@ -512,6 +723,9 @@ ui <- tagList(
                   
                ) # end of sidebar layout
                ), # end of tab panel
+   
+      tabPanel(HTML("<span style = 'color:#ffffff;'>Barcoding</span>")
+               ), # end of tabpanel
       
       ## POP STAT
       tabPanel(HTML("<span style = 'color:#ffffff;'>Population Statistics</span>"),
@@ -534,7 +748,11 @@ ui <- tagList(
                            h4("Private Alleles Summary"),
                            uiOutput("privateAllelePlot")
                   ),
-                  tabPanel("2 Heterozygosity",
+                  tabPanel("2 Mean Allelic Richness",
+                           h4("Mean Allelic Richness per site"),
+                           DT::dataTableOutput("meanallelic")
+                           ),
+                  tabPanel("3 Heterozygosity",
                            h4("Observed vs Expected Heterozygosity"),
                            DT::dataTableOutput("heterozygosity_table"),
                            hr(),
@@ -542,21 +760,21 @@ ui <- tagList(
                            imageOutput("heterozygosity_plot"),
                            downloadButton("downloadHeterozygosityPlot", "Download Plot")
                   ),
-                  tabPanel("3 Inbreeding Coefficients",
+                  tabPanel("4 Inbreeding Coefficients",
                            h4("Inbreeding Coefficient by Population"),
                            DT::dataTableOutput("inbreeding_table")
                   ),
-                  tabPanel("4 Allele Frequencies",
+                  tabPanel("5 Allele Frequencies",
                            h4("Allele Frequency Table"),
                            DT::dataTableOutput("allele_freq_table")
                   ),
-                  tabPanel("5 Hardy-Weinberg Equilibrium",
+                  tabPanel("6 Hardy-Weinberg Equilibrium",
                            h4("HWE P-value Summary"),
                            uiOutput("hwe_summary"),
                            h4("Population-wise HWE Chi-Square Table"),
                            DT::dataTableOutput("hwe_chisq_table")
                   ),
-                  tabPanel("6 Fst Values",
+                  tabPanel("7 Fst Values",
                            h4("Pairwise Fst Matrix"),
                            uiOutput("fstMatrixUI"),  
                            h4("Tidy Pairwise Fst Data"),
@@ -630,7 +848,12 @@ ui <- tagList(
                h4("STRUCTURE Visualization"),
                imageOutput("structurePlotPreview"),
 
-               
+               p("Some functions were revised and adapted from the strataG and dartR packages such as 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'"),
+               h3("References"),
+               p("Archer, F., Adams, P., and Schneiders, B. (2016). strataG: an R package for manipulating, summarizing, and analyzing population genetic data. Molecular Ecology Resources 17: 5-11. https://doi.org/10.1111/1755-0998.12559"),
+               p("Mijangos, J.L., Gruber, B., Berry, O., Pacioni, C., and Georges, A. (2022). dartR v2: An accessible genetic analysis platform for conservation, ecology, and agriculture. Methods in Ecology and Evolution. https://doi.org/10.1111/2041-210X.13918"),
+               p("Gruber, B., Unmack, P.J., Berry, O.F., and Georges, A. (2018). dartR: an R package to facilitate analysis of SNP data generated from reduced representation genome sequencing. Molecular Ecology Resources 18:691-699. https://doi.org/10.1111/1755-0998.12745"),
+               p("Jenkins, T. (2018). R function to export a genind object in STRUCTURE format. [Source code]. GitHub. https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2structure_function.R")
                #tags$h4("Sample File"),
                #tags$ul(
                #   tags$a("Sample file", href = "www/sample.csv", download = NA)
@@ -659,40 +882,39 @@ ui <- tagList(
 # TO ADD
 server <- function(input, output, session) {
    
-   lastAction <- reactiveVal(Sys.time())
+   #lastAction <- reactiveVal(Sys.time())
    
    # timer
-   observe({
-      invalidateLater(600000, session)  # 5 minutes
+   #observe({
+      #invalidateLater(600000, session)  # 5 minutes
       
       # set cleanup time by 5 mins
-      if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
-         # resets
-         convertedCSV
-         convertedSNIPPER
-         convertedUAS
-         concordanceResult(NULL)
-         concordancePlotPath(NULL)
-         fsnps_gen(NULL)
-         population_stats(NULL)
-         hardy_weinberg_stats(NULL)
-         fst_stats(NULL)
+   #   if (difftime(Sys.time(), lastAction(), units = "secs") > 300) {
+   #      # resets
+   #      convertedCSV
+   #      convertedSNIPPER
+   #      convertedUAS
+   #      concordanceResult(NULL)
+   #      concordancePlotPath(NULL)
+   #      fsnps_gen(NULL)
+   #      population_stats(NULL)
+   #      hardy_weinberg_stats(NULL)
+   #      fst_stats(NULL)
          
          # this would reset the ui
-         shinyjs::reset("formPanel")
+   #      shinyjs::reset("formPanel")
          
          # to clean the files
-         unlink(tempdir(), recursive = TRUE)
+   #      unlink(tempdir(), recursive = TRUE)
          
-         showNotification("Session cleaned due to inactivity.", type = "message")
-      }
-   })
+   #      showNotification("Session cleaned due to inactivity.", type = "message")
+   #   }
+   #})
    
    
    ## Store plots for viewing and downloading
    plots <- reactiveValues(pca = NULL, het = NULL, fst = NULL)
    status <- reactiveVal("Waiting for input...")
-   
    
    # ===================== FILE CONV
    convertedCSV <- reactiveVal(NULL)
@@ -836,6 +1058,13 @@ server <- function(input, output, session) {
    }) # end of observeEvent
    
    
+   # CONVERT TO FASTA #
+   
+   observe({
+      fasta_ready <- !is.null(input$vcfFile)
+      shinyjs::toggleState("converttoFasta", condition = fasta_ready)
+   })
+   
    observeEvent(input$converttoFasta, {
       req(input$vcfFile, input$refFasta)
       
@@ -866,7 +1095,7 @@ server <- function(input, output, session) {
          paste(readLines(fasta_path, n = 10), collapse = "\n")
       })
       
-      enable("converttoFasta")
+      shinyjs::enable("converttoFasta")
       waiter_hide()
    }) # end of observe event convert to FASTA
    
@@ -1043,6 +1272,80 @@ server <- function(input, output, session) {
       
    }) # end of observe Event
    
+   
+   
+   # CSV TO STR #
+   shinyjs::disable("downloadrevised")
+   shinyjs::disable("downloadSTRfile")
+   
+   observe({
+      toggleState("csv2str", !is.null(input$tostrFile) && !is.null(input$systemFile))
+   })
+   
+   csv_revised <- reactiveVal(NULL)
+   strconvert <- reactiveVal(NULL)
+   str_file <- reactiveVal(NULL)
+   
+   observeEvent(input$csv2str, {
+      disable("csv2str")
+      shinyjs::disable("downloadrevised")
+      shinyjs::disable("downloadSTRfile")
+      waiter_show(html = spin_fading_circles(), color = "#ffffff")
+      
+      withProgress(message = "Analyzing files...", value = 0, {
+         tryCatch({
+            req(input$tostrFile$datapath, input$systemFile)
+            
+            csv_file <- load_input_file(input$tostrFile$datapath)
+            genind <- convert_to_genind_str(csv_file)
+            csv_revised(genind$new_file)
+            strconvert(genind$fsnps_gen)
+            
+            directory <- tempdir()
+            str_path <- to_structure(strconvert(), directory, system = input$systemFile)
+            str_file(str_path)
+            
+            output$revisedCSV <- DT::renderDataTable({
+               req(csv_revised())
+               csv_revised()
+            }, options = list(pageLength = 10, scrollX = TRUE))
+            
+            # read the str file
+            output$strFile <- DT::renderDataTable({
+               req(str_file())
+               str_lines <- readLines(str_file(), n = 20)
+               str_df <- data.frame(Line = seq_along(str_lines), Content = str_lines)
+               str_df
+            }, options = list(pageLength = 10, scrollX = TRUE))
+            
+            shinyjs::enable("downloadrevised")
+            shinyjs::enable("downloadSTRfile")
+            
+            output$downloadrevised <- downloadHandler(
+               filename = function() {"revised_input.csv"},
+               content = function(file) {
+                  req(csv_revised())
+                  readr::write_csv(csv_revised(), file)
+               }
+            )
+            
+            output$downloadSTRfile <- downloadHandler(
+               filename = function() { "structure_file.str"},
+               content = function(file){
+                  req(str_file())
+                  file.copy(str_path, file)
+               }
+            )
+         }, error = function(e) {
+            showNotification(paste("Error during STRUCTURE conversion", e$message), type = "error", duration = 20)
+         }, finally = {
+            enable("csv2str")
+            waiter_hide()
+         }) # end of try catch 
+      })
+   })
+         
+   
    ## Concordance Analysis
    observe({
       toggleState("compareBtn", !is.null(input$concordanceFile1) && !is.null(input$concordanceFile2))
@@ -1091,25 +1394,13 @@ server <- function(input, output, session) {
                }
             )
             
-            output$concordancePlot <- renderImage({ # will renderImage work???
-               req(concordancePlotPath())
-               
-               list(
-                  src = concordancePlotPath(),
-                  contentType = "image/png",
-                  alt = "Concordance Plot"
-               )
-            }, deleteFile = FALSE)
-            
-            #outputNameConcordance <- paste0("concordance_plot_", Sys.Date(), ".png")
             output$downloadConcordancePlot <- downloadHandler(
                filename = function() {
                   paste0("concordance_plot_", Sys.Date(), ".png")
                },
                content = function(file) {
-                  #plot <- concordancePlotPath(result$plot)     # double check if it outputs correctly
-                  #file.copy(plot, file)
-                  ggsave(filename, concordancePlotPath(), width = 8, height = 8, dpi = 600)
+                  req(concordancePlotPath())
+                  ggsave(file, plot = concordancePlotPath(), width = 8, height = 8, dpi = 600)
                   
                }, contentType = "image/png"
             )
@@ -1149,6 +1440,8 @@ server <- function(input, output, session) {
    
    
    # START MARKER EXTRACTION
+   extracted_file <- reactiveVal(NULL)
+   shinyjs::disable("downloadExtracted")
    observe({
       isFileUploaded <- !is.null(input$markerFile)
       
@@ -1163,19 +1456,11 @@ server <- function(input, output, session) {
    })
    
    
-   
-   extracted_file <- reactiveVal(NULL)
-   
    observeEvent(input$extractBtn, {
-      #lastAction(Sys.time())
-      
       disable("extractBtn")
-      #shinyjs::disable("downloadExtractedBtn")
-      
       req(input$markerFile)
       
       withProgress(message = "Extracting markers...", value = 0, {
-         
          tryCatch({
             snps_list <- if (input$markerType == "rsid") {
                if (input$rsidInputType == "manual") {
@@ -1205,6 +1490,7 @@ server <- function(input, output, session) {
             
             
             temp_dir <- tempdir()
+            
             extracted_markers <- extract_markers(
                input.file  = input$markerFile$datapath,
                snps.list = snps_list,
@@ -1219,20 +1505,9 @@ server <- function(input, output, session) {
             )
             
             extracted_file(extracted_markers)
-            #extracted_file(file.path(temp_dir, "final_merged.vcf"))
             showNotification("VCF file successfully extracted and ready for download!", type = "message")
-            
-            
-            #output$downloadExtracted <- downloadHandler(
-            #   filename = function() { "final_merged.vcf" },
-            #   content = function(file) {
-            #      source_path <- file.path(temp_dir, "final_merged.vcf")
-            #      file.copy(source_path, file)     # would this download??
-            #   }
-            #)
-            
             enable("extractBtn")
-            #shinyjs::enable("downloadExtractedBtn")
+            shinyjs::enable("downloadExtracted")
             waiter_hide()
          }, error = function(e) {
             showNotification(paste("Error:", e$message), type = "error")
@@ -1250,21 +1525,169 @@ server <- function(input, output, session) {
       }
    )
    
-   # observe({
-   #   if (!is.null(extracted_file()) && file.exists(extracted_file())) {
-   #      shinyjs::enable("downloadExtractedBtn")
-   #      showNotification("VCF file ready for download!", type = "message")
-   #   }
-   #})
+   #############
+   # Filtering #
+   #############
+   shinyjs::disable("downloadDepthPlots")
+   shinyjs::disable("downloadFilteredFile")
+   
+   # enable run button only if there's input files and at least one filter
+   observe({
+      hasFile <- !is.null(input$forFilter)
+      anyFilter <- input$filterIndiv || input$filterVariant || input$filterAllele || input$filterQuality || input$filterHWE || input$filterLD
+      shinyjs::toggleState("calcDP", condition = hasFile && anyFilter)
+      })
+   
+   output$filterWarning <- renderText({
+      if (is.null(input$forFilter)){
+         "Please upload a VCF file."
+      } else if (!(input$filterIndiv || input$filterVariant || input$filterAllele || input$filterQuality || input$filterHWE || input$filterLD)){
+         "Please select at least one filtering option."
+      } else {
+         ""
+      }
+   })
+   
+   # reset buttons with new file
+   observeEvent(input$forFilter, {
+      shinyjs::disable("downloadDepthPlots")
+      shinyjs::disable("downloadFilteredFile")
+   })
+   
+   depth_outputs <- reactiveVal(NULL)
+   filtered_plink_file <- reactiveVal(NULL)
+   
+   observeEvent(input$calcDP, {
+      req(input$forFilter)
+      temp_dir <- tempdir()
+      vcf_path <- input$forFilter$datapath
+      ref_path <- if (!is.null(input$highlightRef)) input$highlightRef$datapath else NULL
+      palette <- input$colorPalette
+      
+      if (input$enableDP){
+         dp <- depth_from_vcf(
+            vcf = vcf_path,
+            output.dir = temp_dir,
+            reference = ref_path,
+            palette = palette
+         )
+         depth_outputs(dp)
+      }
+      
+      # for plink filtering
+      plink_cmds <- c("plink", "--vcf", shQuote(vcf_path), "--out", file.path(temp_dir, "filtered"))
+      
+      if (input$filterIndiv){
+         plink_cmds <- c(plink_cmds, "--mind", input$mindThresh)
+      }
+      if (input$filterVariant){
+         plink_cmds <- c(plink_cmds, "--mind", input$genoThresh)
+      }
+      if (input$filterAllele){
+         plink_cmds <- c(plink_cmds, "--mind", input$mafThresh)
+      }
+      if (input$filterQuality){
+         plink_cmds <- c(plink_cmds, "--mind", input$qualThresh)
+      }
+      if (input$filterHWE){
+         plink_cmds <- c(plink_cmds, "--mind", input$qualHWE)
+      }
+      if (input$filterLD){
+         plink_cmds <- c(plink_cmds, "--mind", input$ldWindow, input$ldStep, input$ldR2)
+      }
+      
+      # for custom flags
+      custom_flag <- strsplit(trimws(input$customFilter), "\\s+")[[1]]
+      if (length(custom_flag) == 1 && custom_flag[1] == "") custom_flag <-  NULL
+      
+      if (!is.null(custom_flag) && length(custom_flag) >= 2){
+         if (!is.null(input$extraFile1) && length(custom_flags) >=2){
+            custom_flag[2] <- shQuote(input$extraFile1$datapath)
+         }
+      
+         if (!is.null(input$extraFile2) && length(custom_flags) >=4){
+            custom_flag[4] <- shQuote(input$extraFile2$datapath)
+         }
+      
+         plink_cmds <- c(plink_cmds, custom_flags)}
+      
+      system(paste(plink_cmds, collapse = " "))
+      
+      filtered_path <- file.path(temp_dir, "filtered.vcf")
+      if (file.exists(filtered_path)){
+         filtered_plink_file(filtered_path)
+      }
+      
+      # enable download buttons
+      if (input$enableDP && !is.null(dp)){
+         depth_outputs(dp)
+         shinyjs::enable("downloadDepthPlots")
+      }
+      
+      if (file.exists(filtered_path)){
+         filtered_plink_file(filtered_path)
+         shinyjs::enable("downloadFilteredFile")
+      }
+      
+      output$plinkCommandPreview <- renderText({
+         paste("plink", paste(plink_cmds, collapse = " "))
+      })
+      
+   } 
+                 ) # end of observe events
+   
+   output$depthPlots <- renderUI({
+      req(depth_outputs())
+      plot_marker <- depth_outputs()$plot_marker
+      plot_sample <- depth_outputs()$plot_sample
+      
+      tagList(
+         h5("Depth per Marker"),
+         tags$img(src = plot_marker, width = "100%"),
+         br(),
+         h5("Depth per Sample"),
+         tags$img(src = plot_sample, width = "100%")
+      )
+   })
+   
+   output$downloadDepthPlots <- downloadHandler(
+      filename = function(){"depth_plots.zip"},
+      content = function(file){
+         req(depth_outputs())
+         zip::zip(file, files = c(depth_outputs()$plot_marker, depth_outputs()$plot_sample))
+      }
+   )
+   
+   output$downloadFilteredFile <- downloadHandler(
+      filename = function(){"filtered.vcf"},
+      content = function(file){
+         req(filtered_plink_file())
+         file.copy(filtered_plink_file(), file)
+      }
+   )
    
    #######
    # MSA #
    #######
    
+   shinyjs::disable("downloadAlignedFASTA")
+   shinyjs::disable("downloadAlignmentScores")
+   shinyjs::disable("downloadAlignmentPDF")
+   shinyjs::disable("downloadTree")
+   shinyjs::disable("downloadAll")
+   
    fasta_data <- reactiveVal(NULL)
    aligned_data <- reactiveVal(NULL)
    alignment_scores <- reactiveVal(NULL)
    alignment_pdf <- reactiveVal(NULL)
+   alignment_adjusted <- reactiveVal(NULL)
+   alignment_staggered <- reactiveVal(NULL)
+   
+   observeEvent(input$fastaFILE, {
+      shinyjs::disable("downloadAlignedFASTA")
+      shinyjs::disable("downloadAlignmentScores")
+      shinyjs::disable("downloadAlignmentPDF")
+   })
    
    observeEvent(input$runMSA, {
       req(input$fastaFile)
@@ -1275,12 +1698,28 @@ server <- function(input, output, session) {
       aligned_data(aligned$alignment)
       alignment_scores(aligned$scores)
       alignment_pdf(aligned$pdf)
+      alignment_adjusted(aligned$aligned_adjusted)
+      alignment_staggered(aligned$aligned_staggered)
+      
+      shinyjs::enable("downloadAlignedFASTA")
+      shinyjs::enable("downloadAlignmentScores")
+      shinyjs::enable("downloadAlignmentPDF")
       
    }) # end of observe event for run msa
    
-   output$alignmentPreview <- renderPrint({
+   output$initialAlignmentText <- renderPrint({
       req(aligned_data())
       aligned_data()
+   })
+   
+   output$adjustedAlignmentText <- renderPrint({
+      req(alignment_adjusted())
+      alignment_adjusted()
+   })
+   
+   output$staggeredAlignmentText <- renderPrint({
+      req(alignment_staggered())
+      alignment_staggered()
    })
    
    output$alignmentScoresPreview <- renderPrint({
@@ -1289,9 +1728,14 @@ server <- function(input, output, session) {
    })
    
    output$downloadAlignedFASTA <- downloadHandler(
-      filename = function() { "aligned_sequences.fasta"},
+      filename = function() {paste0("aligned", input$msaDownloadType, "_sequence.fasta")},
       content = function(file){
-      writeLines(utils::capture.output(print(aligned_data())), file)   
+         alignment <- switch(input$msaDownloadType,
+                             initial = aligned_data(),
+                             adjusted = alignment_adjusted(),
+                             staggered = alignment_staggered())
+         req(alignment) 
+      writeLines(utils::capture.output(print(alignment)), file)   
       }
    )
    
@@ -1317,40 +1761,57 @@ server <- function(input, output, session) {
    
    observeEvent(input$buildTree, {
       req(aligned_data())
-      tree_type <- input$treeType
-      outgroup <- input$outgroup
-      bs <- input$boostrapSamples
-      model <- input$model
-      aligned <- aligned_data()
-      directory <- tempdir()
       
-      if (!is.null(input$seed)){
-         seed <- input$seed
-      } else {
-         seed <- "123"
-      }
+      disable("buildTree")
+      waiter_show()
       
-      if (tree_type == "NJ"){
-         plot_obj <- build_nj_tree(aligned, outgroup = outgroup, model = model, seed = seed)
-         tree_plot(plot_obj)
-         tree_path(NULL)
-         tree_model(paste("NJ C", model, ")", sep = ""))
-      } else if (tree_type == "UPGMA"){
-         plot_obj <- build_upgma_tree(aligned, outgroup = outgroup, model = model, seed = seed)
-         tree_plot(plot_obj)
-         tree_path(NULL)
-         tree_model(paste("UPGMA (", model, ")", sep=""))
-      } else if (tree_type == "Parsimony"){
-         path <- build_max_parsimony(aligned, outgroup = outgroup, directory = directory, seed = seed)
-         tree_plot(NULL)
-         tree_path(path)
-         tree_model("Parsimony")
-      } else if (tree_type == "Maximum Likelihood"){
-         results <- build_ml_tree(aligned, outgroup=outgroup, directory = directory, seed = seed, bs = bs)
-         tree_plot(NULL)
-         tree_path(results$filename)
-         tree_model(results$best_model)
-      }
+      withProgress(message = "Building phylogenetic tree...", value = 0, {
+         tryCatch({
+            tree_type <- input$treeType
+            outgroup <- input$outgroup
+            bs <- input$boostrapSamples
+            model <- input$model
+            aligned <- aligned_data()
+            directory <- tempdir()
+            
+            if (!is.null(input$seed)){
+               seed <- input$seed
+            } else {
+               seed <- "123"
+            }
+            
+            if (tree_type == "NJ"){
+               plot_obj <- build_nj_tree(aligned, outgroup = outgroup, model = model, seed = seed)
+               tree_plot(plot_obj)
+               tree_path(NULL)
+               tree_model(paste("NJ C", model, ")", sep = ""))
+            } else if (tree_type == "UPGMA"){
+               plot_obj <- build_upgma_tree(aligned, outgroup = outgroup, model = model, seed = seed)
+               tree_plot(plot_obj)
+               tree_path(NULL)
+               tree_model(paste("UPGMA (", model, ")", sep=""))
+            } else if (tree_type == "Parsimony"){
+               path <- build_max_parsimony(aligned, outgroup = outgroup, directory = directory, seed = seed)
+               tree_plot(NULL)
+               tree_path(path)
+               tree_model("Parsimony")
+            } else if (tree_type == "Maximum Likelihood"){
+               results <- build_ml_tree(aligned, outgroup=outgroup, directory = directory, seed = seed, bs = bs)
+               tree_plot(NULL)
+               tree_path(results$filename)
+               tree_model(results$best_model)
+            }
+            showNotification("Tree construction complete.", type = "message")
+            
+            shinyjs::enable("downloadTree")
+            shinyjs::enable("downloadAll")
+         },error = function(e){
+            showNotification(paste("Error during tree construction:", e$message), type = "error", duration = 20)
+         }) # end of try catch
+         
+         enable("buildTree")
+         waiter_hide()
+      }) # end of with progress
    }) # end of observe event tree
    
    output$treeImage <- renderUI({
@@ -1449,6 +1910,10 @@ server <- function(input, output, session) {
             population_stats <- reactive({
                req(fsnps_gen())
                compute_population_stats(fsnps_gen())
+            })
+            
+            output$meanallelic <- DT::renderDataTable({
+               population_stats()$mar_list
             })
             
             output$heterozygosity_table <- DT::renderDataTable({

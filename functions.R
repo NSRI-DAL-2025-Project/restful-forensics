@@ -72,7 +72,7 @@ tosnipper <- function(input, references, target.pop = TRUE, population.name = NU
       stop("Not an xlsx or csv file")
    }
    
-   if("Sample" %in% names(reference)){
+   #if("Sample" %in% names(reference)){
       library(dplyr) #in case there's an error loading the library
       
       if(class(reference$Sample) != "character"){
@@ -100,9 +100,9 @@ tosnipper <- function(input, references, target.pop = TRUE, population.name = NU
       names(to_excel)[names(to_excel) == "matched[, sec.last]"] <- "Population"
       names(to_excel)[names(to_excel) == "matched$Sample"] <- "Sample"
       
-   } else {
-      stop("No 'Sample' header in reference file")
-   }
+   #} else {
+   #   stop("No 'Sample' header in reference file")
+   #}
    
    
    # split per population
@@ -412,6 +412,66 @@ vcf_to_fasta <- function(vcf_file, reference, bcftools_path, directory){
 
 }
 
+#########################
+# CSV TO STRUCTURE FILE #
+#########################
+
+# expose the new file
+convert_to_genind_str <- function(file) {
+   library(dplyr)
+   
+   # Revise Ind to numerical since STRUCTURE has issues with alphabets
+   file <- file %>%
+      rename(Ind = 1, Pop = 2)
+   
+   names(file)[names(file) == "Ind"] <- "Ind2"
+   # Use rownames (integers) as sample labels
+   file$Ind <- rownames(file)
+   file2 <- file
+   Ind <- file$Ind
+   data <- file[2:ncol(file)-1]
+   file <- data.frame(Ind, data)
+   
+   ind <- as.character(file$Ind)
+   pop <- as.character(file$Pop)
+   
+   # Deducted one since a new column was added
+   fsnps_geno <- file[,3:ncol(file)]
+   
+   fsnps_gen <- adegenet::df2genind(fsnps_geno, 
+                                    ind.names = ind, 
+                                    pop = pop, 
+                                    sep = "/", 
+                                    NA.char = "N", 
+                                    ploidy = 2, 
+                                    type = "codom")
+   
+   
+   fsnps_gen@pop <- as.factor(file$Pop)
+   
+   return(list(fsnps_gen = fsnps_gen, 
+               new_file = file2))
+}
+
+# assuming the genetic files were processed using Convert files to CSV
+
+to_structure <- function(file, directory, system = "Windows"){
+   fsnps_gen_sub <- poppr::popsub(file)
+   path <- file.path(directory, "structure_file.str")
+   
+   if (system == "Windows"){
+      genind2structure(fsnps_gen_sub, file = path, pops = TRUE)
+   } else if(system == "Linux"){
+      genind2structure(fsnps_gen_sub, file = path, pops = TRUE, markers = TRUE, unix = TRUE)
+      # replace all tabs with single spaces
+      reticulate::py_run_string(paste("tr '\t' ' '", path, ">", path))
+      # replace the spacing of the first two columns
+      reticulate::py_run_string(paste("sed -e 's/ /\t/2' -e 's/ /\t/1", path, ">", path))
+   } 
+   
+   return(path)
+}
+
 #####################
 # MARKER EXTRACTION #
 #####################
@@ -424,14 +484,29 @@ extract_markers <- function(input.file,
                             fam.file = NULL, 
                             plink_args = NULL,
                             output.dir = output.dir, 
-                            merged.file = "final_merged.vcf",
+                            merged.file = "pos_extracted.vcf",
                             plink_path = plink_path) {
+  
+    if (!dir.exists(output.dir)) {
+      dir.create(output.dir, recursive = TRUE)
+   }
    
-   file_type <- detect_file_type(input.file, bed.file, bim.file, fam.file)
+   plink_files_given <- !is.null(bed.file) || !is.null(bim.file) || !is.null(fam.file)
+   input_given <- !is.null(input.file)
    
-   commands <- extraction(file_type, 
-                          input.file, 
-                          snps.list, 
+   if (plink_files_given && input_given){
+      stop("Please provide either a single input file (VCF/VCF.GZ/BCF) or PLINK files (bed, bim, fam)")
+   }
+   
+   if (!plink_files_given) {
+      path_file <- convert_to_plink(input.file, output.dir)
+      bed.file <- paste0(path_file, "*.bed$")
+      bim.file <- paste0(path_file, "*.bim$")
+      fam.file <- paste0(path_file, "*.fam$")
+   }
+   
+   # removed file_type, input.file
+   extracted_file <- extraction(snps.list, 
                           pos.list, 
                           bed.file, 
                           bim.file, 
@@ -441,27 +516,25 @@ extract_markers <- function(input.file,
                           merged.file,
                           plink_path)
    
-   #return(list(
-   #   extracted_files = list.files(output.dir, full.names = FALSE)
-   #))
-   return(commands)
+   return(extracted_file)
 }
 
-# TO DO #1: ADDITIONAL ARGUMENTS FOR PLINK - OPTIONAL FILTERING PROCEDURES
-detect_file_type <- function(input.file, bed.file = NULL, bim.file = NULL, fam.file = NULL) {
+convert_to_plink <- function(input.file, output.dir) {
    file_extension <- tools::file_ext(input.file)
+   output_file <- file.path(output.dir, "converted_to_plink")
    
-   if (!is.null(bed.file) && !is.null(bim.file) && !is.null(fam.file)) {
-      return("PLINK")
-   } else if (grepl("\\.vcf\\.gz$", input.file)) {
-      return("VCF_GZ")
+   if (grepl("\\.vcf\\.gz$", input.file)) {
+      cmd <- paste(plink_path, "--vcf", input.file, "--out", output_file)
    } else if (file_extension == "vcf") {
-      return("VCF")
+      cmd <- paste(plink_path, "--vcf", input.file, "--out", output_file)
    } else if (file_extension == "bcf") {
-      return("BCF")
+      cmd <- paste(plink_path, "--bcf", input.file, "--out", output_file)
    } else {
-      stop("Unsupported file type. Please provide a VCF, VCF.GZ, BCF, or PLINK file.")
+      stop("Unsupported file type. Please provide a VCF, VCF.GZ, or BCF.")
    }
+   
+   system(cmd)
+   return(output_file)
 }
 
 merge_vcf_files <- function(output.dir, merged.file) {
@@ -472,18 +545,13 @@ merge_vcf_files <- function(output.dir, merged.file) {
    }
    
    # July 30 note: replaced str_c with system2 to source out bcftools
-   merge_command <- system2("bcftools",
-                            args = c("concat", "-o", merged.file),
-                            stdout = paste(vcf_files, collapse = " "))
+   merge_command <- c("concat", vcf_files, "-o", file.path(output.dir, merged.file))
+   system2("bcftools", args = merge_command)
    
-   system(merge_command)
-   return(file.path(output.dir, "final_merged.vcf"))
-   #print(paste("Merged VCF file created:", merged.file))
+   return(file.path(output.dir, merged.file))
 }
 
-extraction <- function(file_type, 
-                       input.file, 
-                       snps.list = NULL, 
+extraction <- function(snps.list = NULL, 
                        pos.list = NULL, 
                        bed.file = NULL, 
                        bim.file = NULL, 
@@ -492,53 +560,23 @@ extraction <- function(file_type,
                        output.dir, 
                        merged.file,
                        plink_path) {
-   
-   if (!dir.exists(output.dir)) {
-      dir.create(output.dir, recursive = TRUE)
-   }
+   args <- if (!is.null(plink_args)) paste(plink_args, collapse = " ") else ""
    
    if (!is.null(snps.list)) {
-      args <- if (!is.null(plink_args)) paste(plink_args, collapse = " ") else ""
-      
       # Extract markers using rsID
-      command <- switch(file_type,
-                        "VCF" = stringr::str_c(plink_path, 
-                                               " --vcf ", 
-                                               input.file, 
-                                               " --const-fid 0 --cow --extract ", 
-                                               snps.list, 
-                                               " ", args,
-                                               " --keep-allele-order --allow-no-sex --allow-extra-chr --recode vcf --out ", 
-                                               file.path(output.dir, "rsid_extracted")),
-                        "VCF_GZ" = stringr::str_c(plink_path, 
-                                                  " --vcf ", input.file, 
-                                                  " --const-fid 0 --cow --extract ", snps.list, 
-                                                  " ", args,
-                                                  " --keep-allele-order --allow-no-sex --allow-extra-chr --recode vcf --out ", 
-                                                  file.path(output.dir, "rsid_extracted")),
-                        "BCF" = stringr::str_c(plink_path, 
-                                               " --bcf ", 
-                                               input.file, 
-                                               " --const-fid 0 --cow --extract ", 
-                                               snps.list, 
-                                               " ", args,
-                                               " --keep-allele-order --allow-no-sex --allow-extra-chr --recode vcf --out ", 
-                                               file.path(output.dir, "rsid_extracted")),
-                        "PLINK" = stringr::str_c(plink_path, 
-                                                 " --bfile ", 
-                                                 sprintf("--bed %s --bim %s --fam %s", bed.file, bim.file, fam.file), 
-                                                 " --const-fid 0 --cow --extract ", 
-                                                 snps.list, 
-                                                 " ", args,
-                                                 " --keep-allele-order --allow-no-sex --allow-extra-chr --recode vcf --out ", 
-                                                 file.path(output.dir, "rsid_extracted"))
-      )
-      system(command)  # Execute PLINK
-      extracted_file <- file.path(output.dir, "rsid_extracted.vcf")
-      return(extracted_file)
-   } else if (!is.null(pos.list)) {
-      args <- if (!is.null(plink_args)) paste(plink_args, collapse = " ") else ""
+      file_extracted <- file.path(output.dir, "rsid_extracted")
+      command <- stringr::str_c(plink_path, 
+                              sprintf("--bed %s --bim %s --fam %s", bed.file, bim.file, fam.file), 
+                              " --const-fid 0 --cow --extract ", 
+                              snps.list, 
+                              " ", args,
+                              " --keep-allele-order --allow-no-sex --allow-extra-chr --recode vcf --out ", 
+                              file_extracted)
       
+      system(command) 
+      return(file_extracted)
+      
+   } else if (!is.null(pos.list)) {
       # Extract markers using positions (creates multiple output files)
       command_list <- lapply(seq_len(nrow(pos.list)), function(i) {
          chr_num <- pos.list[i, 1]
@@ -550,7 +588,7 @@ extraction <- function(file_type,
          output_file <- file.path(output.dir, paste0(filename_base, ".vcf"))
          
          cmd <- stringr::str_c(
-            plink_path, " --", tolower(file_type), " ", input.file,
+            sprintf("--bed %s --bim %s --fam %s", bed.file, bim.file, fam.file), 
             " --cow --chr ", chr_num,
             " --from-bp ", start_bp,
             " --to-bp ", end_bp,
@@ -558,12 +596,11 @@ extraction <- function(file_type,
             " --recode vcf --keep-allele-order --out ", tools::file_path_sans_ext(output_file)
          )
          
-         system(cmd)  # Run immediately
+         system(cmd) 
       })
       
       extracted_file <- merge_vcf_files(output.dir, merged.file)  # Merge extracted files
-      
-      #return(command_list)
+
       return(extracted_file)
    } else {
       stop("Either `snps.list` or `pos.list` must be provided.")
@@ -572,12 +609,117 @@ extraction <- function(file_type,
 }
 
 
+#############
+# FILTERING #
+#############
+
+# for the depth plot, manually calculate the number of reads (non-NAs) and plot it
+# read vcf?
+depth_from_vcf <- function(vcf, 
+                           output.dir, 
+                           reference, 
+                           palette = palette, 
+                           width = 10, 
+                           height = 8, 
+                           dpi = 300){ # reference added for plotting purposes
+   library(dplyr)
+   vcf.file <- vcfR::read.vcfR(vcf)
+   depth <- vcfR::extract.gt(vcf.file, element = "DP", as.numeric = TRUE)
+   depth <- as.data.frame(t(depth))
+   depth$Sample <- rownames(depth)
+   
+   depth_long <- depth %>% tidyr::pivot_longer(
+      !Sample,
+      names_to = "rsID",
+      values_to = "Depth"
+   )
+   
+   # reference assumes there are only two columns: 
+   # [1] assumes it has the same key as one either the sample or marker name similar to VCF files
+   # [2] the data to be highlighted 
+   if(!is.null(reference)){
+      if(tools::file_ext(reference) == "csv"){
+         ref <- readr::read_csv(reference)
+         ref <- ref %>%
+            rename(Sample = 1, highlight = 2)
+      } else if(tools::file_ext(reference) == "xlsx"){
+         reference <- readxl::read_excel(reference)
+         ref <- ref %>%
+            rename(Sample = 1, highlight = 2)
+      }
+      
+      depth_long <- depth_long %>% dplyr::left_join(reference, by = "Sample")
+      fill = highlight
+   } else {
+      fill = NULL
+   }
+   
+   # plot of depth per marker
+   # to-do: slant the rsID labels
+   p_rsid <- ggplot2::ggplot(depth_long, ggplot2::aes(x=rsID, y = Depth, fill = fill)) +
+      ggplot2::geom_boxplot() +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = .4)) +
+      ggplot2::scale_fill_brewer(palette = palette)
+   
+   out_dp_rsid <- file.path(output.dir, "Depth_marker.png")
+   ggsave(out_dp_rsid, plot = p_rsid, width = width, height = height, dpi = dpi)
+   
+   # plot of depth per sample
+   p_sample <- ggplot2::ggplot(depth_long, ggplot2::aes(x=Sample, y = Depth, fill = fill)) +
+      ggplot2::geom_boxplot() +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = .4)) +
+      ggplot2::scale_fill_brewer(palette = palette)
+   
+   out_dp_sample <- file.path(output.dir, "Depth_samples.png")
+   ggsave(out_dp_sample, plot = p_sample, width = width, height = height, dpi = dpi)
+   
+   return(list(
+      plot_marker = out_dp_rsid,
+      plot_sample = out_dp_sample
+   ))
+}
+
+#filtering_vcf <- function(file, output.dir, plink_path){
+   
+   # filtering by individuals
+   
+   # filtering by variants
+   
+   # Other filters
+#}
+
+
+
+#calculate_depth <- function(file, output.dir){
+   # assuming file is a data frame
+   # remove first column
+   # total rows, total counts na may period or NA; total the non-empty cells (not "." or not "NA")
+   
+#   file <- file %>% mutate(across(tidyselect::everything(), ~ case_when(
+#      . == "NA" ~ "N",
+#      . == "." ~ "N",
+#      . == "N/A" ~ "N",
+#      TRUE ~ .x)))
+   
+#   total_rows <- ncol(file) - 1
+   
+   # count occurrences of N in each row
+#   file$Total <- ncol(file) - 1
+#   file$Empty <- apply(file, 1, function (x) sum (x == "N"))
+#   file[is.na(file)] <- "0"
+   # final column has the tally of the coverage
+#   file$Depth <- file$Total - file$Empty
+   
+   # plot the depth
+   
+#}
+
 ########################
 # CONCORDANCE ANALYSIS #
 ########################
 
 concordance <- function(file1, file2, haplotypes = FALSE){
-   
+   library(dplyr)
    #if (!require("pacman")){
    #   install.packages("pacman")
    #}
@@ -708,14 +850,13 @@ concordance <- function(file1, file2, haplotypes = FALSE){
       group_by(ID) %>%
       summarise(
          Total = paste((ncol(for_conc2) - 1)/2),
-         Incomparable = paste(sum(val == "N") + sum(val2 == "N")),
-         Concordant = paste(sum(val == val2)),
-         Discordant = paste(((ncol(for_conc2) - 1)/2)- sum(val == val2) - (sum(val == "N") + sum(val2 == "N")))
-      ) %>%
+         Incomparable = paste(sum(val == "N" | val2 == "N")), # counts missing data for val or val2 or both 
+         Concordant = paste(sum(val == val2 & val != "N" & val2 != "N")), # checks if vals the same AND not N
+         Discordant = paste(((ncol(for_conc2) - 1)/2) - (sum(val == val2 & val != "N" & val2 != "N") + sum(val == "N" | val2 == "N")))) %>%
       left_join(for_conc2, by = c("ID" = "ID")) 
    
    
-   readr::write_csv(concordance, file = "concordance.csv")
+   #readr::write_csv(concordance, file = "concordance.csv")
    
    pivot <- concordance[,1]
    pivot2 <- concordance[,3:5]
@@ -1877,25 +2018,25 @@ msa_results <- function(files, algorithm, directory){
    gap_penalty <- -2
    personal_matrix <- rbind(personal_matrix, "-" = gap_penalty)
    personal_matrix <- cbind(personal_matrix, "-" = gap_penalty)
-   #rownames(dna_matrix_wgaps)[nrow(dna_matrix_wgaps)] <- "-"
-   #colnames(dna_matrix_wgaps)[ncol(dna_matrix_wgaps)] <- "-"
    colnames(personal_matrix) <- c("A", "C", "G", "T", "M", "R", "W", "S", "Y", "K", "V", "H", "D", "B", "N", "-")
    rownames(personal_matrix) <-  c("A", "C", "G", "T", "M", "R", "W", "S", "Y", "K", "V", "H", "D", "B", "N", "-")
    personal_matrix <- as.matrix(personal_matrix)
    
-   #filename1 <- paste0(directory, "/aligned_seqs.txt")
-   #filename2 <- paste0(directory, "/aligned_seqs_wscores.txt")
-   
    # perform msa
    aligned_sequences <- msa::msa(files,substitutionMatrix = personal_matrix, method = algorithm) # ClustalW, ClustalOmega, MUSCLE
-   #output_aligned <- utils::capture.output(print(aligned_sequences, show = "complete"))
-   #writeLines(output_aligned, filename1)
    
    # calculate alignment score
    alignment_scores <- msa::msaConservationScore(aligned_sequences, substitutionMatrix = personal_matrix)
-   #output_scores <- utils::capture.output(print(alignment_scores, show = "complete"))
-   #writeLines(output_scores, filename2)
    
+   ###################
+   # POST PROCESSING #
+   ###################
+   
+   aligned_dnastrings <- msa::msaConvert(aligned_sequences, type = "seqinr::alignment")
+   aligned_dnastrings <- Biostrings::DNAStringSet(setNames(aligned_dnastrings$seq, aligned_dnastrings$nam))
+   
+   adjusted <- DECIPHER::AdjustAlignment(aligned_dnastrings)
+   staggered <- DECIPHER::StaggerAlignment(adjusted)
    # UNCOMMENT OUT
    #filename3 <- paste0(directory, "/aligned_seqs.pdf")
    # saving a pdf file
@@ -1903,8 +2044,10 @@ msa_results <- function(files, algorithm, directory){
    
    # double check directory where this is saved
    return(list(
-      alignment = aligned_sequences,
-      scores = alignment_scores #,
+      alignment_msa = aligned_sequences,
+      scores = alignment_scores,
+      aligned_adjusted = adjusted,
+      aligned_staggered = staggered #,
       #pdf = filename3
    ))
 }
@@ -2052,6 +2195,7 @@ build_ml_tree <- function(alignment,
    start_tree <- NJ(dm)
    
    fit <- pml(start_tree, data = phy)
+   
    # find best-fit model
    model_test <- modelTest(phy, tree = start_tree)
    best_model <- model_test$Model[which.min(model_test$BIC)]
