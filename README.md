@@ -140,7 +140,7 @@ files to CSV" tab to calculate the common population statistics. For guidance on
 [6] Hardy-Weinberg Equilibrium (pegas package)
 [7] FST values (hierfstat package)
 
-**Known Issues**: BCFtools
+
 
 ### Exploratory Analysis
 
