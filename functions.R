@@ -609,10 +609,17 @@ to_structure_file <- function(file, directory, system = "Windows"){
    } else if(system == "Linux"){
       genind2structure2(fsnps_gen_sub, file = path, pops = TRUE, markers = TRUE, unix = TRUE)
       # replace all tabs with single spaces
-      reticulate::py_run_string(paste("tr '\t' ' '", path, ">", path))
+      #reticulate::py_run_string(paste0("tr '\t' ' ' ", path, " > ", path))
+      system(paste("tr '\t' ' '", shQuote(path), ">", shQuote(path)))
+      #system(paste("tr '\t' ' ' <", shQuote(path), ">", shQuote(path)))
+      
+      
       # replace the spacing of the first two columns
-      reticulate::py_run_string(paste("sed -e 's/ /\t/2' -e 's/ /\t/1", path, ">", path))
-   } 
+      #reticulate::py_run_string(paste0("sed -e 's/ /\t/2' -e 's/ /\t/1", path, ">", path))
+      system(paste("sed -e 's/ /\t/2' -e 's/ /\t/1'", shQuote(path), ">", shQuote(path)))
+      #system(paste("sed -e 's/ /\\t/2' -e 's/ /\\t/1' <", shQuote(path), ">", shQuote(path)))
+      
+       } 
    
    return(path)
 }
@@ -630,7 +637,7 @@ extract_markers <- function(input.file,
                             fam.file = NULL, 
                             plink_args = NULL,
                             output.dir = output.dir, 
-                            merged.file = "pos_extracted.vcf",
+                            merged.file = file,
                             plink_path = plink_path) {
   
     if (!dir.exists(output.dir)) {
@@ -646,9 +653,9 @@ extract_markers <- function(input.file,
    
    if (!plink_files_given) {
       path_file <- convert_to_plink(input.file, output.dir)
-      bed.file <- paste0(path_file, "*.bed$")
-      bim.file <- paste0(path_file, "*.bim$")
-      fam.file <- paste0(path_file, "*.fam$")
+      bed.file <- list.files(output.dir, pattern = "\\.bed$", full.names = TRUE)
+      bim.file <- list.files(output.dir, pattern = "\\.bim$", full.names = TRUE)
+      fam.file <- list.files(output.dir, pattern = "\\.fam$", full.names = TRUE)
    }
    
    # removed file_type, input.file
@@ -706,21 +713,22 @@ extraction <- function(snps.list = NULL,
                        output.dir, 
                        merged.file,
                        plink_path) {
+   
    args <- if (!is.null(plink_args)) paste(plink_args, collapse = " ") else ""
    
    if (!is.null(snps.list)) {
       # Extract markers using rsID
-      file_extracted <- file.path(output.dir, "rsid_extracted")
-      command <- stringr::str_c(plink_path, 
-                              sprintf("--bed %s --bim %s --fam %s", bed.file, bim.file, fam.file), 
-                              " --const-fid 0 --cow --extract ", 
-                              snps.list, 
-                              " ", args,
-                              " --keep-allele-order --allow-no-sex --allow-extra-chr --recode vcf --out ", 
-                              file_extracted)
+      file_extracted <- file.path(output.dir, merged.file)
       
-      system(command) 
-      return(file_extracted)
+      
+      cmd_args <- c("--bed", bed.file, "--bim", bim.file, "--fam", fam.file,
+                "--const-fid", "0", "--cow", "--extract", snps.list,
+                plink_args, "--keep-allele-order", "--allow-no-sex",
+                "--allow-extra-chr", "--recode", "vcf", "--out", file_extracted)
+      
+      system2(plink_path, args = cmd_args)
+      
+      final_vcf <- paste0(file_extracted, ".vcf")
       
    } else if (!is.null(pos.list)) {
       # Extract markers using positions (creates multiple output files)
@@ -733,25 +741,24 @@ extraction <- function(snps.list = NULL,
          filename_base <- paste0("chr", chr_num, "_", start_bp - 1)
          output_file <- file.path(output.dir, paste0(filename_base, ".vcf"))
          
-         cmd <- stringr::str_c(
-            sprintf("--bed %s --bim %s --fam %s", bed.file, bim.file, fam.file), 
-            " --cow --chr ", chr_num,
-            " --from-bp ", start_bp,
-            " --to-bp ", end_bp,
-            " ", args,
-            " --recode vcf --keep-allele-order --out ", tools::file_path_sans_ext(output_file)
-         )
+         cmd_args <- c("--bed", bed.file, "--bim", bim.file, "--fam", fam.file, 
+            "--cow", "--chr ", chr_num,
+            "--from-bp", start_bp,
+            "--to-bp", end_bp,
+            args,
+            "--recode", "vcf", "--keep-allele-order", "--out ", output_file)
          
-         system(cmd) 
+         
+         system2(plink_path, args = cmd_args)
       })
       
-      extracted_file <- merge_vcf_files(output.dir, merged.file)  # Merge extracted files
+      final_vcf <- merge_vcf_files(output.dir, merged.file)  # Merge extracted files
 
-      return(extracted_file)
+      #return(extracted_file)
    } else {
       stop("Either `snps.list` or `pos.list` must be provided.")
    }
-   return(extracted_file)
+   return(final_vcf)
 }
 
 
@@ -764,7 +771,7 @@ extraction <- function(snps.list = NULL,
 depth_from_vcf <- function(vcf, 
                            output.dir, 
                            reference, 
-                           palette = palette, 
+                           palette = NULL, 
                            width = 10, 
                            height = 8, 
                            dpi = 300){ # reference added for plotting purposes
@@ -795,14 +802,14 @@ depth_from_vcf <- function(vcf,
       }
       
       depth_long <- depth_long %>% dplyr::left_join(reference, by = "Sample")
-      fill = highlight
+      fill2 = depth_long$highlight
    } else {
-      fill = NULL
+      fill2 = NULL
    }
    
    # plot of depth per marker
    # to-do: slant the rsID labels
-   p_rsid <- ggplot2::ggplot(depth_long, ggplot2::aes(x=rsID, y = Depth, fill = fill)) +
+   p_rsid <- ggplot2::ggplot(depth_long, ggplot2::aes(x=rsID, y = Depth, fill = fill2)) +
       ggplot2::geom_boxplot() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = .4)) +
       ggplot2::scale_fill_brewer(palette = palette)
@@ -811,7 +818,7 @@ depth_from_vcf <- function(vcf,
    ggsave(out_dp_rsid, plot = p_rsid, width = width, height = height, dpi = dpi)
    
    # plot of depth per sample
-   p_sample <- ggplot2::ggplot(depth_long, ggplot2::aes(x=Sample, y = Depth, fill = fill)) +
+   p_sample <- ggplot2::ggplot(depth_long, ggplot2::aes(x=Sample, y = Depth, fill = fill2)) +
       ggplot2::geom_boxplot() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = .4)) +
       ggplot2::scale_fill_brewer(palette = palette)
@@ -825,40 +832,6 @@ depth_from_vcf <- function(vcf,
    ))
 }
 
-#filtering_vcf <- function(file, output.dir, plink_path){
-   
-   # filtering by individuals
-   
-   # filtering by variants
-   
-   # Other filters
-#}
-
-
-
-#calculate_depth <- function(file, output.dir){
-   # assuming file is a data frame
-   # remove first column
-   # total rows, total counts na may period or NA; total the non-empty cells (not "." or not "NA")
-   
-#   file <- file %>% mutate(across(tidyselect::everything(), ~ case_when(
-#      . == "NA" ~ "N",
-#      . == "." ~ "N",
-#      . == "N/A" ~ "N",
-#      TRUE ~ .x)))
-   
-#   total_rows <- ncol(file) - 1
-   
-   # count occurrences of N in each row
-#   file$Total <- ncol(file) - 1
-#   file$Empty <- apply(file, 1, function (x) sum (x == "N"))
-#   file[is.na(file)] <- "0"
-   # final column has the tally of the coverage
-#   file$Depth <- file$Total - file$Empty
-   
-   # plot the depth
-   
-#}
 
 ########################
 # CONCORDANCE ANALYSIS #
@@ -1106,7 +1079,7 @@ compute_population_stats <- function(fsnps_gen) {
    mar_matrix <- hierfstat::allelic.richness(hierfstat::genind2hierfstat(fsnps_gen))$Ar %>%
       apply(MARGIN = 2, FUN = mean) %>%
       round(digits = 3)
-   mar_list <- as.list(mar_matrix)
+   mar_list <- as.data.frame(mar_matrix)
    
    basic_fsnps <- hierfstat::basic.stats(fsnps_gen, diploid = TRUE)
    Ho <- apply(basic_fsnps$Ho, 2, mean, na.rm = TRUE) %>% round(2)

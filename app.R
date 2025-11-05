@@ -545,8 +545,8 @@ ui <- tagList(
                                            tableOutput("examplePOS")
                                     )
                                  ),
-                                 downloadButton("downloadExtracted", "Download Extracted VCF")
-                                 
+                                 downloadButton("downloadExtracted", "Download Extracted VCF"),
+                                 helpText("Note: Some systems mislabel .vcf files as contact files. This is a reminder that the file is a genomic VCF.")
                               ) # end of mainpanel
                            )
                   ),
@@ -638,7 +638,9 @@ ui <- tagList(
             mainPanel(
                verbatimTextOutput("plinkCommandPreview"),
                h4("Depth of Coverage Plots"),
-               uiOutput("depthPlots"),
+               #uiOutput("depthPlots"),
+               imageOutput("depthMarkerPlot"),
+               imageOutput("depthSamplePlot"),
                br(),
                downloadButton("downloadFilteredFile", "Download Filtered File"),
                downloadButton("downloadDepthPlots", "Download Plots")
@@ -1197,9 +1199,6 @@ server <- function(input, output, session) {
             })
          }
          
-         #xlsx_file <- file.path(paste(outputDir, outputName))
-         #convertedSNIPPER(snipper.file)
-         #enable("convertBtn")
       })
       
    }) # end of observe Event
@@ -1408,7 +1407,7 @@ server <- function(input, output, session) {
                },
                content = function(file) {
                   req(concordancePlotPath())
-                  ggsave(file, plot = concordancePlotPath(), width = 8, height = 8, dpi = 600)
+                  ggsave(file, plot = concordancePlotPath(), width = 8, height = 6, dpi = 600)
                   
                }, contentType = "image/png"
             )
@@ -1526,11 +1525,12 @@ server <- function(input, output, session) {
       
    })
    output$downloadExtracted <- downloadHandler(
-      filename = function() { "final_merged.vcf" },
+      filename = function() { "final_merged.zip" },
       content = function(file) {
          req(extracted_file())
          file.copy(extracted_file(), file)
-      }
+      },
+      contentType = "text/plain"
    )
    
    #############
@@ -1570,7 +1570,7 @@ server <- function(input, output, session) {
       temp_dir <- tempdir()
       vcf_path <- input$forFilter$datapath
       ref_path <- if (!is.null(input$highlightRef)) input$highlightRef$datapath else NULL
-      palette <- input$colorPalette
+      palette <-  if (!is.null(input$colorPalette)) input$colorPalette else NULL
       
       if (input$enableDP){
          dp <- depth_from_vcf(
@@ -1644,27 +1644,15 @@ server <- function(input, output, session) {
    } 
                  ) # end of observe events
    
-   output$depthPlots <- renderUI({
+   output$depthMarkerPlot <- renderImage({
       req(depth_outputs())
-      plot_marker <- depth_outputs()$plot_marker
-      plot_sample <- depth_outputs()$plot_sample
-      
-      tagList(
-         h5("Depth per Marker"),
-         tags$img(src = plot_marker, width = "100%"),
-         br(),
-         h5("Depth per Sample"),
-         tags$img(src = plot_sample, width = "100%")
-      )
-   })
+      list(src = depth_outputs()$plot_marker, contentType = "image/png", width = "100%")
+   }, deleteFile = FALSE)
    
-   output$downloadDepthPlots <- downloadHandler(
-      filename = function(){"depth_plots.zip"},
-      content = function(file){
-         req(depth_outputs())
-         zip::zip(file, files = c(depth_outputs()$plot_marker, depth_outputs()$plot_sample))
-      }
-   )
+   output$depthSamplePlot <- renderImage({
+      req(depth_outputs())
+      list(src = depth_outputs()$plot_sample, contentType = "image/png", width = "100%")
+   }, deleteFile = FALSE)
    
    output$downloadFilteredFile <- downloadHandler(
       filename = function(){"filtered.vcf"},
