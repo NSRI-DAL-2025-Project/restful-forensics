@@ -33,6 +33,7 @@ functionalities.
 ### File Conversion
 
 A. Convert files to CSV
+
 This tab converts genetic data files to a
 commonly used file in downstream analysis. Population data is required
 and will be merged with the genetic data file based on the sample value
@@ -42,14 +43,19 @@ The output of this file can directly be used in the calculation of
 population statistics, Principal Component Analysis, STRUCTURE analysis,
 and other tools not included in this toolkit.
 
+
+
 B. Widen ForenSeq UAS files
+
 This tab is specific to the work at the DNA
 Analysis Laboratory and to laboratories using the ForenSeq DNA Signature
 Prep Kit. It builds upon the work of the Filipino Genomes Research
 Program 2. The output is similar to the first tab.
 
 
+
 C. VCF to FASTA
+
 This tab converts VCF files to FASTA and requires a
 reference file genome. The output can be used for multiple sequence
 alignment.
@@ -57,10 +63,13 @@ alignment.
 **Known Issues**: Uses BCFtools not compatible with Windows.
 
 D. Convert to SNIPPER-analysis ready file
+
 This tab is specific to the
 ancestry work at the DNA Analysis Laboratory.
 
+
 E. CSV to STRUCTURE file
+
 This tab converts a processed CSV file (similar
 to the output of tab A) to a STRUCTURE (.str) file that can be used in
 STRUCTURE v2.3.4 or other tools such as StrAuto or faststructure.
@@ -68,6 +77,7 @@ STRUCTURE v2.3.4 or other tools such as StrAuto or faststructure.
 ### SNP Extraction
 
 A. SNP Extraction 
+
 This tab is specific for extracting markers via their
 GRCh37/GRCh38 position or their Reference SNP cluster ID (rsID). The
 extracted files can be processed in file conversion to generate an
@@ -76,9 +86,11 @@ analysis-ready file.
 **Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
 
 B. Concordance Analysis 
+
 This tab compares the sequencing outputs of two
 different technologies. It expects either an XLSX or CSV file containing
 sample and marker information.
+
 
 ### Filtering
 
@@ -102,6 +114,7 @@ Standard filtering flags included:
 
 PLINK 1.9 flag options: https://www.cog-genomics.org/plink/
 
+
 ### Multiple Sequence Alignment
 
 This tab accepts zipped FASTA files and performs sequence alignment
@@ -109,6 +122,7 @@ using the msa R package. The post-processing of the alignment is
 performed using the DECIPHER package. Two functions, AdjustAlignment()
 and StaggerAlignment() is used and provided as an option for
 phylogenetic tree construction.
+
 
 ### Phylogenetic Tree
 
