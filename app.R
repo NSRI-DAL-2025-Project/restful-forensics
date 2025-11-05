@@ -97,16 +97,24 @@ ui <- tagList(
       tabPanel(
          title = HTML("<span style = 'color:#000000 ;'>Homepage</span>"),
          
-         
          div(
             class = "card",
-            style = "margin: 30px; box-shadow: 0 5px 10px rgba(0,0,0,0.08);",
-            div(class = "card-header", "From the Authors:"),
-            div(class = "card-text",
-                p("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types.")
-                )
-         ) # end of div
-         
+            style = "margin: 30px; box-shadow: 0 5 px 10px rgba(0,0,0,0.08); padding: 20px",
+            
+            div(
+               class = "card-header",
+               style = "font-size: 20px; font-weight: bold; margin-bottom: 15px;",
+               "From the Authors:"
+            ),
+            
+            div(
+               class = "card-text",
+               style = "font-size: 16px; line-height: 1.6;",
+               p("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."),
+               br(),
+               p("This project is led by Nelvie Fatima Jane Soliven (nasoliven@up.edu.ph) and Ambrocio Melvin Matias (aamatias@up.edu.ph).")
+            )
+         )
       ), # end of tab panel for homepage
       
       
@@ -960,7 +968,7 @@ server <- function(input, output, session) {
    observeEvent(input$convertCSV, {
       req(input$convertCSV)
       
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("convertCSV")
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
@@ -1302,7 +1310,7 @@ server <- function(input, output, session) {
             strconvert(genind$fsnps_gen)
             
             directory <- tempdir()
-            str_path <- to_structure(strconvert(), directory, system = input$systemFile)
+            str_path <- to_structure_file(strconvert(), directory, system = input$systemFile)
             str_file(str_path)
             
             output$revisedCSV <- DT::renderDataTable({
@@ -1882,7 +1890,7 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$runPopStats, {
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("runPopStats")
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
@@ -2135,7 +2143,7 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$runPCA, {
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("runPCA")
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
@@ -2255,7 +2263,7 @@ server <- function(input, output, session) {
    })
    
    observeEvent(input$runStructure, {
-      lastAction(Sys.time())
+      #lastAction(Sys.time())
       
       disable("runStructure")
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
