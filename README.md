@@ -1,7 +1,7 @@
 
 # restful-forensics
 
-## Installation (installing without Docker)
+## INSTALLATION (installing without Docker)
 
 ### From the terminal
 
@@ -23,14 +23,16 @@ corner of the source panel. ![](www/readme/runapp.png)
 Note: Some functionalities require a Linux OS. A Windows-compatible
 version will be linked here once available.
 
-## Workflow
+
+
+## WORKFLOW
 
 This application is used for the pre-processing of standard genetic data
 files (VCF, VCF.GZ, BCF, PLINK files, and FASTA) and analysis to an
 extent. The following tabs are available and offers certain
 functionalities.
 
-### File Conversion
+### 🔄 File Conversion
 
 _A. Convert files to CSV_
 
@@ -60,7 +62,7 @@ This tab converts VCF files to FASTA and requires a
 reference file genome. The output can be used for multiple sequence
 alignment.
 
-**Known Issues**: Uses BCFtools not compatible with Windows.
+> **Known Issues**: Uses BCFtools which is not compatible with Windows.
 
 
 _D. Convert to SNIPPER-analysis ready file_
@@ -77,7 +79,7 @@ STRUCTURE v2.3.4 or other tools such as StrAuto or faststructure.
 
 
 
-### SNP Extraction
+### 🧬 SNP Extraction
 
 _A. SNP Extraction_ 
 
@@ -86,7 +88,7 @@ GRCh37/GRCh38 position or their Reference SNP cluster ID (rsID). The
 extracted files can be processed in file conversion to generate an
 analysis-ready file.
 
-**Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
+> **Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
 
 
 _B. Concordance Analysis_
@@ -96,7 +98,7 @@ different technologies. It expects either an XLSX or CSV file containing
 sample and marker information.
 
 
-### Filtering
+### 🔽 Filtering
 
 This tab is dedicated for the filtering of variants and/or samples in a
 genetic data file. Standard filtering options are given, but there is an
@@ -119,7 +121,7 @@ Standard filtering flags included:
 PLINK 1.9 flag options: https://www.cog-genomics.org/plink/
 
 
-### Multiple Sequence Alignment
+### ↔️ Multiple Sequence Alignment
 
 This tab accepts zipped FASTA files and performs sequence alignment
 using the msa R package. The post-processing of the alignment is
@@ -128,17 +130,17 @@ and StaggerAlignment() is used and provided as an option for
 phylogenetic tree construction.
 
 
-### Phylogenetic Tree
+### 🌲Phylogenetic Tree
 
 This tab automatically accepts the alignment from the previous tab to
 build a phylogenetic tree using the common approaches (NJ, UPGMA,
 Maximum Parsimony, and Maximum Likelihood).
 
-**Known Issues**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
+> **Known Issues**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
 
-### Barcoding
+### 📑 Barcoding
 
-### Population Statistics
+### 📝 Population Statistics
 
 This accepts a processed file similar to the output of the "Convert
 files to CSV" tab to calculate the common population statistics. 
@@ -156,13 +158,13 @@ files to CSV" tab to calculate the common population statistics.
 
 
 
-### Exploratory Analysis
+### 🔍 Exploratory Analysis
 
 This tab performs principal component analysis (PCA) on a pre-processed data in CSV or XLSX format using the ade4 R package. This accepts a processed file similar to the output of the "Convert
 files to CSV" tab. Labels and colors can be personalized. 
 
 
-### STRUCTURE Analysis
+### 📊 STRUCTURE Analysis
 
 This tab explores population structure using the STRUCTURE v2.3.4 software. 
 
