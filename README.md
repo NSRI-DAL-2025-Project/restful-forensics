@@ -89,7 +89,7 @@ analysis-ready file.
 **Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
 
 
-_B. Concordance Analysis _
+_B. Concordance Analysis_
 
 This tab compares the sequencing outputs of two
 different technologies. It expects either an XLSX or CSV file containing
@@ -141,7 +141,10 @@ Maximum Parsimony, and Maximum Likelihood).
 ### Population Statistics
 
 This accepts a processed file similar to the output of the "Convert
-files to CSV" tab to calculate the common population statistics. For guidance on interpreting the following, see the references.
+files to CSV" tab to calculate the common population statistics. 
+
+> [! NOTE]
+> For guidance on interpreting the following, see the references.
 
 [1] Private alleles (poppr package)
 [2] Mean Allelic Richness (hierfstat package)
@@ -161,7 +164,7 @@ files to CSV" tab. Labels and colors can be personalized.
 
 ### STRUCTURE Analysis
 
-This tab explores population structure using the STRUCTURE v2.3.4 software.
+This tab explores population structure using the STRUCTURE v2.3.4 software. 
 
 Parameters required:
 - Min and Max K 
@@ -173,9 +176,12 @@ Parameters required:
 - Linkage Model (assumed False)
 - Ploidy level (assumed 2)
 
+To explore STRUCTURE v2.3.4: https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
 
 
-
+> [! NOTE]
+> This toolkit adapted functions from strataG [8] and dartR [9] R packages.
+> The following functions were adapted and revised: 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'.
 
 
 
@@ -190,3 +196,5 @@ Parameters required:
 [5] Rezaei, N., and Hedayat, M. (2013). Allele Frequency. Brenner's Encyclopedia of Genetics (Second Edition). https://doi.org/10.1016/B978-0-12-374984-0.00032-2
 [6] Tiret, L., and Cambien, F. (1995). Departure from Hardy-Weinberg equilibrium should be systematically tested in studies of association between genetic markers and disease. Circulation, 92(11):3364-3365.
 [7] Weir, B.S., and Cockerham, C.C. (1984). Estimating F-statistics for the analysis of population structure. Evolution; International Journal of Organic Evolution, 38(6): 1358-1370. https://doi.org/10.1111/j.1558-5646.1984.tb05657.x
+[8] Archer, F., Adams, P., and Schneiders, B. (2016). strataG: an R package for manipulating, summarizing, and analyzing population genetic data. Molecular Ecology Resources 17: 5-11. https://doi.org/10.1111/1755-0998.12559
+[9] Gruber, B., Unmack, P.J., Berry, O.F., and Georges, A. (2018). dartR: an R package to facilitate analysis of SNP data generated from reduced representation genome sequencing. Molecular Ecology Resources 18:691-699. https://doi.org/10.1111/1755-0998.12745
