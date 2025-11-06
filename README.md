@@ -25,7 +25,7 @@ version will be linked here once available.
 
 
 
-## WORKFLOW
+## Features
 
 This application is used for the pre-processing of standard genetic data
 files (VCF, VCF.GZ, BCF, PLINK files, and FASTA) and analysis to an
@@ -33,8 +33,11 @@ extent. The following tabs are available and offers certain
 functionalities.
 
 ### 🔄 File Conversion
+This tab has multiple features dedicated to converting file types to a different data structure structure.
 
-_A. Convert files to CSV_
+| 
+
+**_A. Convert files to CSV_**
 
 This tab converts genetic data files to a
 commonly used file in downstream analysis. Population data is required
@@ -46,7 +49,7 @@ population statistics, Principal Component Analysis, STRUCTURE analysis,
 and other tools not included in this toolkit.
 
 
-_B. Widen ForenSeq UAS files_
+**_B. Widen ForenSeq UAS files_**
 
 This tab is specific to the work at the DNA
 Analysis Laboratory and to laboratories using the ForenSeq DNA Signature
@@ -54,7 +57,7 @@ Prep Kit. It builds upon the work of the Filipino Genomes Research
 Program 2. The output is similar to the first tab.
 
 
-_C. VCF to FASTA_
+**_C. VCF to FASTA_**
 
 This tab converts VCF files to FASTA and requires a
 reference file genome. The output can be used for multiple sequence
@@ -63,13 +66,13 @@ alignment.
 > **Known Issues**: Uses BCFtools which is not compatible with Windows.
 
 
-_D. Convert to SNIPPER-analysis ready file_
+**_D. Convert to SNIPPER-analysis ready file_**
 
 This tab is specific to the
 ancestry work at the DNA Analysis Laboratory.
 
 
-_E. CSV to STRUCTURE file_
+**_E. CSV to STRUCTURE file_**
 
 This tab converts a processed CSV file (similar
 to the output of tab A) to a STRUCTURE (.str) file that can be used in
@@ -78,7 +81,7 @@ STRUCTURE v2.3.4 or other tools such as StrAuto or faststructure.
 
 ### 🧬 SNP Extraction
 
-_A. SNP Extraction_ 
+**_A. SNP Extraction_ **
 
 This tab is specific for extracting markers via their
 GRCh37/GRCh38 position or their Reference SNP cluster ID (rsID). The
@@ -88,7 +91,7 @@ analysis-ready file.
 > **Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
 
 
-_B. Concordance Analysis_
+**_B. Concordance Analysis_**
 
 This tab compares the sequencing outputs of two
 different technologies. It expects either an XLSX or CSV file containing
