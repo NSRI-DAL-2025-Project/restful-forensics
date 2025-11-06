@@ -144,13 +144,13 @@ files to CSV" tab to calculate the common population statistics.
 
 > For guidance on interpreting the following, see the references.
 
-[1] Private alleles (poppr package)
-[2] Mean Allelic Richness (hierfstat package)
-[3] Heterozygosity (hierfstat package)
-[4] Inbreeding Coefficient (hierfstat package)
-[5] Allele Frequency (adegenet package)
-[6] Hardy-Weinberg Equilibrium (pegas package)
-[7] FST values (hierfstat package)
+[1] Private alleles (poppr package)  
+[2] Mean Allelic Richness (hierfstat package)  
+[3] Heterozygosity (hierfstat package)  
+[4] Inbreeding Coefficient (hierfstat package)  
+[5] Allele Frequency (adegenet package)  
+[6] Hardy-Weinberg Equilibrium (pegas package)  
+[7] FST values (hierfstat package)  
 
 
 ### 🔍 Exploratory Analysis
