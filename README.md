@@ -1,7 +1,7 @@
 
 # restful-forensics
 
-## INSTALLATION (installing without Docker)
+## Installation (installing without Docker)
 
 ### From the terminal
 
@@ -145,7 +145,6 @@ Maximum Parsimony, and Maximum Likelihood).
 This accepts a processed file similar to the output of the "Convert
 files to CSV" tab to calculate the common population statistics. 
 
-> [! NOTE]
 > For guidance on interpreting the following, see the references.
 
 [1] Private alleles (poppr package)
@@ -180,8 +179,6 @@ Parameters required:
 
 To explore STRUCTURE v2.3.4: https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
 
-
-> [! NOTE]
 > This toolkit adapted functions from strataG [8] and dartR [9] R packages.
 > The following functions were adapted and revised: 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'.
 
