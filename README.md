@@ -35,7 +35,7 @@ functionalities.
 ### 🔄 File Conversion
 This tab has multiple features dedicated to converting file types to a different data structure structure.
 
-| 
+
 
 **_A. Convert files to CSV_**
 
@@ -61,9 +61,8 @@ Program 2. The output is similar to the first tab.
 
 This tab converts VCF files to FASTA and requires a
 reference file genome. The output can be used for multiple sequence
-alignment.
-
-> **Known Issues**: Uses BCFtools which is not compatible with Windows.
+alignment.  
+**Known Issues**: Uses BCFtools which is not compatible with Windows.
 
 
 **_D. Convert to SNIPPER-analysis ready file_**
@@ -81,14 +80,13 @@ STRUCTURE v2.3.4 or other tools such as StrAuto or faststructure.
 
 ### 🧬 SNP Extraction
 
-**_A. SNP Extraction_ **
+**_A. SNP Extraction_**
 
 This tab is specific for extracting markers via their
 GRCh37/GRCh38 position or their Reference SNP cluster ID (rsID). The
 extracted files can be processed in file conversion to generate an
-analysis-ready file.
-
-> **Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
+analysis-ready file.  
+**Known Issues**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
 
 
 **_B. Concordance Analysis_**
@@ -134,9 +132,8 @@ phylogenetic tree construction.
 
 This tab automatically accepts the alignment from the previous tab to
 build a phylogenetic tree using the common approaches (NJ, UPGMA,
-Maximum Parsimony, and Maximum Likelihood).
-
-> **Known Issues**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
+Maximum Parsimony, and Maximum Likelihood).  
+**Known Issues**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
 
 ### 📑 Barcoding
 
@@ -154,6 +151,7 @@ files to CSV" tab to calculate the common population statistics.
 [5] Allele Frequency (adegenet package)  
 [6] Hardy-Weinberg Equilibrium (pegas package)  
 [7] FST values (hierfstat package)  
+**Known Issues**: Takes a significant amount of time to load the results (table and plots).
 
 
 ### 🔍 Exploratory Analysis
