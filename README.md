@@ -1,8 +1,8 @@
 
 # restful-forensics
-For feedback on the tools, please fill up this google form: https://forms.gle/fA62Kwb2Ah2pC12H7
+For feedback on the tool, please fill up this google form: https://forms.gle/fA62Kwb2Ah2pC12H7
 
-## Installation (installing without Docker)
+## I. Installation (installing without Docker)
 
 ### From the terminal
 
@@ -26,7 +26,7 @@ version will be linked here once available.
 
 
 
-## Features
+## II. Features
 
 This application is used for the pre-processing of standard genetic data
 files (VCF, VCF.GZ, BCF, PLINK files, and FASTA) and analysis to an
