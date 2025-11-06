@@ -109,13 +109,13 @@ files.
 This outputs a VCF file that can be further processed under the "File
 Conversion" tab and used for further analysis.
 
-Standard filtering flags included:
---mind
---geno
---maf
---qual-threshold
---hwe
---indep-pairwise
+Standard filtering flags included:  
+--mind  
+--geno  
+--maf  
+--qual-threshold  
+--hwe  
+--indep-pairwise  
 
 PLINK 1.9 flag options: https://www.cog-genomics.org/plink/
 
@@ -187,8 +187,7 @@ To explore STRUCTURE v2.3.4: https://web.stanford.edu/group/pritchardlab/structu
 > This toolkit adapted functions from strataG [8] and dartR [9] R packages.
 > The following functions were adapted and revised: 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'.
 
-
-
+**Known Issue/s**: Takes a significant amount of time to load the results (zipped files and plots).
 
 
 
