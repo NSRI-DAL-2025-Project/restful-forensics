@@ -127,7 +127,8 @@ using the msa R package. The post-processing of the alignment is
 performed using the DECIPHER package. Two functions, AdjustAlignment()
 and StaggerAlignment() is used and provided as an option for
 phylogenetic tree construction.
-
+**Known Issue/s**: PDF of the alignment is automatically being downloaded in the working directory of the repository.  
+Output is not properly appearing using the shiny app.
 
 ### 🌲Phylogenetic Tree
 
@@ -137,6 +138,37 @@ Maximum Parsimony, and Maximum Likelihood).
 **Known Issue/s**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
 
 ### 📑 Barcoding
+
+This uses the BarcodingR package for species identification and to calculate and evaluate barcoding gaps.  
+Link to the manual: https://cran.r-project.org/web/packages/BarcodingR/BarcodingR.pdf
+
+**_A. Species Identification_**  
+
+This subtab uses aligned reference and query sequences (should be the same length) for species identification.  
+There is an option to additionally utilize the kmer method. The functions used are ```barcoding.spe.identify```,  
+```barcoding.spe.identify2```, and ```bbsik```.  
+
+- ```barcoding.spe.identify``` used for protein-coding barcodes. Methods 'bpNewTraining' is used to make direct species identification for relatively small datasets (<500 samples), 'bpNewTrainingOnly' for COI barcode data with >500 samples (first run) and then 'bpUseTrained' for the second run. Other two options are 'fuzzyId' and 'Bayesian'
+- ```barcoding.spe.identify2``` used for non-protein-coding barcodes.
+- ```bbsik``` used for both protein-coding and non-coding barcodes using kmer statistics.  
+
+**_B. Optimize kmer values_**  
+
+Calculates the optimal kmer value per dataset (can be query or reference). It outputs a plot indicating the optimal value.
+
+**_C. Barcoding Gap_**  
+
+Calculates the DNA barcoding gap using any of the following methods: K2P distance, euclidean, or raw.
+
+**_D. Evaluate Barcodes_**  
+
+Evaluates two barcodes using species identification success rate criteria. Kmer values can be identified by first running 'Optimize kmer values'.  
+
+**_E. Species Membership Value (TDR)_**  
+
+Calculates the TDR value for a set of queries and one potential species.
+
+
 
 For Automatic Barcode Gap Discovery, several iTaxoTools webtool/webserver implementations are accessible:  
 - iTaxoTools Galaxy webserver: http://galaxy.itaxotoolsweb.org/
