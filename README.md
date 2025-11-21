@@ -137,7 +137,7 @@ build a phylogenetic tree using the common approaches (NJ, UPGMA,
 Maximum Parsimony, and Maximum Likelihood).  
 **Known Issue/s**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
 
-### 📑 Barcoding
+### 📑 Barcoding (*not yet tested)
 
 This uses the BarcodingR package for species identification and to calculate and evaluate barcoding gaps.  
 Link to the manual: https://cran.r-project.org/web/packages/BarcodingR/BarcodingR.pdf
