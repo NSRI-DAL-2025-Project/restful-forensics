@@ -1,9 +1,3 @@
-# problem 1: docker logo not showing - Addressed 08/08/25
-# problem 2: copyright not showing properly, add at the bottom of the application - Addressed 06/08/2025
-# problem 3: previously uploaded file showing upon reload, should be wiped clean
-# problem 4: wont run in docker container - needed package installed, addressed 07/08/25
-# problem 5: can't download plots
-
 # to-do: add a notice that server will disconnect after a certain time
 # to-do: reset file uploads
 library(bslib)
@@ -112,7 +106,7 @@ ui <- tagList(
                style = "font-size: 16px; line-height: 1.6;",
                p("This application is a compilation of the work on ancestry informative markers by the DNA Analysis Laboratory with an ongoing effort to expand to other marker types."),
                br(),
-               p("This project is led by Nelvie Fatima Jane Soliven (nasoliven@up.edu.ph) and Ambrocio Melvin Matias (aamatias@up.edu.ph).")
+               p("This project is led by Nelvie Fatima Jane Soliven. For inquiries, contact nasoliven@up.edu.ph.")
             )
          )
       ), # end of tab panel for homepage
@@ -220,7 +214,8 @@ ui <- tagList(
                           tags$ul(
                              tags$li("Aligned sequences"),
                              tags$li("Alignment scores"),
-                             tags$li("Alignment PDF")
+                             tags$li("Alignment PDF"),
+                             p("Note: Alignment PDF is only available via the Dockerized application.")
                           ),
                           br(),
                           p("The aligned sequences can be used in the tab 'Phylogenetic Tree'")
@@ -589,9 +584,10 @@ ui <- tagList(
       tabPanel(HTML("<span style = 'color:#ffffff;'> Filtering </span>"),
          sidebarLayout(
             sidebarPanel(
-               fileInput("forFilter", "Upload VCF file"),
+               fileInput("forFilter", "Upload VCF/BCF/PLINK files"),
                fileInput("highlightRef", "Optional Reference file for highlighting (CSV/XLSX)"),
                checkboxInput("enableDP", "Plot Depth of Coverage", value = TRUE),
+               helpText("Depth of Coverage Plot only available if using a VCF file."),
                selectInput("colorPalette", "Color Palette", choices = rownames(RColorBrewer::brewer.pal.info), selected = "Set2"),
                hr(),
                
@@ -658,11 +654,11 @@ ui <- tagList(
                   sidebarPanel(
                            #useShinyjs(),
                            fileInput("fastaFile", "Upload zipped FASTA files"),
-                           actionButton("runMSA", "Align", icon = icon("align-justify")),
-                           br(),
                            radioButtons("substitutionMatrix", "Choose Substitution Matrix for MSA",
                                         choices = c("ClustalW" = "ClustalW", "ClustalOmega" = "ClustalOmega", "MUSCLE" = "Muscle")),
-                           selectInput("msaDownloadType", "Choose alignment version to download:",
+                           br(),
+                           actionButton("runMSA", "Align", icon = icon("align-justify")),
+                           selectInput("msaDownloadType", "Choose alignment (FASTA and PDF) version to download:",
                                        choices = c(
                                           "Initial" = "initial",
                                           "Adjusted" = "adjusted",
@@ -689,6 +685,7 @@ ui <- tagList(
          
       ), # end of tabpanel for MSA
       
+      # Phylogenetic Tree Construction
       tabPanel(HTML("<span style='color:#ffffff;'>Phylogenetic Tree</span>"),
                sidebarLayout(
                   sidebarPanel(
@@ -733,11 +730,107 @@ ui <- tagList(
                   
                ) # end of sidebar layout
                ), # end of tab panel
-   
-      tabPanel(HTML("<span style = 'color:#ffffff;'>Barcoding</span>")
-               ), # end of tabpanel
       
-      ## POP STAT
+   
+         #############
+         # BARCODING #
+         #############   
+         tabPanel(HTML("<span style = 'color:#ffffff;'>Barcoding</span>"),
+            tabsetPanel(
+               tabPanel("Species Identification",
+                        sidebarPanel(
+                           fileInput("refBarcoding", "Upload Aligned Reference Sequences"),
+                           fileInput("queBarcoding", "Upload Aligned Query Sequences"),
+                           helpText("The reference and query sequences should have the same length."),
+                           checkboxInput("kmerSelect", "Use k-mer method?", value = FALSE),
+                           conditionalPanel("input.kmerSelect == false",
+                                            selectInput("barcodingMethod", "Select method to train model and infer membership:",
+                                                        choices = c("fuzzyId", "bpNewTraining", "bpNewTrainingOnly", "bpUseTrained", "Bayesian"),
+                                                        selected = "bpNewTraining")
+                           ),
+                           conditionalPanel("input.kmerSelect == true",
+                                            radioButtons("kmerType", "Choose Method",
+                                                         choices = c("Fuzzy-set Method and kmer", "BP-based Method and kmer")),
+                                            #checkboxInput("kmerFuzzy", "Fuzzy-set Method and kmer", value = FALSE),
+                                            conditionalPanel("input.kmerType == 'Fuzzy-set Method and kmer'",
+                                                             numericInput("kmerValue", "K-mer value", value = 1, min = 0),
+                                                             checkboxInput("optimizationKMER", "Use different kmer length?", value = FALSE)
+                                            ),
+                                            #checkboxInput("kmerBP", "BP-based Method and kmer", value = FALSE),
+                                            conditionalPanel("input.kmerType == 'BP-based Method and kmer'",
+                                                             numericInput("kmerValue", "K-mer value", value = 1, min = 0),
+                                                             checkboxInput("builtModel", "Use built model", value = FALSE),
+                                                             numericInput("lrValue", "Parameter for weight decay", value = 0.00005),
+                                                             numericInput("maxitValue", "Maximum number of iterations", value = 1000000)
+                                            )
+                           ), # end of conditional panel if kmerselect = true
+                           actionButton("identifySpecies", "Identify Species", icon = icon("magnifying-glass"))
+                        ), # end of sidebar Panel
+                        mainPanel(
+                           verbatimTextOutput("identificationResult")
+                        )
+               ), # end of first tab Panel
+               tabPanel("Optimize kmer values",
+                        sidebarPanel(
+                           p("Calculate the optimal kmer value that can be used for relevant calculations."),
+                           fileInput("optimizeKmerRef", "Upload reference dataset"),
+                           numericInput("maxKmer", "Length of maximum kmer value", value = "5", min = 2),
+                           actionButton("calOptimumKmer", "Identify Optimum kmer value", icon = icon("upload"))
+                        ), # end of sidebar panel
+                        mainPanel(
+                           verbatimTextOutput("kmerResult"),
+                           imageOutput("kmerPlot"),
+                           downloadHandler("downloadKmerPlot", "Download Plot")
+                        )
+                        
+               ), # end of second tab panel
+               tabPanel("Barcoding Gap",
+                        sidebarPanel(
+                           fileInput("barcodeRef", "Upload reference dataset"),
+                           selectInput("gapModel", "Choose Distance",
+                                       choices = c("raw", "K80", "euclidean"),
+                                       selected = "raw"),
+                           actionButton("gapBarcodes", "Calculate gap", icon = icon("arrows-left-right-to-line"))
+                           
+                        ), # end of sidebar panel
+                        mainPanel(
+                           verbatimTextOutput("barcodingResult"),
+                           imageOutput("BarcodingGapPlot"),
+                           downloadHandler("downloadGapPlot", "Download Barcoding Gap Plot")
+                        )
+               ), #end of third tab panel
+               tabPanel("Evaluate Barcodes",
+                        sidebarPanel(
+                           fileInput("barcode1", "Upload Barcode 1"),
+                           fileInput("barcode2", "Upload Barcode 2"),
+                           numericInput("kmer1", "Length of kmer for barcode 1", value = 5, min = 1),
+                           numericInput("kmer2", "Length of kmer for barcode 2", value = 5, min = 1),
+                           actionButton("evalBarcodes", "Evaluate Barcodes", icon = icon("code-compare"))
+                        ), # end of sidebar panel
+                        mainPanel(
+                           tableOutput("evalBarcodesResult")
+                        )
+               ), #end of third tab panel
+               tabPanel("Species Membership Value (TDR)",
+			               sidebarPanel(
+			                     p("Calculate the TDR2 value"),
+			                     fileInput("oneSpe", "Upload DNA seq from a single query species"),
+                              fileInput("queSpe", "Upload DNA seq from different samples"),
+                              numericInput("bootValue1", "Bootstrap value for query species", value = 10, min = 1),
+                              numericInput("bootValue2", "Bootstrap value for reference samples", value = 10, min = 1),
+			                     actionButton("calculateTDR2", "Calculate", icon = icon("calculator"))
+			), # end of sidebar panel
+			mainPanel(
+			   verbatimTextOutput("tdrValues")
+			)
+		) # end of fourth tab panel
+	) # end of first tabset panel
+), # end of tabpanel
+      
+      #########################
+      # Population Statistics #
+      #########################
+   
       tabPanel(HTML("<span style = 'color:#ffffff;'>Population Statistics</span>"),
                tabsetPanel(
                   sidebarPanel("Perform Analysis",
@@ -791,14 +884,16 @@ ui <- tagList(
                            DT::dataTableOutput("fstDfTable"),
                            hr(),
                            h4("Fst Heatmap"),
-                           imageOutput("fst_heatmap_plot", width = "100%")                        #imageOutput("fst_heatmap"),
-                           #downloadButton("downloadFstHeatmap", "Download Heatmap")
+                           imageOutput("fst_heatmap_plot", width = "100%") 
                            
                   )
                )
       ), # end of tabpanel
       
-      ## PCA
+      #######
+      # PCA #
+      #######
+   
       tabPanel(HTML("<span style = 'color:#ffffff;'>Exploratory Analysis</span>"),
                sidebarLayout(
                   sidebarPanel(
@@ -832,12 +927,16 @@ ui <- tagList(
                )
       ), # end of tabpanel
       
-      ## STRUCTURE Analysis
+      ######################
+      # STRUCTURE Analysis #
+      ######################
+   
       tabPanel(
          HTML("<span style='color:#ffffff;'>STRUCTURE Analysis</span>"),
          sidebarLayout(
             sidebarPanel(
-               fileInput("structureFile", "Upload STRUCTURE Input"),
+               fileInput("structureFile", "Upload Input File (CSV/XLSX)"),
+               helpText("Input file should be similar to the output of the 'Convert to CSV' tab under 'File Conversion'"),
                numericInput("kMin", "Min K", value = 2, min = 1),
                numericInput("kMax", "Max K", value = 5, min = 1),
                numericInput("numKRep", "Replicates per K", value = 5, min = 1),
@@ -857,29 +956,16 @@ ui <- tagList(
                ),
                h4("STRUCTURE Visualization"),
                imageOutput("structurePlotPreview"),
-
+               br(),
+               p("NOTE: The plots are expected to take some time to load."),
+               br(), br(),
                p("Some functions were revised and adapted from the strataG and dartR packages such as 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'"),
                h3("References"),
                p("Archer, F., Adams, P., and Schneiders, B. (2016). strataG: an R package for manipulating, summarizing, and analyzing population genetic data. Molecular Ecology Resources 17: 5-11. https://doi.org/10.1111/1755-0998.12559"),
                p("Mijangos, J.L., Gruber, B., Berry, O., Pacioni, C., and Georges, A. (2022). dartR v2: An accessible genetic analysis platform for conservation, ecology, and agriculture. Methods in Ecology and Evolution. https://doi.org/10.1111/2041-210X.13918"),
                p("Gruber, B., Unmack, P.J., Berry, O.F., and Georges, A. (2018). dartR: an R package to facilitate analysis of SNP data generated from reduced representation genome sequencing. Molecular Ecology Resources 18:691-699. https://doi.org/10.1111/1755-0998.12745"),
                p("Jenkins, T. (2018). R function to export a genind object in STRUCTURE format. [Source code]. GitHub. https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2structure_function.R")
-               #tags$h4("Sample File"),
-               #tags$ul(
-               #   tags$a("Sample file", href = "www/sample.csv", download = NA)
-               #),
-               #h4("STRUCTURE Visualization"),
-               #imageOutput("structurePlotPreview"),
-               #h4("Download Results")
                
-               #downloadButton("downloadLogs", "Download STRUCTURE Logs (.log)"),
-               #downloadButton("downloadFOutputs", "Download STRUCTURE Output Files"),
-               #downloadButton("downloadQMatrixTxtZip", "Download Q Matrices (.txt zip)"),
-               #downloadButton("downloadStructurePlots", "Download STRUCTURE Plots")
-               #h4("Run Summary"),
-               #tableOutput("structureSummary"),
-               #h4("All STRUCTURE Plots"),
-               #uiOutput("structurePlots")
             ) # end of mainpanel
          )
       ), #end of tabpanel
@@ -926,7 +1012,7 @@ server <- function(input, output, session) {
    plots <- reactiveValues(pca = NULL, het = NULL, fst = NULL)
    status <- reactiveVal("Waiting for input...")
    
-   # ===================== FILE CONV
+   # FILE CONVERSION #
    convertedCSV <- reactiveVal(NULL)
    
    output$exampleRefCSV <- renderTable({
@@ -974,8 +1060,6 @@ server <- function(input, output, session) {
       
       disable("convertCSV")
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
-      #csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
-      #convertedCSV(csv_result)
       
       outputDir <- tempdir()
       timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
@@ -993,7 +1077,6 @@ server <- function(input, output, session) {
          ext <- tools::file_ext(input$vcfFile$name)
          if (ext %in% c("vcf", "gz")) {
             vcfPath <- input$vcfFile$datapath
-            #vcftocsv(vcf = vcfPath, ref = refValue)
             
             csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
             convertedCSV(csv_result)
@@ -1019,7 +1102,6 @@ server <- function(input, output, session) {
          }
          
          vcfPath <- paste0(temp_output, ".vcf")
-         #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
          convertedCSV(csv_result)
          
@@ -1043,9 +1125,7 @@ server <- function(input, output, session) {
             return()
          }
          
-         #system(command)
          vcfPath <- paste0(outputVCF, ".vcf")
-         #vcftocsv(vcf = vcfPath, ref = refValue)
          csv_result <- vcftocsv(vcf = vcfPath, ref = refValue)
          convertedCSV(csv_result)
       }
@@ -1061,7 +1141,7 @@ server <- function(input, output, session) {
       
       output$previewTable <- renderTable({
          req(convertedCSV())
-         head(convertedCSV(), 10)  # Preview top 10 rows
+         head(convertedCSV(), 10)
       })
       
       waiter_hide()
@@ -1253,7 +1333,6 @@ server <- function(input, output, session) {
             enable("run_uas2csv")
             
             outputName <- "01_merged_typed_data.csv"
-            #csv_file <- file.path(paste(temp_dir, outputName))
             
             output$downloadUAScsv <- downloadHandler(
                filename = function() {
@@ -1393,10 +1472,12 @@ server <- function(input, output, session) {
                concordancePlotPath()
             })
             
+            showNotification("Concordance analysis complete, rendering outputs.", type = "message", duration = 30)
+            print(Sys.time())
+            
             output$downloadConcordance <- downloadHandler(
                filename = function() {"concordance.csv"},
                content = function(file) {
-                  #file.copy("concordance.csv", file)            # DO I NEED TO FILE.COPY?
                   readr::write_csv(concordanceResult(), file)
                }
             )
@@ -1560,6 +1641,14 @@ server <- function(input, output, session) {
    observeEvent(input$forFilter, {
       shinyjs::disable("downloadDepthPlots")
       shinyjs::disable("downloadFilteredFile")
+      
+      ext <- tools::file_ext(input$forFilter$name)
+      if (tolower(ext) == "vcf"){
+         shinyjs::enable("enableDp")
+      } else {
+         updateCheckboxInput(inputId = "enableDP", value = FALSE)
+         shinyjs::disable("enableDP")
+      }
    })
    
    depth_outputs <- reactiveVal(NULL)
@@ -1572,7 +1661,9 @@ server <- function(input, output, session) {
       ref_path <- if (!is.null(input$highlightRef)) input$highlightRef$datapath else NULL
       palette <-  if (!is.null(input$colorPalette)) input$colorPalette else NULL
       
-      if (input$enableDP){
+      ext <- tools::file_ext(input$forFilter$name)
+      
+      if (tolower(ext) == "vcf" && input$enableDP){
          dp <- depth_from_vcf(
             vcf = vcf_path,
             output.dir = temp_dir,
@@ -1580,10 +1671,14 @@ server <- function(input, output, session) {
             palette = palette
          )
          depth_outputs(dp)
+         shinyjs::enable("downloadDepthPlots")
       }
       
+      # Revised 14 November 2025 to first convert files to PLINK before filtering
+      input_file <- convert_to_plink(input$forFilter$datapath, temp_dir)
+      
       # for plink filtering
-      plink_cmds <- c("plink", "--vcf", shQuote(vcf_path), "--out", file.path(temp_dir, "filtered"))
+      plink_cmds <- c("plink", "--bfile", shQuote(input_file), "--out", file.path(temp_dir, "filtered"))
       
       if (input$filterIndiv){
          plink_cmds <- c(plink_cmds, "--mind", input$mindThresh)
@@ -1624,16 +1719,6 @@ server <- function(input, output, session) {
       filtered_path <- file.path(temp_dir, "filtered.vcf")
       if (file.exists(filtered_path)){
          filtered_plink_file(filtered_path)
-      }
-      
-      # enable download buttons
-      if (input$enableDP && !is.null(dp)){
-         depth_outputs(dp)
-         shinyjs::enable("downloadDepthPlots")
-      }
-      
-      if (file.exists(filtered_path)){
-         filtered_plink_file(filtered_path)
          shinyjs::enable("downloadFilteredFile")
       }
       
@@ -1641,8 +1726,7 @@ server <- function(input, output, session) {
          paste("plink", paste(plink_cmds, collapse = " "))
       })
       
-   } 
-                 ) # end of observe events
+   }) # end of observe events
    
    output$depthMarkerPlot <- renderImage({
       req(depth_outputs())
@@ -1678,6 +1762,7 @@ server <- function(input, output, session) {
    alignment_pdf <- reactiveVal(NULL)
    alignment_adjusted <- reactiveVal(NULL)
    alignment_staggered <- reactiveVal(NULL)
+   directory <- tempdir()
    
    observeEvent(input$fastaFILE, {
       shinyjs::disable("downloadAlignedFASTA")
@@ -1688,7 +1773,6 @@ server <- function(input, output, session) {
    observeEvent(input$runMSA, {
       req(input$fastaFile)
       
-      directory <- tempdir()
       fasta_data(read_fasta(input$fastaFile$datapath, directory = directory))
       aligned <- msa_results(fasta_data(), algorithm = input$substitutionMatrix, directory = directory)
       aligned_data(aligned$alignment)
@@ -1706,7 +1790,10 @@ server <- function(input, output, session) {
    output$initialAlignmentText <- renderPrint({
       req(aligned_data())
       aligned_data()
-   })
+      #aligned <- aligned_data()
+      #withMathJax(HTML(msa::msaPrettyPrint(aligned, output="asis", showNames = "left", showLogo = "none",
+      #               shadingMode = "similar", showLegend = FALSE, shadingColors = "blues", askForOverwrite = FALSE)))
+      })
    
    output$adjustedAlignmentText <- renderPrint({
       req(alignment_adjusted())
@@ -1723,6 +1810,8 @@ server <- function(input, output, session) {
       alignment_scores()
    })
    
+   # Changed writeLines to seqinr::write.fasta
+   # 20 Nov 2025 used bios2mds to download msa to fasta
    output$downloadAlignedFASTA <- downloadHandler(
       filename = function() {paste0("aligned", input$msaDownloadType, "_sequence.fasta")},
       content = function(file){
@@ -1731,8 +1820,11 @@ server <- function(input, output, session) {
                              adjusted = alignment_adjusted(),
                              staggered = alignment_staggered())
          req(alignment) 
-      writeLines(utils::capture.output(print(alignment)), file)   
-      }
+      #writeLines(utils::capture.output(print(alignment)), file)
+      #seqinr::write.fasta(sequences = as.list(alignment), names = getSequence(alignment), file.out = filename)
+      aligned <- msa::msaConvert(alignment, "bios2mds::align")
+      bios2mds::export.fasta(aligned, outfile = file, open = "w")
+         }
    )
    
    output$downloadAlignmentScores <- downloadHandler(
@@ -1742,13 +1834,18 @@ server <- function(input, output, session) {
       }
    )
    
+   #filename3 <- paste0(directory, "/aligned_seqs.pdf")
+   
    output$downloadAlignmentPDF <- downloadHandler(
-      filename = function(){"aligned_sequences.pdf"},
+      filename = function(){#"aligned_seqs.pdf"
+         file.path(paste0(directory, "aligned_seqs.pdf"))
+         },
       content = function(file){
          req(alignment_pdf())
          file.copy(alignment_pdf(), file)
       }
    )
+   
    
    # Phylogenetic Tree Construction
    tree_plot <- reactiveVal(NULL)
@@ -1860,6 +1957,180 @@ server <- function(input, output, session) {
       }
    )
    
+   # BARCODING
+
+   # Species identification
+   observe({ 
+      refReady = !is.null(input$refBarcoding)
+      queReady = !is.null(input$queBarcoding)
+      
+      toggleState("identifySpecies", refReady && queReady)
+   })
+   
+   observeEvent(input$identifySpecies, {
+      disable("identifySpecies")
+      req(input$refBarcoding)
+      req(input$queBarcoding)
+
+         refseq <- ape::as.DNAbin(as.character(input$refBarcoding))
+         queseq <- ape::as.DNAbin(as.character(input$queBarcoding))
+         
+         # If not using kmer method
+         if (input.kmerSelect == "false"){
+            result_identity <- BarcodingR::barcoding.spe.identify(refseq, queseq, method = input$barcodingMethod)
+         }
+         
+         if (input.kmerType == 'Fuzzy-set Method and kmer'){
+            req(input$kmerValue)
+            req(input$optimizationKMER)
+            
+            result_identity <- BarcodingR::barcoding.spe.identify2(refseq, queseq, kmer = input$kmerValue, optimization = input$optimizationKMER)
+            
+         } else if (input.kmerType == 'BP-based Method and kmer') {
+            req(input$kmerValue)
+            req(input$builtModel)
+            req(input$lrValue)
+            req(input$maxitValue)
+            result_identity <- BarcodingR::bbsik(refseq, queseq, kmer = input$kmerValue, UseBuiltModel = input$builtModel, lr = input$lrValue, maxit = input$maxitValue)
+         }
+         
+         output$identificationResult <- renderPrint({
+            req(result_identity)
+            result_identity
+         })
+   })
+   
+   # Optimize kmer values
+   observe({
+      fileReady <- !is.null(input$optimizeKmerRef)
+      toggleState("calOptimumKmer", fileReady)
+   })
+   
+   observeEvent(input$calOptimumKmer, {
+      disable("calOptimumKmer")
+      req(input$optimizeKmerRef)
+      
+      kmerFile <- ape::as.DNAbin(as.character(input$optimizeKmerRef))
+      optimalKmer <- BarcodingR::optimize.kmer(kmerFile, max.kmer = input$maxKmer)
+      
+      # download
+      output$kmerResult <- renderPrint({
+         req(optimalKmer)
+         as.data.frame(optimalKmer)
+      })
+      
+      output$kmerPlot <- renderImage({
+         req(kmerFile)
+         req(input$maxKmer)
+         BarcodingR::optimize.kmer(kmerFile, max.kmer = input$maxKmer)
+      }, deleteFile = FALSE)
+      
+      output$downloadKmerPlot <- downloadHandler(
+         filename = function(){
+            paste0("optimum_kmer_", Sys.Date(), ".png")
+         },
+         content = function(file){
+            req(kmerFile)
+            req(input$maxKmer)
+            BarcodingR::optimize.kmer(kmerFile, max.kmer = input$maxKmer)
+         }, contentType = "image/png"
+      )
+      
+   }) # end of observe event
+   
+   # barcoding gap
+   observe({
+      gapReady <- !is.null(input$barcodeRef)
+      toggleState("gapBarcodes", gapReady)
+   })
+   
+   observeEvent(input$gapBarcodes, {
+      disable("gapBarcodes")
+      req(input$barcodeRef)
+      
+      refBarcode <- ape::as.DNAbin(as.character(input$barcodeRef))
+      gap <- BarcodingR::barcoding.gap(refBarcode, dist = input$gapModel)
+      
+      # download
+      output$barcodingResult <- renderPrint({
+         req(gap)
+         as.data.frame(gap)
+      })
+      
+      output$BarcodingGapPlot <- renderImage({
+         req(refBarcode)
+         req(input$gapModel)
+         BarcodingR::barcoding.gap(refseq, dist = input$gapModel)
+      }, deleteFile = FALSE)
+      
+      output$downloadGapPlot <- downloadHandler(
+         filename = function(){
+            paste0("barcoding_gap_", Sys.Date(), ".png")
+         },
+         content = function(file){
+            req(refBarcode)
+            req(input$gapModel)
+            BarcodingR::barcoding.gap(refBarcode, dist = input$gapModel)
+         }, contentType = "image/png"
+      )
+      
+      
+   }) # end of observe event
+   
+   # barcodes eval
+   observe({ 
+      barcode1 = !is.null(input$barcode1)
+      barcode2 = !is.null(input$barcode2)
+      toggleState("evalBarcodes", barcode1 && barcode2)
+   })
+   
+   observeEvent(input$evalBarcodes, {
+      disable("evalBarcodes")
+      req(input$barcode1)
+      req(input$barcode2)
+      
+      barcode1 <- ape::as.DNAbin(as.character(input$barcode1))
+      barcode2 <- ape::as.DNAbin(as.character(input$barcode2))
+      # convert to dataframe to download
+      result <- BarcodingR::barcodes.eval(barcode1, barcode2, kmer1 = kmer1, kmer2 = kmer2)
+      
+      output$evalBarcodesResult <- renderTable({
+         req(result)
+         result2 <- as.data.frame(result)
+         result2
+      })
+      
+   }) # end of observe event
+   
+   # tdr2
+   
+   observe({
+      file1Ready <- !is.null(input$oneSpe)
+      file2Ready <- !is.null(input$queSpe)
+      toggleState("calculateTDR2", file1Ready && file2Ready)
+   })
+   
+   observeEvent(input$calculateTDR2, {
+      disable(calculateTDR2)
+      req(input$oneSpe)
+      req(input$queSpe)
+      
+      query <- ape::as.DNAbin(as.character(input$oneSpe))
+      reference <- ape::as.DNAbin(as.character(input$queSpe))
+      #tdr_result <- BarcodingR::TDR2(query, reference, boot = input$bootValue1, boot2 = input$bootValue2)
+      
+      # issue with results, it prints and not stores
+      output$tdrValues <- renderPrint({
+         req(query)
+         req(reference)
+         req(input$bootValue1)
+         req(input$bootValue2)
+         BarcodingR::TDR2(query, reference, boot = input$bootValue1, boot2 = input$bootValue2)
+      })
+   })
+   
+   ###
+   
    
    # POP STAT
    output$examplePop <- renderTable({
@@ -1902,6 +2173,10 @@ server <- function(input, output, session) {
             priv_alleles <- poppr::private_alleles(fsnps_gen())
             if (is.null(priv_alleles)) priv_alleles <- list(message = "No private alleles detected")
             
+            output$privateAlleleTable <- DT::renderDataTable({
+               as.data.frame(priv_alleles)
+            }, options = list(pageLength = 10, scrollX = TRUE))
+            
             incProgress(0.6, detail = "Computing population statistics...")
             population_stats <- reactive({
                req(fsnps_gen())
@@ -1912,38 +2187,11 @@ server <- function(input, output, session) {
                population_stats()$mar_list
             })
             
+            # heterozygosity
             output$heterozygosity_table <- DT::renderDataTable({
                population_stats()$heterozygosity
             })
             
-            output$inbreeding_table <- DT::renderDataTable({
-               population_stats()$inbreeding_coeff
-            })
-            
-            output$ttest_table <- DT::renderDataTable({
-               population_stats()$ttest
-            })
-            
-            output$allele_freq_table <- DT::renderDataTable({
-               population_stats()$allele_frequencies
-            }, options = list(scrollX = TRUE))
-            
-            output$privateAllelePlot <- renderUI({
-               if (is.list(priv_alleles) && "message" %in% names(priv_alleles)) {
-                  # Display styled message if no private alleles
-                  tags$div(style = "color:gray; font-style:italic; margin-top:10px;",
-                           priv_alleles$message)
-               } else {
-                  # Display as a nicely formatted table
-                  DT::dataTableOutput("privateAlleleTable")
-               }
-            })
-            
-            output$privateAlleleTable <- DT::renderDataTable({
-               as.data.frame(priv_alleles)
-            }, options = list(pageLength = 10, scrollX = TRUE))
-            
-            ## Heterozygosity Plotting
             output$heterozygosity_plot <- renderImage({
                req(population_stats()$heterozygosity)
                
@@ -1960,6 +2208,27 @@ server <- function(input, output, session) {
                )
             }, deleteFile = TRUE)
             
+            output$inbreeding_table <- DT::renderDataTable({
+               population_stats()$inbreeding_coeff
+            })
+            
+            output$ttest_table <- DT::renderDataTable({
+               population_stats()$ttest
+            })
+            
+            output$allele_freq_table <- DT::renderDataTable({
+               population_stats()$allele_frequencies
+            }, options = list(scrollX = TRUE))
+            
+            #output$privateAllelePlot <- renderUI({
+            #   if (is.list(priv_alleles) && "message" %in% names(priv_alleles)) {
+            #      tags$div(style = "color:gray; font-style:italic; margin-top:10px;",
+            #               priv_alleles$message)
+            #   } else {
+            #      # Display as a nicely formatted table
+            #      DT::dataTableOutput("privateAlleleTable")
+            #   }
+            #})
             
             ## HWE
             incProgress(0.8, detail = "Running HWE and FST calculations...")
@@ -1997,6 +2266,9 @@ server <- function(input, output, session) {
                fst_stats()$fst_dataframe
             })
             
+            showNotification("Rendering outputs, this might take some time...", type = "message", duration = 30)
+            print(Sys.time())
+            
             output$fstMatrixUI <- renderUI({
                fst <- fst_stats()$fsnps_fst_matrix
                if (is.list(fst) && "message" %in% names(fst)) {
@@ -2018,11 +2290,7 @@ server <- function(input, output, session) {
                fst_stats()$fst_dataframe
             })
             
-            # plotting
-            #output$fst_heatmap_interactive <- plotly::renderPlotly({
-            #   req(fst_stats()$fst_dataframe)
-            #   plot_fst_heatmap_interactive(fst_stats()$fst_dataframe)
-            #})
+
             output$fst_heatmap_plot <- renderImage({
                req(fst_data())
                
@@ -2039,16 +2307,6 @@ server <- function(input, output, session) {
                )
             }, deleteFile = TRUE)
             
-            #output$downloadFstHeatmap <- downloadHandler(
-            #  filename = function() { "fst_heatmap.png" },
-            #   content = function(file) {
-            #      plot_path <- plot_fst_heatmap(fst_stats()$fst_dataframe, out_dir = tempdir())
-            #      file.copy(plot_path, file)
-            #      ggsave(filename = filename, plot = plot_path, width = 8, height = 8, dpi = 600)
-            #   }
-            #)
-            
-            #incProgress(1, detail = "Finalizing output...")
             
             enable("runPopStats")
             
@@ -2250,84 +2508,38 @@ server <- function(input, output, session) {
       shinyjs::toggleState("runStructure", condition = file_ready)
    })
    
+   structure_result <- reactiveVal(NULL)
+   qmatrices_result <- reactiveVal(NULL)
+   structure_plot_paths <- reactiveVal(NULL)
+
    observeEvent(input$runStructure, {
-      #lastAction(Sys.time())
-      
       disable("runStructure")
       waiter_show(html = spin_fading_circles(), color = "#ffffff")
       
       req(input$structureFile)
-      #structure_path <- Sys.which("structure")
-      #if (structure_path == "") structure_path <- "/usr/local/bin/console/structure"
-      #structure_path <- "./structure.exe"
-      
       
       withProgress(message = "Running STRUCTURE analysis...", {
-         
          incProgress(0.2, detail = "Loading input file...")
-         fsnps_gen <- reactive({
-            req(input$structureFile)
-            
-            df <- load_input_file(input$structureFile$datapath)
-            clean_input_data_str(df)
-         })
+         df <- load_input_file(input$structureFile$datapath)
+         fsnps_gen <- clean_input_data_str(df)
+
          
          incProgress(0.4, detail = "Converting to STRUCTURE file...")
-         
-         #structure_file <- reactive({
-         #   req(fsnps_gen()$fsnps_gen)
-         #   out_path <- file.path(output_dir, "structure_input.str")
-         
-         #   structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
-         #   #temp_str_file <- tempfile(pattern = "structure_input", fileext = ".str")
-         #   write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
-         #   return(out_path)
-         #})
-         # dont make it reactive
-         #output_dir <- tempdir()
-         #dir.create(output_dir)
-         
-         #out_path <- file.path(output_dir, "structure_input.str")
-         #structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
-         #write.table(structure_df, file = out_path, quote = FALSE, sep = " ", row.names = FALSE, col.names = FALSE)
-         
-         #structure_file <- out_path
-         # Create temp output directory
          output_dir <- tempdir()
          dir.create(output_dir, showWarnings = FALSE)
-         
          out_path <- file.path(output_dir, "structure_input.str")
          
-         structure_df <- to_structure(fsnps_gen()$fsnps_gen, include_pop = TRUE)
+         structure_df <- to_structure(fsnps_gen$fsnps_gen, include_pop = TRUE)
          structure_df[] <- lapply(structure_df, function(col) as.numeric(as.character(col)))
-         
-         # Validate formatting
-         validate_structure_input <- function(df) {
-            if (!is.data.frame(df)) return("Input is not a data frame")
-            if (ncol(df) %% 2 != 0) return("Number of columns must be even (two alleles per locus)")
-            if (any(is.na(df))) return("Missing values detected")
-            if (!all(sapply(df, is.numeric))) return("All columns must be numeric")
-            return(NULL)
-         }
-         
-         validation_msg <- validate_structure_input(structure_df)
-         if (!is.null(validation_msg)) {
-            showNotification(paste("STRUCTURE input error:", validation_msg), type = "error")
-            return(NULL)
-         }
          
          write.table(structure_df, file = out_path, quote = FALSE, sep = " ",
                      row.names = FALSE, col.names = FALSE)
          
-         cat("STRUCTURE input preview:\n", paste(readLines(out_path, n = 5), collapse = "\n"))
-         
-         structure_file <- out_path
+         #cat("STRUCTURE input preview:\n", paste(readLines(out_path, n = 5), collapse = "\n"))
+         #structure_file <- out_path
          
          incProgress(0.6, detail = "Running STRUCTURE analysis...")
-         str_files <- reactive({
-            req(structure_file)
-            
-            result <- running_structure(structure_file,
+            result <- running_structure(out_path,
                                         k.range = input$kMin:input$kMax,
                                         num.k.rep = input$numKRep,
                                         burnin = input$burnin,
@@ -2336,114 +2548,42 @@ server <- function(input, output, session) {
                                         phased = input$phased,
                                         ploidy = input$ploidy,
                                         linkage = input$linkage,
-                                        structure_path = "./structure.sh",
+                                        structure_path = "structure/structure.exe",
                                         output_dir = output_dir)
             
-            return(list(
-               output_dir = output_dir,
-               plot_paths = result$plot.paths
-            ))
-         })
+         structure_result(list(
+            output_dir = output_dir,
+            plot_paths = result$plot.paths
+         ))
          
          incProgress(0.8, detail = "Extracting q matrices...")
-         qmatrices_data <- reactive({
-            req(str_files())
-            q_matrices(str_files()$plot_paths)
-         })
+         qmatrices_result(q_matrices(result$plot.paths))
          
          incProgress(1.0, detail = "Plotting...")
-         structure_plots <- reactive({
-            req(str_files(), fsnps_gen())  
+            populations_df <- fsnps_gen$pop_labels  
+            str_files <- list.files(output_dir, pattern = "_f$", full.names = TRUE)
+            str_data <- lapply(str_files, starmie::loadStructure)
             
-            str.dir <- str_files()$output_dir
-            populations_df <- fsnps_gen()$pop_labels  
-            
-            str.files <- list.files(str.dir, pattern = "_f$", full.names = TRUE)
-            str.data <- lapply(str.files, starmie::loadStructure)
-            
-            plot_paths <- list()
-            
-            for (i in seq_along(str.data)) {
-               structure_obj <- str.data[[i]]
-               file_name <- paste0(str.dir, "/", structure_obj$K, "_plot.png")
-               
+            plot_paths <- lapply(str_data, function(structure_obj){
+               file_name <- file.path(output_dir, paste0(structure_obj$K, "_plot.png"))
                gg <- plotQ(structure_obj, populations_df, outfile = file_name)
                ggplot2::ggsave(file_name, plot = gg, width = 12, height = 10, dpi = 600)
-               
-               plot_paths[[i]] <- file_name
-            }
-            
-            return(plot_paths)
-         })
-         
-         # Logs
-         log_zip_path <- reactive({
-            req(str_files())
-            files <- list.files(str_files()$plot_paths, pattern = "_log$", full.names = TRUE)
-            if (length(files) == 0) return(NULL)
-            zip_file <- tempfile(fileext = ".zip")
-            zip::zipr(zipfile = zip_file, files = files)
-            zip_file
-         })
-         
-         # STRUCTURE _f outputs
-         #f_zip_path <- reactive({
-         #   req(str_files())
-         #   files <- list.files(str_files()$plot_paths, pattern = "_f$", full.names = TRUE)
-         #   if (length(files) == 0) return(NULL)
-         #   zip_file <- tempfile(fileext = ".zip")
-         #   zip::zipr(zipfile = zip_file, files = files)
-         #   zip_file
-         #})
-         f_zip_path <- reactive({
-            req(str_files())
-            output_dir <- str_files()$output_dir
-            files <- list.files(output_dir, pattern = "_f$", full.names = TRUE)
-            if (length(files) == 0) {
-               warning("No STRUCTURE _f files found in output_dir.")
-               return(NULL)
-            }
-            zip_file <- tempfile(fileext = ".zip")
-            zip::zipr(zipfile = zip_file, files = files)
-            zip_file
-         })
-         # Q matrices
-         qmatrix_zip_path <- reactive({
-            req(qmatrices_data())
-            temp_dir <- tempfile()
-            dir.create(temp_dir)
-            
-            lapply(names(qmatrices_data()), function(name) {
-               matrix_data <- qmatrices_data()[[name]]
-               if (!is.data.frame(matrix_data)) return(NULL)
-               file_path <- file.path(temp_dir, paste0(name, ".txt"))
-               write.table(matrix_data, file = file_path, row.names = FALSE,
-                           col.names = FALSE, quote = FALSE, sep = "\t")
+               file_name
             })
             
-            zip_file <- tempfile(fileext = ".zip")
-            zip::zipr(zipfile = zip_file, files = list.files(temp_dir, full.names = TRUE))
-            zip_file
-         })
+            structure_plot_paths(plot_paths)
+            enable("runStructure")
+            waiter_hide()
          
-         # STRUCTURE plots
-         plot_zip_path <- reactive({
-            req(structure_plots())
-            zip_file <- tempfile(fileext = ".zip")
-            zip::zipr(zipfile = zip_file, files = structure_plots())
-            zip_file
-         })
-         
-         enable("runStructure")
-         
-         
+        
          output$downloadLogs <- downloadHandler(
             filename = function() {
                paste0("structure_logs_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               req(log_zip_path())
-               file.copy(log_zip_path(), file)
+               log_files <- list.file(output_dir, pattern = "_log$", full.names = TRUE)
+               if (length(log_files) == 0) return(NULL)
+               zip::zipr(zipfile = file, files = log_files)
             },
             contentType = "application/zip"
          )
@@ -2453,8 +2593,9 @@ server <- function(input, output, session) {
                paste0("structure_outputs_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               req(f_zip_path())
-               file.copy(f_zip_path(), file)
+               f_files <- list.files(output_dir, pattern = "_f$", full.names = TRUE)
+               if (length(f_files) == 0) return(NULL)
+               zip::zipr(zipfile = file, files = f_files)
             },
             contentType = "application/zip"
          )
@@ -2465,7 +2606,15 @@ server <- function(input, output, session) {
             },
             content = function(file) {
                req(qmatrix_zip_path())
-               file.copy(qmatrix_zip_path(), file)
+               temp_dir <- tempfile()
+               dir.create(temp_dir)
+               lapply(names(qmatrices_result()), function(name){
+                  matrix_data <- qmatrices_result()[[name]]
+                  if (!is.data.frame(matrix_data)) return(NULL)
+                  write.table(matrix_data, file = file.path(temp_dir, paste0(name, ".txt")),
+                              row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t")
+               })
+               zip::zipr(zipfile = file, files = list.files(temp_dir, full.names = TRUE))
             },
             contentType = "application/zip"
          )
@@ -2475,15 +2624,14 @@ server <- function(input, output, session) {
                paste0("structure_plots_", Sys.Date(), ".zip")
             },
             content = function(file) {
-               req(plot_zip_path())
-               file.copy(plot_zip_path(), file)
+               req(structure_plot_paths())
+               zip::zipr(zipfile = file, files = structure_plot_paths())
             },
             contentType = "application/zip"
          )
          
          output$structurePlotPreview <- renderImage({
-            req(structure_plots())
-            
+            req(structure_plot_paths())
             list(
                src = structure_plots()[[1]],
                contentType = "image/png",
@@ -2493,8 +2641,7 @@ server <- function(input, output, session) {
          }, deleteFile = FALSE)
          
          output$downloadButtons <- renderUI({
-            req(structure_plots(), qmatrices_data(), str_files())
-            
+            req(structure_plot_paths(), qmatrices_result(), structure_result())
             tagList(
                downloadButton("downloadLogs", "Download Log Files (.zip)"),
                br(), br(),
@@ -2505,8 +2652,6 @@ server <- function(input, output, session) {
                downloadButton("downloadStructurePlots", "Download STRUCTURE Plots (.zip)")
             )
          })
-         
-         waiter_hide()
       }) # end of with progress
       
       

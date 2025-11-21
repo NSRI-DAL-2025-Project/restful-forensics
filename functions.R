@@ -1,9 +1,13 @@
-# TO DO #1: (DONE) ADDITIONAL ARGUMENTS FOR PLINK - OPTIONAL FILTERING PROCEDURES
-# TO DO #2: ADD DOWNLOADABLE SAMPLE FILES - can do, create sample files
-
-##############################
-# FILE CONVERSION TO SNIPPER #
-##############################
+#============================
+# FILE CONVERSION TO SNIPPER 
+# 
+# Description: Function combines genetic data files (VCF/CSV/XLSX) containing
+# sample names in the first column and marker information (A/T) in succeeding cols
+# and its population metadata (Superpopulation/Continental level and population level).
+# This creates an output compatible specific to SNIPPER
+#
+# Last revised 24 June 2025
+#============================
 
 tosnipper <- function(input, references, target.pop = TRUE, population.name = NULL, markers = snps){
    if (!dir.exists(dir))  dir.create(dir, recursive = TRUE)
@@ -176,10 +180,17 @@ tosnipper <- function(input, references, target.pop = TRUE, population.name = NU
    
 }
 
-##########################
-# VCF FILE CONVERSION TO CSV #
-##########################
-# Issue (06 August 2025): Pop added at the end of the file
+#============================
+# VCF FILE CONVERSION TO CSV
+# 
+# Description: Function converts VCF and/or VCF.GZ to CSV files containing
+# sample names in the first column and marker information (A/T) in succeeding cols
+# and merges it with population metadata (Superpopulation/Continental level).
+#
+# Last revised 06 August 2025
+# Issue: Pop added at the end of the file
+#============================
+
 vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    library(dplyr)
    
@@ -254,9 +265,16 @@ vcftocsv <- function(vcf, ref = NULL, dir = tempdir()) { # set dir to tmp
    return(final_df)
 }
 
-###############################
-# UAS FILES CONVERSION TO CSV #
-###############################
+
+#============================
+# UAS FILES CONVERSION TO CSV
+# 
+# Description: Function converts multiple ForenSeq UAS files to a CSV file containing
+# sample names in the first column and marker information (A/T) in succeeding cols
+# It has an option to merge with population metadata (Superpopulation/Continental level).
+#
+# Last revised 24 April 2025
+#============================
 
 uas2csv <- function(files = files, population = pop_file, reference = FALSE, dir = dir){
    
@@ -396,9 +414,15 @@ uas2csv <- function(files = files, population = pop_file, reference = FALSE, dir
    }
 } 
 
-################
-# VCF TO FASTA #
-################
+
+#============================
+# VCF TO FASTA
+# 
+# Description: Function converts a VCF file to FASTA.
+# Prerequisites: bcftools
+#
+# Last revised 31 October 2025
+#============================
 
 vcf_to_fasta <- function(vcf_file, reference, bcftools_path, directory){
    output_file <- file.path(directory, "consensus.fa")
@@ -411,10 +435,6 @@ vcf_to_fasta <- function(vcf_file, reference, bcftools_path, directory){
    return(output_file)
 
 }
-
-#########################
-# CSV TO STRUCTURE FILE #
-#########################
 
 
 #======================================
@@ -450,7 +470,16 @@ vcf_to_fasta <- function(vcf_file, reference, bcftools_path, directory){
 # Convert Windows text file to Unix text file in Linux
 # awk '{ sub("\r$", ""); print }' winfile.txt > unixfile.txt
 
-
+#============================
+# CSV TO STRUCTURE FILE
+# 
+# Description: Function converts a CSV file containing
+# sample names in the first column and marker information (A/T) in succeeding cols
+# to an str file. It uses Jenkin's genind2structure but requires specific revisions
+# addressed by the to_structure_file().
+#
+# Last revised 31 October 2025
+#============================
 genind2structure2 <- function(data, file="", pops=TRUE, markers=TRUE, unix=FALSE){
    
    ## Check input file a genind object
@@ -625,10 +654,14 @@ to_structure_file <- function(file, directory, system = "Windows"){
 }
 
 
-#####################
-# MARKER EXTRACTION #
-#####################
-
+#============================
+# MARKER EXTRACTION
+# 
+# Description: Function extracts SNPs by their rsID or position information
+# using PLINK
+#
+# Last revised 31 October 2025
+#============================
 extract_markers <- function(input.file, 
                             snps.list = NULL, 
                             pos.list = NULL, 
@@ -762,12 +795,14 @@ extraction <- function(snps.list = NULL,
 }
 
 
-#############
-# FILTERING #
-#############
+#============================
+# Depth Plot
+# 
+# Description: Generates depth of coverage plot available only when using VCF files.
+#
+# Last revised 31 October 2025
+#============================
 
-# for the depth plot, manually calculate the number of reads (non-NAs) and plot it
-# read vcf?
 depth_from_vcf <- function(vcf, 
                            output.dir, 
                            reference, 
@@ -833,9 +868,16 @@ depth_from_vcf <- function(vcf,
 }
 
 
-########################
-# CONCORDANCE ANALYSIS #
-########################
+#============================
+# CONCORDANCE ANALYSIS
+# 
+# Description: Compares genetic data information generated by different sequencing techniques.
+# It compares the genetic data of the same individual from technique 1 and technique 2.  
+# Input file should be in CSV or XLSX format.
+#
+# Last revised 16 October 2025: Corrected discordant and concordant counts
+#============================
+
 
 concordance <- function(file1, file2, haplotypes = FALSE){
    library(dplyr)
@@ -1018,9 +1060,15 @@ concordance <- function(file1, file2, haplotypes = FALSE){
 }
 
 
-#########################
-# POPULATION STATISTICS #
-#########################
+#============================
+# POPULATION STATISTICS
+# 
+# Description: Calculates basic population statistics.
+# It compares the genetic data of the same individual from technique 1 and technique 2.  
+# Input file should be in CSV or XLSX format.
+#
+# Last revised 16 October 2025
+#============================
 
 load_input_file <- function(input) {
    if (tools::file_ext(input) == "csv") {
@@ -1220,10 +1268,15 @@ export_results <- function(stats_matrix, hw_matrix, fst_matrix, dir = tempdir())
 }
 
 
-
-################################
-# PRINCIPAL COMPONENT ANALYSIS #
-################################
+#============================
+# PRINCIPAL COMPONENT ANALYSIS
+# 
+# Description: Performs exploratory analysis using PCA.
+# It accepts a CSV/XLSX file containing sample names in the first column, 
+# population data on the second, and genetic data on the third col.
+#
+# Last revised 04 August 2025
+#============================
 
 compute_pca <- function(fsnps_gen) {
    library(ade4)
@@ -1343,9 +1396,16 @@ explore.pca <- function(input, default.colors.labels = TRUE, pca.labels = NULL, 
    }
 }
 
-######################
-# STRUCTURE ANALYSIS #
-######################
+
+#============================
+# STRUCTURE ANALYSIS
+# 
+# Description: Explores population structure and ancestry inference.
+# It accepts a CSV/XLSX file containing sample names in the first column, 
+# population data on the second, and genetic data on the third col.
+#
+# Last revised 24 August 2025
+#============================
 
 clean_input_data_str <- function(file) {
    library(dplyr)
@@ -1410,7 +1470,7 @@ to_structure <- function(genind_obj,
    # Get basic info
    library(ade4)
    library(adegenet)
-   ind <- indNames(genind_obj)
+   ind <- adegenet::indNames(genind_obj)
    pop <- if (include_pop) as.character(genind_obj@pop) else rep(1, length(ind))
    ploidy <- max(genind_obj@ploidy)
    loci <- adegenet::locNames(genind_obj)
@@ -2157,17 +2217,18 @@ msa_results <- function(files, algorithm, directory){
    adjusted <- DECIPHER::AdjustAlignment(aligned_dnastrings)
    staggered <- DECIPHER::StaggerAlignment(adjusted)
    # UNCOMMENT OUT
-   #filename3 <- paste0(directory, "/aligned_seqs.pdf")
+   filename3 <- file.path(paste0(directory, "aligned_seqs.pdf"))
    # saving a pdf file
-   #msa::msaPrettyPrint(aligned_sequences, output="pdf", file = filename3, showNames= "none", showLogo = "none")
+   msa::msaPrettyPrint(aligned_sequences, file = filename3,
+                          output="pdf", showNames= "left", showLogo = "none", askForOverwrite = FALSE)
    
    # double check directory where this is saved
    return(list(
       alignment_msa = aligned_sequences,
       scores = alignment_scores,
       aligned_adjusted = adjusted,
-      aligned_staggered = staggered #,
-      #pdf = filename3
+      aligned_staggered = staggered,
+      pdf = filename3
    ))
 }
 
@@ -2340,3 +2401,4 @@ build_ml_tree <- function(alignment,
    ))
    
 }
+
