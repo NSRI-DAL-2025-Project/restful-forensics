@@ -33,6 +33,8 @@ files (VCF, VCF.GZ, BCF, PLINK files, and FASTA) and analysis to an
 extent. The following tabs are available and offers certain
 functionalities.
 
+![](www/readme/workplan.png)
+
 ### 🔄 File Conversion
 This tab has multiple features dedicated to converting file types to a different data structure structure.
 
