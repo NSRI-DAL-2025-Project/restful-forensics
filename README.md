@@ -2,31 +2,40 @@
 # restful-forensics
 For feedback on the tool, please fill up this google form: https://forms.gle/fA62Kwb2Ah2pC12H7
 
-## I. Installation (installing without Docker)
+This is the docker implementation of the tool. See https://github.com/NSRI-DAL-2025-Project/restful-forensics-shinyapp to run the shiny application via RStudio.
 
-### From the terminal
+## Requirements
 
-Clone the repository. Make sure that git is installed.
+The installation of the tool requires the following:
+1. git
+2. docker
 
+## I. Installation
+
+This implementation requires a Linux-based operating system and Git installation.
+
+1. On your terminal, clone the repository via:
 ```         
 git clone https://github.com/NSRI-DAL-2025-Project/restful-forensics.git
 ```
 
-### Using RStudio
+2. Go to the directory by doing ```cd restful-forensics```
 
--   Under File \> New Project \> Version Control \> Git
--   Under Repository URL, paste:
-    "<https://github.com/NSRI-DAL-2025-Project/restful-forensics.git>"
+3. Build the Docker image
+```
+# first do the ff (make sure to include the period)
+docker build -t restful-forensics .
 
-Open the "app.R" file and click the "Run App" button on the top right
-corner of the source panel. ![](www/readme/runapp.png)
+# next do the ff (choose any name for the {container})
+docker run --name {container} -p 3838:3838 restful-forensics
+```
 
-Note: Some functionalities require a Linux OS. A Windows-compatible
-version will be linked here once available.
+## II. Accessing the tool
+Access the tool via any web browser using https://localhost:3838/restful-forensics
 
+Other computers connected to the same network can access the tool using the same link.
 
-
-## II. Features
+## III. Features
 
 This application is used for the pre-processing of standard genetic data
 files (VCF, VCF.GZ, BCF, PLINK files, and FASTA) and analysis to an
