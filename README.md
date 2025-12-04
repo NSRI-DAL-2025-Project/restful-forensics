@@ -74,6 +74,7 @@ Program 2. The output is similar to the first tab.
 This tab converts VCF files to FASTA and requires a
 reference file genome. The output can be used for multiple sequence
 alignment.  
+
 **Known Issue/s**: Uses BCFtools which is not compatible with Windows.
 
 
@@ -98,6 +99,7 @@ This tab is specific for extracting markers via their
 GRCh37/GRCh38 position or their Reference SNP cluster ID (rsID). The
 extracted files can be processed in file conversion to generate an
 analysis-ready file.  
+
 **Known Issue/s**: Uses BCFtools for merging zipped VCF files (vcf.gz) not compatible with Windows.
 
 
@@ -106,6 +108,7 @@ analysis-ready file.
 This tab compares the sequencing outputs of two
 different technologies. It expects either an XLSX or CSV file containing
 sample and marker information.  
+
 **Known Issue/s**: Takes a significant amount of time to load the results (table and plots)
 
 ### 🔽 Filtering
@@ -137,7 +140,8 @@ This tab accepts zipped FASTA files and performs sequence alignment
 using the msa R package. The post-processing of the alignment is
 performed using the DECIPHER package. Two functions, AdjustAlignment()
 and StaggerAlignment() is used and provided as an option for
-phylogenetic tree construction.
+phylogenetic tree construction.  
+
 **Known Issue/s**: PDF of the alignment is automatically being downloaded in the working directory of the repository.  
 Output is not properly appearing using the shiny app.
 
@@ -146,6 +150,7 @@ Output is not properly appearing using the shiny app.
 This tab automatically accepts the alignment from the previous tab to
 build a phylogenetic tree using the common approaches (NJ, UPGMA,
 Maximum Parsimony, and Maximum Likelihood).  
+
 **Known Issue/s**: Occasionally throws an error that requires fsnps_gen() which is used in other functions.
 
 ### 📑 Barcoding (*not yet tested)
@@ -201,6 +206,7 @@ files to CSV" tab to calculate the common population statistics.
 [5] Allele Frequency (adegenet package)  
 [6] Hardy-Weinberg Equilibrium (pegas package)  
 [7] FST values (hierfstat package)  
+
 **Known Issue/s**: Takes a significant amount of time to load the results (table and plots).
 
 
@@ -228,7 +234,7 @@ Parameters required:
 To explore STRUCTURE v2.3.4: https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
 
 > This toolkit adapted functions from strataG [8] and dartR [9] R packages.
-> The following functions were adapted and revised: 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'.
+> The following functions were adapted and revised: 'gl.run.structure', '.structureParseQmat', 'structureRead', and 'utils.structure.evanno'.  
 
 **Known Issue/s**: Takes a significant amount of time to load the results (zipped files and plots).
 
