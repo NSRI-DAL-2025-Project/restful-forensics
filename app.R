@@ -1,5 +1,4 @@
-# to-do: add a notice that server will disconnect after a certain time
-# to-do: reset file uploads
+# Revised Dec 5, 2025: Revised Instructions tab (a) added contents on "Barcoding" (b) Included parameters on each tab description
 library(bslib)
 library(shinyjs)
 source("functions.R", local = TRUE)
@@ -120,31 +119,42 @@ ui <- tagList(
                           
                           div(class = "inner-card",
                               h5("A. Convert files to CSV and add population info"),
-                              p("Input file: VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
-                              p("Expected output file: CSV file.")
+                              p("Input file/s:"), 
+                              tags$ul(
+                                 tags$li("VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
+                                 tags$li("(Optional) Population data in XLSX or CSV")                          
+                              ),
+                              p("Parameter/s: Metadata on sample population"),
+                              p("Expected output file/s: CSV file.")
                           ),
                           div(class = "inner-card",
                               h5("B. Convert ForenSeq UAS outputs to wide format"),
-                              p("Input file: Compressed folder (.zip or .tar) of XLSX files."),
-                              p("Expected output file: Single CSV file (merged XLSX files)."),
+                              p("Input file/s: Compressed folder (.zip or .tar) of XLSX files."),
+                              p("Expected output file/s: Single CSV file (merged XLSX files)."),
                               br(),
                               p("This section builds upon the work of Ms. Maeviviene Sosing as part of the Filipino Genomes Research Program 2"),
                           ),
                           div(class = "inner-card",
                               h5("C. Convert VCF files to FASTA"),
-                              p("Input file: VCF file"),
-                              p("Expected output file: FASTA file.")
+                              p("Input file/s: VCF file"),
+                              p("Expected output file/s: FASTA file.")
                               ), 
                           div(class = "inner-card",
                               h5("D. Convert CSV or XLSX files to a SNIPPER-compatible file"),
-                              p("Input file: CSV or XLSX file."),
-                              p("Expected output file: XLSX file."),
+                              p("Input file/s: CSV or XLSX file."),
+                              p("Parameter/s: (optional) Target population name for classification"),
+                              p("Expected output file/s: XLSX file."),
                               p("SNIPPER tool for sample classification: https://mathgene.usc.es/snipper/index.php")
                           ),
                           div(class = "inner-card",
                               h5("E. Convert CSV files to STRUCTURE files."),
-                              p("Input file: CSV file with marker and population data."),
-                              p("Expected output file: str file and revised input file"),
+                              p("Input file/s: CSV file with marker and population data."),
+                              p("Parameter/s: User's operating system (for STRUCTURE input compatibility)"),
+                              p("Expected output file/s:"),
+                              tags$ul(
+                                 tags$li("structure (.str) file"),
+                                 tags$li("revised input file")
+                                      ),
                               br(),
                               p("STRUCTURE generally can't handle sample labels with alphabets, the function would convert sample labels to their associated row number."),
                               p("For users who opt to use STRUCTURE via the terminal or using the GUI, instructions can be found here: https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html")
@@ -160,7 +170,7 @@ ui <- tagList(
                           
                           div(class = "inner-card",
                               h5("A. Extract SNPs based on rsID (marker identification) or GRCh37/GRCh38 position"),
-                              p("Input file:"),
+                              p("Input file/s:"),
                               p("(1) VCF, BCF, or PLINK (.bed, .bim, .fam) files."),
                               p("(2) Markers/position list — you may type rsIDs manually, upload a list, or use a POS txt file."),
                               p("The position list (txt file) should include:"),
@@ -168,19 +178,21 @@ ui <- tagList(
                                  tags$li("[1] Chromosome number (integer)"),
                                  tags$li("[2] Starting base-pair position (integer)"),
                                  tags$li("[3] Final base-pair position (integer)")
-                              )
+                              ),
+                              p("Parameter/s: Filtering options"),
+                              p("Expected output file/s: VCF file")
                           ),
                           
                           div(class = "inner-card",
                               h5("B. Concordance analysis between files with the same samples"),
-                              p("Input files: Two CSV or XLSX files."),
-                              p("Expected outputs:"),
+                              p("Input file/s: Two CSV or XLSX files."),
+                              p("Parameter/s: Indicate if using haplotypes"),
+                              p("Expected output/s:"),
                               tags$ul(
                                  tags$li("Concordance table"),
                                  tags$li("Concordance plot")
                               )
                           )
-                          
                       )
                   ), # end of div for tab2
                   div(class = "clickable-card",
@@ -189,8 +201,18 @@ ui <- tagList(
                           h4("Filter individuals and variants using standard options in PLINK 1.9."),
                           p("Standard filtering flags are indicated. For other PLINK flags, see https://www.cog-genomics.org/plink/ for options to be specified in the 'Additional PLINK flags' text box."),
                           br(),
-                          p("Input file: VCF file"),
-                          p("Expected outputs:"),
+                          p("Input file/s: VCF file"),
+                          p("Parameter/s:"),
+                          tags$ul(
+                            tags$li("--mind [value]"),
+                            tags$li("--geno [value]"),
+                            tags$li("--maf [value]"),
+                            tags$li("--qual-threshold [value]"),
+                            tags$li("--hwe [value]"),
+                            tags$li("--indep-pairwise [value]"),
+                            tags$li("Other additional PLINK flags")
+                          ),
+                          p("Expected output/s:"),
                           tags$ul(
                              tags$li("VCF file"),
                              tags$li("Depth of Coverage Plots")
@@ -204,8 +226,9 @@ ui <- tagList(
                           h4("Perform multiple sequence alignment using the msa R package."),
                           p("Post-processing of alignment is performed using the DECIPHER package in R. https://bioconductor.org/packages/devel/bioc/vignettes/DECIPHER/inst/doc/ArtOfAlignmentInR.pdf"),
                           br(),
-                          p("Input file: Zipped folder of FASTA files."),
-                          p("Expected outputs:"),
+                          p("Input file/s: Zipped folder of FASTA files."),
+                          p("Parameter/s: Substitution matrix for the alignment (ClustalW, ClustalOmega, MUSCLE)"),
+                          p("Expected output/s:"),
                           tags$ul(
                              tags$li("Aligned sequences"),
                              tags$li("Alignment scores"),
@@ -224,6 +247,7 @@ ui <- tagList(
                           p("Approaches to tree construction are NJ, UPGMA, Maximum Parsimony, and Maximum Likelihood. Check the assumptions and constraints of each approach [1]."),
                           br(),
                           p("Input file used is the alignment output from the MSA tab. There is an option of using the raw, adjusted, or staggered alignment for tree construction."),
+                          p("Parameters vary based on the method."),
                           p("Expected output is the phylogenetic tree in PNG format."),
                           br(), br(),
                           h5("References"),
@@ -232,14 +256,53 @@ ui <- tagList(
                       ),
                   div(class = "clickable-card",
                       div(class = "card-header", "📑 Barcoding"),
-                      div(class = "card-body")
+                      div(class = "card-body",
+                          p("Perform DNA barcoding using the R package 'BarcodingR'"),
+                          div(class = "inner-card",
+                              h5("A. Species Identification"),
+                              p("Input file/s:"),
+                              tags$ul(
+                                tags$li("Aligned reference sequences"),
+                                tags$li("Aligned query sequences")
+                              ),
+                              p("Parameter/s:"),
+                              tags$ul(
+                                 tags$li("(without kmer method) Training model: bpNewTraining, fuzzyId, bpNewTrainingOnly, bpUsedTrained, or Bayesian"),
+                                 tags$li("(with kmer method) Fuzzy-set Method or BP-based method")
+                              )
+                          ),
+                          div(class = "inner-card",
+                              h5("B. Optimize kmer values"),
+                              p("Input file/s: Aligned sequences of the reference dataset (FASTA)"),
+                              p("Parameter/s: Length of maximum kmer value"),
+                              p("Expected output file: Kmer plot"),
+                              br(),
+                              p("This section builds upon the work of Ms. Maeviviene Sosing as part of the Filipino Genomes Research Program 2"),
+                          ),
+                          div(class = "inner-card",
+                              h5("C. Barcoding Gap"),
+                              p("Input file: VCF file"),
+                              p("Parameter/s: Distance (raw, K80, euclidean)"),
+                              p("Expected output file: Barcoding gap plot")
+                          ), 
+                          div(class = "inner-card",
+                              h5("D. Evaluate Barcodes"),
+                              p("Input file/s: CSV or XLSX file."),
+                              p("Parameter/s: Length of kmer for barcode 1 and barcode 2 (separate)")
+                           ),
+                          div(class = "inner-card",
+                              h5("E. Species Membership Value (TDR)"),
+                              p("Input file/s: CSV file with marker and population data."),
+                              p("Parameter/s: Boostrap value for query and reference samples.")
+                          )
+                          )
+                          ) # end of card body
                       ),
                   
                   ### POP Stat
                   div(class = "clickable-card",
                       div(class = "card-header", "📝 Population Statistics"),
                       div(class = "card-body",
-                          #h4("Calculate private alleles [1], heterozygosity [2], inbreeding coefficients [3], allele frequencies [4], hardy-weinberg equilibrium [5], and FST values [6]."),
                           p("Calculation of common population statistics:"),
                           tags$ul(
                             tags$li("Private alleles [1] calculated using the poppr R package"),
@@ -519,7 +582,6 @@ ui <- tagList(
                                              
                                              actionButton("extractBtn", "Run Marker Extraction", icon = icon("play"))
                                              
-                                             #downloadButton("downloadExtracted", "Download Merged VCF")
                                           )
                                  )
                               ),
@@ -629,7 +691,6 @@ ui <- tagList(
             mainPanel(
                verbatimTextOutput("plinkCommandPreview"),
                h4("Depth of Coverage Plots"),
-               #uiOutput("depthPlots"),
                imageOutput("depthMarkerPlot"),
                imageOutput("depthSamplePlot"),
                br(),
@@ -746,12 +807,10 @@ ui <- tagList(
                            conditionalPanel("input.kmerSelect == true",
                                             radioButtons("kmerType", "Choose Method",
                                                          choices = c("Fuzzy-set Method and kmer", "BP-based Method and kmer")),
-                                            #checkboxInput("kmerFuzzy", "Fuzzy-set Method and kmer", value = FALSE),
                                             conditionalPanel("input.kmerType == 'Fuzzy-set Method and kmer'",
                                                              numericInput("kmerValue", "K-mer value", value = 1, min = 0),
                                                              checkboxInput("optimizationKMER", "Use different kmer length?", value = FALSE)
                                             ),
-                                            #checkboxInput("kmerBP", "BP-based Method and kmer", value = FALSE),
                                             conditionalPanel("input.kmerType == 'BP-based Method and kmer'",
                                                              numericInput("kmerValue", "K-mer value", value = 1, min = 0),
                                                              checkboxInput("builtModel", "Use built model", value = FALSE),
@@ -1966,9 +2025,13 @@ server <- function(input, output, session) {
       disable("identifySpecies")
       req(input$refBarcoding)
       req(input$queBarcoding)
-
-         refseq <- ape::as.DNAbin(as.character(input$refBarcoding))
-         queseq <- ape::as.DNAbin(as.character(input$queBarcoding))
+         
+         # read file
+         barcoding_ref <- rphast::read.msa(input$refBarcoding)
+         barcoding_que <- rphast::read.msa(input$queBarcoding)
+         
+         refseq <- ape::as.DNAbin(as.character(barcoding_ref))
+         queseq <- ape::as.DNAbin(as.character(barcoding_que))
          
          # If not using kmer method
          if (input.kmerSelect == "false"){
@@ -2005,7 +2068,8 @@ server <- function(input, output, session) {
       disable("calOptimumKmer")
       req(input$optimizeKmerRef)
       
-      kmerFile <- ape::as.DNAbin(as.character(input$optimizeKmerRef))
+      barcoding_ref <- rphast::read.msa(input$optimizeKmerRef)
+      kmerFile <- ape::as.DNAbin(as.character(barcoding_ref))
       optimalKmer <- BarcodingR::optimize.kmer(kmerFile, max.kmer = input$maxKmer)
       
       # download
@@ -2043,7 +2107,8 @@ server <- function(input, output, session) {
       disable("gapBarcodes")
       req(input$barcodeRef)
       
-      refBarcode <- ape::as.DNAbin(as.character(input$barcodeRef))
+      barcoding_ref <- rphast::read.msa(input$barcodeRef)
+      refBarcode <- ape::as.DNAbin(as.character(barcoding_ref))
       gap <- BarcodingR::barcoding.gap(refBarcode, dist = input$gapModel)
       
       # download
@@ -2084,8 +2149,11 @@ server <- function(input, output, session) {
       req(input$barcode1)
       req(input$barcode2)
       
-      barcode1 <- ape::as.DNAbin(as.character(input$barcode1))
-      barcode2 <- ape::as.DNAbin(as.character(input$barcode2))
+      b1 <- rphast::read.msa(input$barcode1)
+      b2 <- rphast::read.msa(input$barcode2)
+      barcode1 <- ape::as.DNAbin(as.character(b1))
+      barcode2 <- ape::as.DNAbin(as.character(b2))
+      
       # convert to dataframe to download
       result <- BarcodingR::barcodes.eval(barcode1, barcode2, kmer1 = kmer1, kmer2 = kmer2)
       
@@ -2110,10 +2178,12 @@ server <- function(input, output, session) {
       req(input$oneSpe)
       req(input$queSpe)
       
-      query <- ape::as.DNAbin(as.character(input$oneSpe))
-      reference <- ape::as.DNAbin(as.character(input$queSpe))
-      #tdr_result <- BarcodingR::TDR2(query, reference, boot = input$bootValue1, boot2 = input$bootValue2)
+      que <- rphast::read.msa(input$oneSpe)
+      ref <- rphast::read.msa(input$queSpe)
       
+      query <- ape::as.DNAbin(as.character(que))
+      reference <- ape::as.DNAbin(as.character(ref))
+
       # issue with results, it prints and not stores
       output$tdrValues <- renderPrint({
          req(query)
