@@ -2613,7 +2613,7 @@ server <- function(input, output, session) {
                                         phased = input$phased,
                                         ploidy = input$ploidy,
                                         linkage = input$linkage,
-                                        structure_path = "structure/structure.exe",
+                                        structure_path = "structure.sh",
                                         output_dir = output_dir)
             
          structure_result(list(
