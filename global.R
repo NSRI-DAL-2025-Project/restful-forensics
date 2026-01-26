@@ -6,7 +6,6 @@ library(dplyr)
 library(waiter)
 devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2genepop_function.R")
 devtools::source_url("https://raw.githubusercontent.com/Tom-Jenkins/utility_scripts/master/TJ_genind2structure_function.R")
-source("functions.R", local = TRUE)
 useShinyjs()
 
 # load plink

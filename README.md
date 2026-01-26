@@ -48,13 +48,19 @@ functionalities.
 This tab has multiple features dedicated to converting file types to a different data structure structure.
 
 
-
 **_A. Convert files to CSV_**
 
 This tab converts genetic data files to a
-commonly used file in downstream analysis. Population data is required
-and will be merged with the genetic data file based on the sample value
-(therefore it assumes the sample name is the same for both files.)
+commonly used file in downstream analysis. If converting to CSV, 
+population data is required and will be merged with the genetic 
+data file based on the sample value (therefore it assumes the 
+sample name is the same for both files.)
+
+Conversion options:
+- VCF starting file to PLINK files, CSV, or FASTA file.
+- BCF starting file to PLINK files, CSV, or VCF file.
+- PLINK starting files to CSV or VCF file.
+- CSV starting file to VCF file.
 
 The output of this file can directly be used in the calculation of
 population statistics, Principal Component Analysis, STRUCTURE analysis,
@@ -69,22 +75,13 @@ Prep Kit. It builds upon the work of the Filipino Genomes Research
 Program 2. The output is similar to the first tab.
 
 
-**_C. VCF to FASTA_**
-
-This tab converts VCF files to FASTA and requires a
-reference file genome. The output can be used for multiple sequence
-alignment.  
-
-**Known Issue/s**: Uses BCFtools which is not compatible with Windows.
-
-
-**_D. Convert to SNIPPER-analysis ready file_**
+**_C. Convert to SNIPPER-analysis ready file_**
 
 This tab is specific to the
 ancestry work at the DNA Analysis Laboratory.
 
 
-**_E. CSV to STRUCTURE file_**
+**_D. CSV to STRUCTURE file_**
 
 This tab converts a processed CSV file (similar
 to the output of tab A) to a STRUCTURE (.str) file that can be used in
@@ -156,7 +153,7 @@ Maximum Parsimony, and Maximum Likelihood).
 ### 📑 Barcoding (*not yet tested)
 
 This uses the BarcodingR package for species identification and to calculate and evaluate barcoding gaps.  
-Link to the manual: https://cran.r-project.org/web/packages/BarcodingR/BarcodingR.pdf
+Link to the manual: https://cran.r-project.org/web/packages/BarcodingR/BarcodingR.pdf  
 
 **_A. Species Identification_**  
 
