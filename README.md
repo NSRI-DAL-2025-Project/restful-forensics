@@ -45,7 +45,7 @@ functionalities.
 ![](www/readme/workplan.png)
 
 ### 🔄 File Conversion
-This tab has multiple features dedicated to converting file types to a different data structure structure.
+This tab has multiple features dedicated to converting file types to a different data structure.
 
 
 **_A. Convert files to CSV_**
