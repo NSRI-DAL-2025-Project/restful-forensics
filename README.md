@@ -16,7 +16,7 @@ This implementation requires a Linux-based operating system and Git installation
 
 1. On your terminal, clone the repository via:
 ```         
-git clone https://github.com/NSRI-DAL-2025-Project/restful-forensics.git
+git clone https://github.com/NSRI-DAL-2025-Project/rstudio-shiny-verse-opencpu-dependencies-restful-forensics.git
 ```
 
 2. Go to the directory by doing ```cd restful-forensics```
@@ -235,6 +235,11 @@ To explore STRUCTURE v2.3.4: https://web.stanford.edu/group/pritchardlab/structu
 
 **Known Issue/s**: Takes a significant amount of time to load the results (zipped files and plots).
 
+
+### 🪪 Classification  
+
+Classify individuals using Naive Bayes from the e1071 and caret R packages.
+It accepts a CSV/XLSX file with sample, population, and genotype information. 
 
 
 ### References
