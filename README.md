@@ -2,13 +2,16 @@
 # restful-forensics
 For feedback on the tool, please fill up this google form: https://forms.gle/fA62Kwb2Ah2pC12H7
 
-This is the docker implementation of the tool. See https://github.com/NSRI-DAL-2025-Project/restful-forensics-shinyapp to run the shiny application via RStudio.
+This is the basis for the docker implementation of the tool. See https://github.com/NSRI-DAL-2025-Project/restful-forensics-shinyapp to run the shiny application via RStudio.
 
 ## Requirements
+The application can be ran using Docker Desktop or via the terminal.
 
-The installation of the tool requires the following:
-1. git
-2. docker
+To run on a GUI platform, install Docker Desktop on your machine. Note that there are different ways of installation based on your operating system. https://docs.docker.com/desktop/
+
+To install the tool via the terminal, the following should be installed:
+1. git (https://git-scm.com/install/)
+2. docker (https://docs.docker.com/engine/install/ubuntu/)
 
 ## I. Installation
 
@@ -19,7 +22,7 @@ This implementation requires a Linux-based operating system and Git installation
 git clone https://github.com/NSRI-DAL-2025-Project/rstudio-shiny-verse-opencpu-dependencies-restful-forensics.git
 ```
 
-2. Go to the directory by doing ```cd restful-forensics```
+2. Go to the directory by doing ```cd rstudio-shiny-verse-opencpu-dependencies-restful-forensics```
 
 3. Build the Docker image
 ```
